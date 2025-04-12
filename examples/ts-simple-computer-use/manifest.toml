@@ -1,0 +1,37 @@
+[resources.ls]
+name = "list files"
+uri = ""
+description = ""
+mime_type = "text/plain"
+resource_type = "text"
+function = "get_files"
+
+[resources.ps]
+name = "list processes"
+uri = ""
+description = ""
+mime_type = "text/plain"
+resource_type = "text"
+function = "get_processes"
+
+[tools.mkdir]
+name = "create directory"
+description = "create a new directory using the mkdir command on linux"
+input_schema = { type = "string" }
+function = "create_new_directory"
+[tools.mkdir.annotations]
+title = "new folder"
+read_only_hint = false
+destructive_hint = false
+idempotent_hint = true
+open_world_hint = false
+
+[prompts.git-commit]
+name = "git commit"
+description = "Generate a Git commit message"
+arguments = [
+	{ name = "changes", description = "Git diff or description of changes", required = true },
+]
+role = "user"
+[prompts.git-commit.content]
+text = { text = "Generate a concise but descriptive commit message for these changes:\n\n${request.params.arguments?.changes}" }

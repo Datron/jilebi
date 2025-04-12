@@ -5,3 +5,7 @@ edition = "2024"
 
 [dependencies]
 dosa = { path = "../plugin-runtime" }
+jilebi_types = { path = "../jilebi_types" }
+toml = { workspace = true }
+log = { workspace = true }
+env_logger = "0.11.8"
