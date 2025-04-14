@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use derive_more::Deref;
 use serde::{Deserialize, Serialize};
 use strum_macros::{EnumIter, EnumString};
 
@@ -23,7 +24,7 @@ pub struct Resource {
     pub function: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Deref)]
 pub struct Resources(pub HashMap<ResourceKey, Resource>);
 
 impl TryFrom<&toml::Value> for Resources {
@@ -68,7 +69,7 @@ pub struct Tool {
     pub function: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Deref)]
 pub struct Tools(pub HashMap<ToolKey, Tool>);
 
 impl TryFrom<&toml::Value> for Tools {
@@ -114,7 +115,7 @@ pub struct PromptArgument {
     pub required: Option<bool>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Deref)]
 pub struct PromptArguments(pub Vec<PromptArgument>);
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -128,7 +129,7 @@ pub struct Prompt {
 
 pub type PromptKey = String;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Deref)]
 pub struct Prompts(pub HashMap<PromptKey, Prompt>);
 
 impl TryFrom<&toml::Value> for Prompts {
