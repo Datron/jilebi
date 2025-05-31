@@ -12,3 +12,4 @@ toml = { workspace = true }
 strum = { workspace = true }
 strum_macros = { workspace = true }
 derive_more = { workspace = true }
+tokio = { workspace = true }

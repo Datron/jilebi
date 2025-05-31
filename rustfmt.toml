@@ -1,0 +1,2 @@
+imports_granularity = "Crate" # Merge imports from the same crate into a single use statement
+style_edition = "2024"

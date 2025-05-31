@@ -156,6 +156,8 @@ impl TryFrom<&toml::Value> for Prompts {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Manifest {
+    pub name: String,
+    // pub identifier: String,
     pub resources: Resources,
     pub tools: Tools,
     pub prompts: Prompts,
@@ -165,6 +167,12 @@ impl TryFrom<toml::Value> for Manifest {
     type Error = String;
 
     fn try_from(value: toml::Value) -> Result<Self, Self::Error> {
+        let name = value
+            .get("name")
+            .ok_or("The name of the plugin is mandatory".to_string())?
+            .as_str()
+            .ok_or("The name of the plugin is not convertible to string")?
+            .to_string();
         let resources = Resources::try_from(
             value
                 .get("resources")
@@ -181,6 +189,7 @@ impl TryFrom<toml::Value> for Manifest {
                 .ok_or("The prompts section is mandatory".to_string())?,
         )?;
         Ok(Self {
+            name,
             resources,
             tools,
             prompts,
