@@ -1,12 +1,13 @@
-use std::{collections::HashMap, sync::Arc};
+use std::{borrow::Cow, collections::HashMap, sync::Arc};
 
 use jilebi_types::{Plugins, plugin::Manifest};
 use rmcp::{
     ServerHandler,
     model::{
         GetPromptRequestMethod, GetPromptRequestParam, GetPromptResult, Implementation,
-        InitializeRequestParam, InitializeResult, ListPromptsResult, PaginatedRequestParam, Prompt,
-        PromptArgument, ProtocolVersion, ServerCapabilities, ServerInfo,
+        InitializeRequestParam, InitializeResult, ListPromptsResult, ListToolsResult,
+        PaginatedRequestParam, Prompt, PromptArgument, ProtocolVersion, ServerCapabilities,
+        ServerInfo, Tool,
     },
     service::RequestContext,
 };
@@ -49,7 +50,7 @@ impl ServerHandler for JilebiMcpServer {
             protocol_version: ProtocolVersion::V_2025_03_26,
             capabilities: ServerCapabilities::builder()
                 .enable_prompts()
-                .enable_prompts_list_changed()
+                .enable_tools()
                 .build(),
             server_info: Implementation {
                 name: "Jilebi".into(),
@@ -59,13 +60,13 @@ impl ServerHandler for JilebiMcpServer {
         }
     }
 
-    fn list_prompts(
+    async fn list_prompts(
         &self,
         _request: Option<PaginatedRequestParam>,
         _context: RequestContext<rmcp::RoleServer>,
-    ) -> impl Future<Output = Result<ListPromptsResult, rmcp::Error>> + Send + '_ {
+    ) -> Result<ListPromptsResult, rmcp::Error> {
         let mut prompts: Vec<Prompt> = Vec::new();
-        let plugins = self.plugins.blocking_read();
+        let plugins = self.plugins.read().await;
         for (_, plugin) in plugins.iter() {
             let mut p = plugin
                 .prompts
@@ -88,19 +89,60 @@ impl ServerHandler for JilebiMcpServer {
                 .collect::<Vec<_>>();
             prompts.append(&mut p);
         }
-        std::future::ready(Ok(ListPromptsResult {
+        Ok(ListPromptsResult {
             next_cursor: None,
             prompts,
-        }))
+        })
     }
 
-    fn get_prompt(
+    async fn get_prompt(
         &self,
         _request: GetPromptRequestParam,
         _context: RequestContext<rmcp::RoleServer>,
-    ) -> impl Future<Output = Result<GetPromptResult, rmcp::Error>> + Send + '_ {
-        std::future::ready(Err(
-            rmcp::Error::method_not_found::<GetPromptRequestMethod>(),
-        ))
+    ) -> Result<GetPromptResult, rmcp::Error> {
+        Err(rmcp::Error::method_not_found::<GetPromptRequestMethod>())
+    }
+
+    async fn call_tool(
+        &self,
+        _request: rmcp::model::CallToolRequestParam,
+        _context: RequestContext<rmcp::RoleServer>,
+    ) -> Result<rmcp::model::CallToolResult, rmcp::Error> {
+        Err(rmcp::Error::method_not_found::<
+            rmcp::model::CallToolRequestMethod,
+        >())
+    }
+
+    async fn list_tools(
+        &self,
+        _request: Option<PaginatedRequestParam>,
+        _context: RequestContext<rmcp::RoleServer>,
+    ) -> Result<rmcp::model::ListToolsResult, rmcp::Error> {
+        let mut tools: Vec<Tool> = Vec::new();
+		tracing::info!("Listing tools");
+        let plugins = self.plugins.read().await;
+        tracing::info!("Plugins loaded: {:?}", *plugins);
+        for (_, plugin) in plugins.iter() {
+            let mut p = plugin
+                .tools
+                .values()
+                .map(|tool| Tool {
+                    name: Cow::from(format!("{}.{}", plugin.name, tool.name)),
+                    description: tool.description.clone().map(|i| Cow::from(i)),
+                    input_schema: Arc::new(
+                        tool.input_schema
+                            .as_object()
+                            .map(|s| s.to_owned())
+                            .unwrap_or_default(),
+                    ),
+                    annotations: None,
+                })
+                .collect::<Vec<_>>();
+            tools.append(&mut p);
+        }
+        Ok(ListToolsResult {
+            next_cursor: None,
+            tools,
+        })
     }
 }

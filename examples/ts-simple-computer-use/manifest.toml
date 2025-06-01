@@ -20,7 +20,7 @@ function = "get_processes"
 [tools.mkdir]
 name = "create directory"
 description = "create a new directory using the mkdir command on linux"
-input_schema = { type = "string" }
+input_schema = { type = "object" }
 function = "create_new_directory"
 [tools.mkdir.annotations]
 title = "new folder"
