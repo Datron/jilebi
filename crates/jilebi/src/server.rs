@@ -4,10 +4,10 @@ use jilebi_types::{Plugins, plugin::Manifest};
 use rmcp::{
     ServerHandler,
     model::{
-        GetPromptRequestMethod, GetPromptRequestParam, GetPromptResult, Implementation,
-        InitializeRequestParam, InitializeResult, ListPromptsResult, ListToolsResult,
-        PaginatedRequestParam, Prompt, PromptArgument, ProtocolVersion, ServerCapabilities,
-        ServerInfo, Tool,
+        GetPromptRequestParam, GetPromptResult, Implementation, InitializeRequestParam,
+        InitializeResult, ListPromptsResult, ListResourcesResult, ListToolsResult,
+        PaginatedRequestParam, Prompt, PromptArgument, PromptMessage, ProtocolVersion, RawResource,
+        Resource, ServerCapabilities, ServerInfo, Tool,
     },
     service::RequestContext,
 };
@@ -51,6 +51,7 @@ impl ServerHandler for JilebiMcpServer {
             capabilities: ServerCapabilities::builder()
                 .enable_prompts()
                 .enable_tools()
+                .enable_resources()
                 .build(),
             server_info: Implementation {
                 name: "Jilebi".into(),
@@ -97,10 +98,58 @@ impl ServerHandler for JilebiMcpServer {
 
     async fn get_prompt(
         &self,
-        _request: GetPromptRequestParam,
-        _context: RequestContext<rmcp::RoleServer>,
+        request: GetPromptRequestParam,
+        context: RequestContext<rmcp::RoleServer>,
     ) -> Result<GetPromptResult, rmcp::Error> {
-        Err(rmcp::Error::method_not_found::<GetPromptRequestMethod>())
+        tracing::debug!("request ID for get_prompt: {}", context.id);
+        let mut identifier = request.name.split(".").into_iter();
+        let (plugin_name, prompt_name) = (
+            identifier
+                .next()
+                .map(str::to_string)
+                .ok_or(rmcp::Error::invalid_request(
+                    "The name of the prompt is incorrect",
+                    None,
+                ))?,
+            identifier
+                .next()
+                .map(str::to_string)
+                .ok_or(rmcp::Error::invalid_request(
+                    "The name of the prompt is incorrect",
+                    None,
+                ))?,
+        );
+        let plugins = self.plugins.read().await;
+        let plugin = plugins
+            .get(&plugin_name)
+            .ok_or(rmcp::Error::invalid_request(
+                "The plugin name provided is either invalid or has been removed",
+                None,
+            ))?;
+        let prompt = plugin
+            .prompts
+            .get(&prompt_name)
+            .ok_or(rmcp::Error::invalid_request(
+                "The plugin name provided is either invalid or has been removed",
+                None,
+            ))?;
+        let prompt_content = match prompt.content.clone() {
+            jilebi_types::plugin::PromptContentType::Text { text } => {
+                rmcp::model::PromptMessageContent::Text { text }
+            }
+            jilebi_types::plugin::PromptContentType::Resource {
+                uri: _,
+                text,
+                mime_type: _,
+            } => rmcp::model::PromptMessageContent::Text { text },
+        };
+        Ok(GetPromptResult {
+            description: prompt.description.clone(),
+            messages: Vec::from_iter([PromptMessage {
+                role: rmcp::model::PromptMessageRole::User,
+                content: prompt_content,
+            }]),
+        })
     }
 
     async fn call_tool(
@@ -119,7 +168,7 @@ impl ServerHandler for JilebiMcpServer {
         _context: RequestContext<rmcp::RoleServer>,
     ) -> Result<rmcp::model::ListToolsResult, rmcp::Error> {
         let mut tools: Vec<Tool> = Vec::new();
-		tracing::info!("Listing tools");
+        tracing::info!("Listing tools");
         let plugins = self.plugins.read().await;
         tracing::info!("Plugins loaded: {:?}", *plugins);
         for (_, plugin) in plugins.iter() {
@@ -144,5 +193,53 @@ impl ServerHandler for JilebiMcpServer {
             next_cursor: None,
             tools,
         })
+    }
+
+    async fn list_resources(
+        &self,
+        _request: Option<PaginatedRequestParam>,
+        _context: RequestContext<rmcp::RoleServer>,
+    ) -> Result<ListResourcesResult, rmcp::Error> {
+        let mut resources: Vec<Resource> = Vec::new();
+        let plugins = self.plugins.read().await;
+        for (_, plugin) in plugins.iter() {
+            let mut p = plugin
+                .resources
+                .values()
+                .map(|resource| Resource {
+                    raw: RawResource {
+                        uri: resource.uri.clone(),
+                        name: format!("{}.{}", plugin.name, resource.name),
+                        description: resource.description.clone(),
+                        mime_type: resource.mime_type.clone(),
+                        size: None,
+                    },
+                    annotations: None,
+                })
+                .collect::<Vec<_>>();
+            resources.append(&mut p);
+        }
+        Ok(ListResourcesResult {
+            next_cursor: None,
+            resources,
+        })
+    }
+
+    async fn list_resource_templates(
+        &self,
+        _request: Option<PaginatedRequestParam>,
+        _context: RequestContext<rmcp::RoleServer>,
+    ) -> Result<rmcp::model::ListResourceTemplatesResult, rmcp::Error> {
+        Ok(rmcp::model::ListResourceTemplatesResult::default())
+    }
+
+    async fn read_resource(
+        &self,
+        _request: rmcp::model::ReadResourceRequestParam,
+        _context: RequestContext<rmcp::RoleServer>,
+    ) -> Result<rmcp::model::ReadResourceResult, rmcp::Error> {
+        Err(rmcp::Error::method_not_found::<
+            rmcp::model::ReadResourceRequestMethod,
+        >())
     }
 }

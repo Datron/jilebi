@@ -1,31 +1,38 @@
-use std::collections::HashMap;
+use std::{borrow::Cow, collections::HashMap, sync::Arc};
 
 use derive_more::Deref;
+use either::Either::{self, Left, Right};
+use rmcp::model::{Prompt, RawResource, RawResourceTemplate, Resource, ResourceTemplate, Tool};
 use serde::{Deserialize, Serialize};
-use strum_macros::{EnumIter, EnumString};
+use toml::Table;
 
-#[derive(Debug, Clone, Copy, EnumString, EnumIter, Serialize, Deserialize)]
-#[strum(serialize_all = "lowercase")]
-#[serde(rename_all = "lowercase")]
-pub enum ResourceType {
-    Text,
-    Blob,
+fn mandatory_extractor(op_table: &Table, key: &String, field: &String) -> Result<String, String> {
+    op_table
+        .get(field)
+        .ok_or(format!("Missing field {field} in resource {key}"))?
+        .as_str()
+        .ok_or(format!(
+            "Invalid data entered for field {field} in resource {key}"
+        ))
+        .map(str::to_string)
+}
+
+fn optional_extractor(op_table: &Table, field: &String) -> Option<String> {
+    op_table
+        .get(field)
+        .and_then(|i| i.as_str().map(str::to_string))
 }
 
 pub type ResourceKey = String;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Resource {
-    pub name: String,
-    pub uri: String,
-    pub description: Option<String>,
-    pub mime_type: Option<String>,
-    pub resource_type: ResourceType,
+pub struct JilebiResource {
+    pub resource: Either<Resource, ResourceTemplate>,
     pub function: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Deref)]
-pub struct Resources(pub HashMap<ResourceKey, Resource>);
+pub struct Resources(pub HashMap<ResourceKey, JilebiResource>);
 
 impl TryFrom<&toml::Value> for Resources {
     type Error = String;
@@ -33,14 +40,52 @@ impl TryFrom<&toml::Value> for Resources {
     fn try_from(value: &toml::Value) -> Result<Self, Self::Error> {
         match value {
             toml::Value::Table(map) => {
-                let mut resource_map: HashMap<ResourceKey, Resource> = HashMap::new();
+                let mut resource_map: HashMap<ResourceKey, JilebiResource> = HashMap::new();
                 for (key, table) in map.iter() {
-                    let Ok(resource) = (*table).clone().try_into() else {
+                    let Some(op_table) = table.as_table() else {
+                        // TODO: Add docs for formats
                         return Err(format!(
-                            "Invalid format for resource definition {key}, check the toml"
+                            "Invalid format for resource definition {key}, please check the toml file. Refer the docs:"
                         ));
                     };
-                    resource_map.insert(key.to_string(), resource);
+                    let resource = if op_table.contains_key("uri_template") {
+                        Right(ResourceTemplate::new(
+                            RawResourceTemplate {
+                                uri_template: mandatory_extractor(
+                                    op_table,
+                                    key,
+                                    &"uri_template".to_string(),
+                                )?,
+                                name: mandatory_extractor(op_table, key, &"name".to_string())?,
+                                description: optional_extractor(
+                                    op_table,
+                                    &"description".to_string(),
+                                ),
+                                mime_type: optional_extractor(op_table, &"mime_type".to_string()),
+                            },
+                            None,
+                        ))
+                    } else {
+                        Left(Resource::new(
+                            RawResource {
+                                uri: mandatory_extractor(op_table, key, &"uri".to_string())?,
+                                name: mandatory_extractor(op_table, key, &"name".to_string())?,
+                                description: optional_extractor(
+                                    op_table,
+                                    &"description".to_string(),
+                                ),
+                                mime_type: optional_extractor(op_table, &"mime_type".to_string()),
+                                size: optional_extractor(op_table, &"".to_string())
+                                    .and_then(|s| s.parse::<u32>().ok()),
+                            },
+                            None,
+                        ))
+                    };
+                    let jilebi_resource = JilebiResource {
+                        resource,
+                        function: mandatory_extractor(op_table, key, &"function".to_string())?,
+                    };
+                    resource_map.insert(key.to_string(), jilebi_resource);
                 }
                 Ok(Self(resource_map))
             }
@@ -49,23 +94,11 @@ impl TryFrom<&toml::Value> for Resources {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Annotations {
-    pub title: Option<String>,
-    pub read_only_hint: Option<bool>,
-    pub destructive_hint: Option<bool>,
-    pub idempotent_hint: Option<bool>,
-    pub open_world_hint: Option<bool>,
-}
-
 pub type ToolKey = String;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Tool {
-    pub name: String,
-    pub description: Option<String>,
-    pub input_schema: serde_json::Value,
-    pub annotations: Option<Annotations>,
+pub struct JilebiTool {
+    pub tool: Tool,
     pub function: String,
 }
 
@@ -80,10 +113,27 @@ impl TryFrom<&toml::Value> for Tools {
             toml::Value::Table(map) => {
                 let mut tools_map: HashMap<ToolKey, Tool> = HashMap::new();
                 for (key, table) in map.iter() {
-                    let Ok(tool) = (*table).clone().try_into() else {
+                    let Some(op_table) = table.as_table() else {
                         return Err(format!(
                             "Invalid format for resource definition {key}, check the toml"
                         ));
+                    };
+                    let schema = serde_json::json!(
+                        op_table
+                            .get("input_schema")
+                            .ok_or(format!("Missing field input_schema in resource {key}"))?
+                    )
+                    .as_object()
+                    .cloned()
+                    .ok_or(format!(
+                        "Invalid JSON format for the field input_schema in resource {key}"
+                    ))?;
+                    let tool = Tool {
+                        name: Cow::from(mandatory_extractor(op_table, key, &"name".to_string())?),
+                        description: optional_extractor(op_table, &"description".to_string())
+                            .map(Cow::from),
+                        input_schema: Arc::new(schema),
+                        annotations: None,
                     };
                     tools_map.insert(key.to_string(), tool);
                 }
@@ -92,39 +142,6 @@ impl TryFrom<&toml::Value> for Tools {
             _ => Err("Invalid format for Tools section".to_string()),
         }
     }
-}
-
-#[derive(Debug, Clone, EnumString, EnumIter, Serialize, Deserialize)]
-#[strum(serialize_all = "lowercase")]
-#[serde(rename_all = "lowercase")]
-pub enum PromptContentType {
-    Text {
-        text: String,
-    },
-    Resource {
-        uri: String,
-        text: String,
-        mime_type: String,
-    },
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PromptArgument {
-    pub name: String,
-    pub description: Option<String>,
-    pub required: Option<bool>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, Deref)]
-pub struct PromptArguments(pub Vec<PromptArgument>);
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Prompt {
-    pub name: String,
-    pub description: Option<String>,
-    pub arguments: Option<PromptArguments>,
-    pub role: String,
-    pub content: PromptContentType,
 }
 
 pub type PromptKey = String;

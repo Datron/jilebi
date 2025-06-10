@@ -6,7 +6,6 @@ name = "list files"
 uri = ""
 description = ""
 mime_type = "text/plain"
-resource_type = "text"
 function = "get_files"
 
 [resources.ps]
@@ -14,7 +13,6 @@ name = "list processes"
 uri = ""
 description = ""
 mime_type = "text/plain"
-resource_type = "text"
 function = "get_processes"
 
 [tools.mkdir]
