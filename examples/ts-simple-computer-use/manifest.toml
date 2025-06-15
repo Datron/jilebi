@@ -30,9 +30,9 @@ open_world_hint = false
 [prompts.git-commit]
 name = "git commit"
 description = "Generate a Git commit message"
-# arguments = [
-# 	{ name = "changes", description = "Git diff or description of changes", required = true },
-# ]
-# messages = [
-# 	{ role = "user", type = "text", content = "Generate a concise but descriptive commit message for these changes:\n\n${request.params.arguments?.changes}" },
-# ]
+arguments = [
+	{ name = "changes", description = "Git diff or description of changes", required = true },
+]
+messages = [
+	{ role = "user", type = "text", content = "Generate a concise but descriptive commit message for these changes:\n\n${request.params.arguments?.changes}" },
+]

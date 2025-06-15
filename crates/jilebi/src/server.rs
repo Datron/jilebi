@@ -1,4 +1,4 @@
-use std::{borrow::Cow, collections::HashMap, sync::Arc};
+use std::{collections::HashMap, sync::Arc};
 
 use jilebi_types::{Plugins, plugin::Manifest};
 use rmcp::{
@@ -6,8 +6,8 @@ use rmcp::{
     model::{
         GetPromptRequestParam, GetPromptResult, Implementation, InitializeRequestParam,
         InitializeResult, ListPromptsResult, ListResourcesResult, ListToolsResult,
-        PaginatedRequestParam, Prompt, PromptArgument, PromptMessage, ProtocolVersion, RawResource,
-        Resource, ServerCapabilities, ServerInfo, Tool,
+        PaginatedRequestParam, Prompt, ProtocolVersion, Resource, ResourceTemplate,
+        ServerCapabilities, ServerInfo, Tool,
     },
     service::RequestContext,
 };
@@ -72,20 +72,9 @@ impl ServerHandler for JilebiMcpServer {
             let mut p = plugin
                 .prompts
                 .values()
-                .map(|prompt| Prompt {
-                    name: format!("{}.{}", plugin.name, prompt.name),
-                    description: prompt.description.clone(),
-                    arguments: prompt.arguments.clone().and_then(|args| {
-                        let new_args = args
-                            .iter()
-                            .map(|arg| PromptArgument {
-                                name: arg.name.clone(),
-                                description: arg.description.clone(),
-                                required: arg.required,
-                            })
-                            .collect::<Vec<_>>();
-                        Some(new_args)
-                    }),
+                .map(|jprompt| Prompt {
+                    name: format!("{}.{}", plugin.name, jprompt.prompt.name),
+                    ..jprompt.prompt.clone()
                 })
                 .collect::<Vec<_>>();
             prompts.append(&mut p);
@@ -113,12 +102,13 @@ impl ServerHandler for JilebiMcpServer {
                 ))?,
             identifier
                 .next()
-                .map(str::to_string)
+                .map(|p| p.replace(" ", "-"))
                 .ok_or(rmcp::Error::invalid_request(
                     "The name of the prompt is incorrect",
                     None,
                 ))?,
         );
+		tracing::debug!("Plugin: {} Prompt: {}", plugin_name, prompt_name);
         let plugins = self.plugins.read().await;
         let plugin = plugins
             .get(&plugin_name)
@@ -130,25 +120,12 @@ impl ServerHandler for JilebiMcpServer {
             .prompts
             .get(&prompt_name)
             .ok_or(rmcp::Error::invalid_request(
-                "The plugin name provided is either invalid or has been removed",
+                "The prompt name provided is either invalid or has been removed",
                 None,
             ))?;
-        let prompt_content = match prompt.content.clone() {
-            jilebi_types::plugin::PromptContentType::Text { text } => {
-                rmcp::model::PromptMessageContent::Text { text }
-            }
-            jilebi_types::plugin::PromptContentType::Resource {
-                uri: _,
-                text,
-                mime_type: _,
-            } => rmcp::model::PromptMessageContent::Text { text },
-        };
         Ok(GetPromptResult {
-            description: prompt.description.clone(),
-            messages: Vec::from_iter([PromptMessage {
-                role: rmcp::model::PromptMessageRole::User,
-                content: prompt_content,
-            }]),
+            description: prompt.prompt.description.clone(),
+            messages: prompt.content.clone(),
         })
     }
 
@@ -175,17 +152,7 @@ impl ServerHandler for JilebiMcpServer {
             let mut p = plugin
                 .tools
                 .values()
-                .map(|tool| Tool {
-                    name: Cow::from(format!("{}.{}", plugin.name, tool.name)),
-                    description: tool.description.clone().map(|i| Cow::from(i)),
-                    input_schema: Arc::new(
-                        tool.input_schema
-                            .as_object()
-                            .map(|s| s.to_owned())
-                            .unwrap_or_default(),
-                    ),
-                    annotations: None,
-                })
+                .map(|tool| tool.tool.clone())
                 .collect::<Vec<_>>();
             tools.append(&mut p);
         }
@@ -206,16 +173,7 @@ impl ServerHandler for JilebiMcpServer {
             let mut p = plugin
                 .resources
                 .values()
-                .map(|resource| Resource {
-                    raw: RawResource {
-                        uri: resource.uri.clone(),
-                        name: format!("{}.{}", plugin.name, resource.name),
-                        description: resource.description.clone(),
-                        mime_type: resource.mime_type.clone(),
-                        size: None,
-                    },
-                    annotations: None,
-                })
+                .filter_map(|resource| resource.resource.clone().left())
                 .collect::<Vec<_>>();
             resources.append(&mut p);
         }
@@ -230,7 +188,20 @@ impl ServerHandler for JilebiMcpServer {
         _request: Option<PaginatedRequestParam>,
         _context: RequestContext<rmcp::RoleServer>,
     ) -> Result<rmcp::model::ListResourceTemplatesResult, rmcp::Error> {
-        Ok(rmcp::model::ListResourceTemplatesResult::default())
+        let mut resource_templates: Vec<ResourceTemplate> = Vec::new();
+        let plugins = self.plugins.read().await;
+        for (_, plugin) in plugins.iter() {
+            let mut p = plugin
+                .resources
+                .values()
+                .filter_map(|resource| resource.resource.clone().right())
+                .collect::<Vec<_>>();
+            resource_templates.append(&mut p);
+        }
+        Ok(rmcp::model::ListResourceTemplatesResult {
+            next_cursor: None,
+            resource_templates,
+        })
     }
 
     async fn read_resource(
