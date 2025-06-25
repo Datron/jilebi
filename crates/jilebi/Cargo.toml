@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+derive_more = { workspace = true }
 dosa = { path = "../plugin-runtime" }
 jilebi_types = { path = "../jilebi_types" }
 rmcp = { workspace = true }

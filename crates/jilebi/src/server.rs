@@ -1,5 +1,6 @@
-use std::{collections::HashMap, sync::Arc};
+use std::{borrow::Cow, collections::HashMap, fs, sync::Arc};
 
+use dosa::run_code;
 use jilebi_types::{Plugins, plugin::Manifest};
 use rmcp::{
     ServerHandler,
@@ -9,9 +10,40 @@ use rmcp::{
         PaginatedRequestParam, Prompt, ProtocolVersion, Resource, ResourceTemplate,
         ServerCapabilities, ServerInfo, Tool,
     },
+    serde_json::json,
     service::RequestContext,
 };
-use tokio::sync::RwLock;
+use tokio::{runtime::Handle, sync::RwLock};
+
+#[derive(Debug, Clone, derive_more::Display)]
+enum McpSection {
+    // Resource,
+    Tool,
+    Prompt,
+}
+
+fn get_plugin_and_section_name(
+    name: &String,
+    mcp_section: McpSection,
+) -> Result<(String, String), rmcp::Error> {
+    let mut identifier = name.split(".").into_iter();
+    Ok((
+        identifier
+            .next()
+            .map(str::to_string)
+            .ok_or(rmcp::Error::invalid_request(
+                "The name of the prompt is incorrect",
+                None,
+            ))?,
+        identifier
+            .next()
+            .map(|p| p.replace(" ", "-"))
+            .ok_or(rmcp::Error::invalid_request(
+                format!("The name of the {mcp_section} is incorrect"),
+                None,
+            ))?,
+    ))
+}
 
 #[derive(Clone, Debug)]
 pub struct JilebiMcpServer {
@@ -34,15 +66,15 @@ impl JilebiMcpServer {
 }
 
 impl ServerHandler for JilebiMcpServer {
-    fn initialize(
+    async fn initialize(
         &self,
         request: InitializeRequestParam,
         context: RequestContext<rmcp::RoleServer>,
-    ) -> impl Future<Output = Result<InitializeResult, rmcp::Error>> + Send + '_ {
+    ) -> Result<InitializeResult, rmcp::Error> {
         if context.peer.peer_info().is_none() {
             context.peer.set_peer_info(request);
         }
-        std::future::ready(Ok(self.get_info()))
+        Ok(self.get_info())
     }
 
     fn get_info(&self) -> ServerInfo {
@@ -91,24 +123,9 @@ impl ServerHandler for JilebiMcpServer {
         context: RequestContext<rmcp::RoleServer>,
     ) -> Result<GetPromptResult, rmcp::Error> {
         tracing::debug!("request ID for get_prompt: {}", context.id);
-        let mut identifier = request.name.split(".").into_iter();
-        let (plugin_name, prompt_name) = (
-            identifier
-                .next()
-                .map(str::to_string)
-                .ok_or(rmcp::Error::invalid_request(
-                    "The name of the prompt is incorrect",
-                    None,
-                ))?,
-            identifier
-                .next()
-                .map(|p| p.replace(" ", "-"))
-                .ok_or(rmcp::Error::invalid_request(
-                    "The name of the prompt is incorrect",
-                    None,
-                ))?,
-        );
-		tracing::debug!("Plugin: {} Prompt: {}", plugin_name, prompt_name);
+        let (plugin_name, prompt_name) =
+            get_plugin_and_section_name(&request.name, McpSection::Prompt)?;
+        tracing::debug!("Plugin: {} Prompt: {}", plugin_name, prompt_name);
         let plugins = self.plugins.read().await;
         let plugin = plugins
             .get(&plugin_name)
@@ -131,12 +148,53 @@ impl ServerHandler for JilebiMcpServer {
 
     async fn call_tool(
         &self,
-        _request: rmcp::model::CallToolRequestParam,
+        request: rmcp::model::CallToolRequestParam,
         _context: RequestContext<rmcp::RoleServer>,
     ) -> Result<rmcp::model::CallToolResult, rmcp::Error> {
-        Err(rmcp::Error::method_not_found::<
-            rmcp::model::CallToolRequestMethod,
-        >())
+        let plugins = self.plugins.read().await;
+        let code = fs::read_to_string("examples/ts-simple-computer-use/main.js").map_err(|e| {
+            tracing::error!("Could not find JS file: {}", e);
+            rmcp::Error::internal_error("Could not find the JS file that has the function", None)
+        })?;
+
+        let (plugin_name, tool_name) =
+            get_plugin_and_section_name(&request.name.into_owned(), McpSection::Tool)?;
+        let plugin = plugins
+            .get(&plugin_name)
+            .cloned()
+            .ok_or(rmcp::Error::invalid_request(
+                "The plugin name provided is either invalid or has been removed",
+                None,
+            ))?;
+        let tool = plugin
+            .tools
+            .get(&tool_name)
+            .cloned()
+            .ok_or(rmcp::Error::invalid_request(
+                "The tool name provided is either invalid or has been removed",
+                None,
+            ))?;
+        let handle = Handle::current();
+
+        let result = handle
+            .spawn_blocking(move || {
+                let args = request.arguments.unwrap_or_default();
+                run_code::<rmcp::model::CallToolResult>(&code, &tool.function, json!(args)).map_err(
+                    |e| {
+                        rmcp::Error::internal_error(
+                            "The function call for this tool failed",
+                            Some(json!(e)),
+                        )
+                    },
+                )
+            })
+            .await
+            .map_err(|e| {
+                tracing::error!("An error occurred while joining the thread: {e}");
+                rmcp::Error::internal_error("The function call for this tool failed", None)
+            })??;
+
+        Ok(result)
     }
 
     async fn list_tools(
@@ -152,7 +210,10 @@ impl ServerHandler for JilebiMcpServer {
             let mut p = plugin
                 .tools
                 .values()
-                .map(|tool| tool.tool.clone())
+                .map(|tool| Tool {
+                    name: Cow::from(format!("{}.{}", plugin.name, tool.tool.name.to_string())),
+                    ..tool.tool.clone()
+                })
                 .collect::<Vec<_>>();
             tools.append(&mut p);
         }

@@ -8,7 +8,11 @@ export function get_processes(request, env) {
 	return ["jilebi", "bash"];
 }
 
-export function create_new_directory(request, env) {
-	console.log("create_new_directory called with args ", request, env);
-	return true;
+export function create_new_directory({ name }, env) {
+	let response = `create_new_directory called with args ${name}, env: ${env}`;
+	return {
+		content: [
+			{ type: "text", text: response }
+		]
+	};
 }

@@ -1832,6 +1832,7 @@ dependencies = [
 name = "jilebi"
 version = "0.1.0"
 dependencies = [
+ "derive_more",
  "dosa",
  "env_logger",
  "jilebi_types",

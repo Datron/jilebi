@@ -36,7 +36,6 @@ async fn main() -> Result<(), String> {
 // TODO: add pagination support
 // TODO: implement call tool
 // TODO: implement call resource
-// TODO: implement call prompt
 // TODO: Error handling
 // TODO: support SSE, HTTP
 // plugins

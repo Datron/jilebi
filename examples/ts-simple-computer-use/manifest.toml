@@ -1,26 +1,28 @@
 name = "example1"
 
 
-[resources.ls]
+[resources.list-files]
 name = "list files"
 uri = ""
 description = ""
 mime_type = "text/plain"
 function = "get_files"
 
-[resources.ps]
+[resources.list-processes]
 name = "list processes"
 uri = ""
 description = ""
 mime_type = "text/plain"
 function = "get_processes"
 
-[tools.mkdir]
+[tools.create-directory]
 name = "create directory"
 description = "create a new directory using the mkdir command on linux"
-input_schema = { type = "object" }
+input_schema = { type = "object", properties = { name = { type = "string" } }, required = [
+	"name",
+] }
 function = "create_new_directory"
-[tools.mkdir.annotations]
+[tools.create-directory.annotations]
 title = "new folder"
 read_only_hint = false
 destructive_hint = false
