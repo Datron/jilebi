@@ -1,17 +1,18 @@
 name = "example1"
-
+version = "1.0"
+homepage = "github.com"
+creator = "jilebi"
+contact = "support@jilebi.ai"
 
 [resources.list-files]
 name = "list files"
-uri = ""
-description = ""
+description = "list some files from a directory"
 mime_type = "text/plain"
 function = "get_files"
 
 [resources.list-processes]
 name = "list processes"
-uri = ""
-description = ""
+description = "list all processes running"
 mime_type = "text/plain"
 function = "get_processes"
 

@@ -19,7 +19,6 @@ rmcp = { git = "https://github.com/modelcontextprotocol/rust-sdk", rev = "a66f66
 	"transport-sse-server",
 	"transport-streamable-http-server",
 ] }
-either = { version = "1.15.0", features = ["serde"] }
 
 [patch.crates-io]
 deno_media_type = { git = 'https://github.com/denoland/deno_media_type', tag = "0.2.6" }

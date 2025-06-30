@@ -22,30 +22,23 @@ async fn main() -> Result<(), String> {
     })?;
     service.waiting().await.map_err(|e| e.to_string())?;
     Ok(())
-    // let code =
-    //     fs::read_to_string("examples/ts-simple-computer-use/main.js").expect("File not found");
-    // let function = manifest.resources.get("ls").unwrap();
-    // match run_code(&code, &function.function) {
-    //     Ok(result) => println!("Function output = {}", result),
-    //     Err(err) => println!("Function failed with error {}", err),
-    // }
 }
 
 // Jilebi MVP
 // MCP Server
-// TODO: add pagination support
-// TODO: implement call tool
-// TODO: implement call resource
-// TODO: Error handling
 // TODO: support SSE, HTTP
+// TODO: write logs to a file for debugging
+// TODO: Error handling
+// TODO: add pagination support
 // plugins
-// TODO: let folks specify mc plugins from github or file system or URL
-// TODO: revisit manifest
-// TODO: include plugin details in manifest
-// TODO: improve parsing
+// TODO: support dynamic file loads (I've hardcoded the path to the JS file)
+// TODO: support async functions
+// TODO: implement custom logging functions
+// TODO: implement custom file read/write functions
+// TODO: implement custom network functions
+
 // TODO: make it easy to manage with a store
-// TODO: secure plugins but isolating file system
-// TODO: implement custom logging functions and other stuff plugins need
+// TODO: let folks specify mc plugins from github or file system or URL
 
 // Beyond MVP
 // UI

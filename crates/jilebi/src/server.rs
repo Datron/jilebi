@@ -7,8 +7,8 @@ use rmcp::{
     model::{
         GetPromptRequestParam, GetPromptResult, Implementation, InitializeRequestParam,
         InitializeResult, ListPromptsResult, ListResourcesResult, ListToolsResult,
-        PaginatedRequestParam, Prompt, ProtocolVersion, Resource, ResourceTemplate,
-        ServerCapabilities, ServerInfo, Tool,
+        PaginatedRequestParam, Prompt, ProtocolVersion, Resource, ServerCapabilities, ServerInfo,
+        Tool,
     },
     serde_json::json,
     service::RequestContext,
@@ -17,7 +17,7 @@ use tokio::{runtime::Handle, sync::RwLock};
 
 #[derive(Debug, Clone, derive_more::Display)]
 enum McpSection {
-    // Resource,
+    Resource,
     Tool,
     Prompt,
 }
@@ -104,10 +104,7 @@ impl ServerHandler for JilebiMcpServer {
             let mut p = plugin
                 .prompts
                 .values()
-                .map(|jprompt| Prompt {
-                    name: format!("{}.{}", plugin.name, jprompt.prompt.name),
-                    ..jprompt.prompt.clone()
-                })
+                .map(|jprompt| jprompt.prompt.clone())
                 .collect::<Vec<_>>();
             prompts.append(&mut p);
         }
@@ -211,7 +208,7 @@ impl ServerHandler for JilebiMcpServer {
                 .tools
                 .values()
                 .map(|tool| Tool {
-                    name: Cow::from(format!("{}.{}", plugin.name, tool.tool.name.to_string())),
+                    name: Cow::from(tool.tool.name.clone()),
                     ..tool.tool.clone()
                 })
                 .collect::<Vec<_>>();
@@ -234,7 +231,7 @@ impl ServerHandler for JilebiMcpServer {
             let mut p = plugin
                 .resources
                 .values()
-                .filter_map(|resource| resource.resource.clone().left())
+                .map(|resource| resource.resource.clone())
                 .collect::<Vec<_>>();
             resources.append(&mut p);
         }
@@ -244,34 +241,54 @@ impl ServerHandler for JilebiMcpServer {
         })
     }
 
-    async fn list_resource_templates(
-        &self,
-        _request: Option<PaginatedRequestParam>,
-        _context: RequestContext<rmcp::RoleServer>,
-    ) -> Result<rmcp::model::ListResourceTemplatesResult, rmcp::Error> {
-        let mut resource_templates: Vec<ResourceTemplate> = Vec::new();
-        let plugins = self.plugins.read().await;
-        for (_, plugin) in plugins.iter() {
-            let mut p = plugin
-                .resources
-                .values()
-                .filter_map(|resource| resource.resource.clone().right())
-                .collect::<Vec<_>>();
-            resource_templates.append(&mut p);
-        }
-        Ok(rmcp::model::ListResourceTemplatesResult {
-            next_cursor: None,
-            resource_templates,
-        })
-    }
-
     async fn read_resource(
         &self,
-        _request: rmcp::model::ReadResourceRequestParam,
+        request: rmcp::model::ReadResourceRequestParam,
         _context: RequestContext<rmcp::RoleServer>,
     ) -> Result<rmcp::model::ReadResourceResult, rmcp::Error> {
-        Err(rmcp::Error::method_not_found::<
-            rmcp::model::ReadResourceRequestMethod,
-        >())
+        let plugins = self.plugins.read().await;
+        let code = fs::read_to_string("examples/ts-simple-computer-use/main.js").map_err(|e| {
+            tracing::error!("Could not find JS file: {}", e);
+            rmcp::Error::internal_error("Could not find the JS file that has the function", None)
+        })?;
+
+        let (plugin_name, resource_name) =
+            get_plugin_and_section_name(&request.uri, McpSection::Resource)?;
+        let plugin = plugins
+            .get(&plugin_name)
+            .cloned()
+            .ok_or(rmcp::Error::invalid_request(
+                "The plugin name provided is either invalid or has been removed",
+                None,
+            ))?;
+        let resource =
+            plugin
+                .resources
+                .get(&resource_name)
+                .cloned()
+                .ok_or(rmcp::Error::invalid_request(
+                    "The resource name provided is either invalid or has been removed",
+                    None,
+                ))?;
+        let handle = Handle::current();
+
+        let result = handle
+            .spawn_blocking(move || {
+                run_code::<rmcp::model::ReadResourceResult>(&code, &resource.function, json!({}))
+                    .map_err(|e| {
+						tracing::error!("Error while running the resource function {}", e);
+                        rmcp::Error::internal_error(
+                            "The function call for this resource failed",
+                            Some(json!(e)),
+                        )
+                    })
+            })
+            .await
+            .map_err(|e| {
+                tracing::error!("An error occurred while joining the thread: {e}");
+                rmcp::Error::internal_error("The function call for this resource failed", None)
+            })??;
+
+        Ok(result)
     }
 }

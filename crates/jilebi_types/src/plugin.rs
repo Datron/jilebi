@@ -1,10 +1,9 @@
 use std::{borrow::Cow, collections::HashMap, sync::Arc};
 
 use derive_more::Deref;
-use either::Either::{self, Left, Right};
 use rmcp::model::{
     Prompt, PromptArgument, PromptMessage, PromptMessageContent, PromptMessageRole, RawResource,
-    RawResourceTemplate, Resource, ResourceTemplate, Tool,
+    Resource, Tool,
 };
 use serde::{Deserialize, Serialize};
 use toml::Table;
@@ -30,17 +29,15 @@ pub type ResourceKey = String;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct JilebiResource {
-    pub resource: Either<Resource, ResourceTemplate>,
+    pub resource: Resource,
     pub function: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Deref)]
 pub struct Resources(pub HashMap<ResourceKey, JilebiResource>);
 
-impl TryFrom<&toml::Value> for Resources {
-    type Error = String;
-
-    fn try_from(value: &toml::Value) -> Result<Self, Self::Error> {
+impl Resources {
+    fn try_from(value: &toml::Value, plugin_name: &String) -> Result<Self, String> {
         let map = value
             .as_table()
             .ok_or("Invalid format for Resources section".to_string())?;
@@ -52,33 +49,18 @@ impl TryFrom<&toml::Value> for Resources {
                     "Invalid format for resource definition {key}, please check the toml file. Refer the docs:"
                 ));
             };
-            let resource = if op_table.contains_key("uri_template") {
-                Right(ResourceTemplate::new(
-                    RawResourceTemplate {
-                        uri_template: mandatory_extractor(
-                            op_table,
-                            key,
-                            &"uri_template".to_string(),
-                        )?,
-                        name: mandatory_extractor(op_table, key, &"name".to_string())?,
-                        description: optional_extractor(op_table, &"description".to_string()),
-                        mime_type: optional_extractor(op_table, &"mime_type".to_string()),
-                    },
-                    None,
-                ))
-            } else {
-                Left(Resource::new(
-                    RawResource {
-                        uri: mandatory_extractor(op_table, key, &"uri".to_string())?,
-                        name: mandatory_extractor(op_table, key, &"name".to_string())?,
-                        description: optional_extractor(op_table, &"description".to_string()),
-                        mime_type: optional_extractor(op_table, &"mime_type".to_string()),
-                        size: optional_extractor(op_table, &"".to_string())
-                            .and_then(|s| s.parse::<u32>().ok()),
-                    },
-                    None,
-                ))
-            };
+            let resource_name = mandatory_extractor(op_table, key, &"name".to_string())?;
+            let resource = Resource::new(
+                RawResource {
+                    uri: format!("{plugin_name}.{resource_name}"),
+                    name: resource_name,
+                    description: optional_extractor(op_table, &"description".to_string()),
+                    mime_type: optional_extractor(op_table, &"mime_type".to_string()),
+                    size: optional_extractor(op_table, &"".to_string())
+                        .and_then(|s| s.parse::<u32>().ok()),
+                },
+                None,
+            );
             let jilebi_resource = JilebiResource {
                 resource,
                 function: mandatory_extractor(op_table, key, &"function".to_string())?,
@@ -100,10 +82,8 @@ pub struct JilebiTool {
 #[derive(Debug, Clone, Serialize, Deserialize, Deref)]
 pub struct Tools(pub HashMap<ToolKey, JilebiTool>);
 
-impl TryFrom<&toml::Value> for Tools {
-    type Error = String;
-
-    fn try_from(value: &toml::Value) -> Result<Self, Self::Error> {
+impl Tools {
+    fn try_from(value: &toml::Value, plugin_name: &String) -> Result<Self, String> {
         let map = value
             .as_table()
             .ok_or("Invalid format for Tools section".to_string())?;
@@ -125,7 +105,10 @@ impl TryFrom<&toml::Value> for Tools {
                 "Invalid JSON format for the field input_schema in tool {key}"
             ))?;
             let tool = Tool {
-                name: Cow::from(mandatory_extractor(op_table, key, &"name".to_string())?),
+                name: Cow::from(format!(
+                    "{plugin_name}.{}",
+                    mandatory_extractor(op_table, key, &"name".to_string())?
+                )),
                 description: optional_extractor(op_table, &"description".to_string())
                     .map(Cow::from),
                 input_schema: Arc::new(schema),
@@ -152,10 +135,8 @@ pub type PromptKey = String;
 #[derive(Debug, Clone, Serialize, Deserialize, Deref)]
 pub struct Prompts(pub HashMap<PromptKey, JilebiPrompt>);
 
-impl TryFrom<&toml::Value> for Prompts {
-    type Error = String;
-
-    fn try_from(value: &toml::Value) -> Result<Self, Self::Error> {
+impl Prompts {
+    fn try_from(value: &toml::Value, plugin_name: &String) -> Result<Self, String> {
         let map = value
             .as_table()
             .ok_or("Invalid format for Prompts section".to_string())?;
@@ -184,7 +165,10 @@ impl TryFrom<&toml::Value> for Prompts {
                         .collect()
                 });
             let prompt = Prompt {
-                name: mandatory_extractor(op_table, key, &"name".to_string())?,
+                name: format!(
+                    "{plugin_name}.{}",
+                    mandatory_extractor(op_table, key, &"name".to_string())?
+                ),
                 description: optional_extractor(op_table, &"description".to_string()),
                 arguments: arguments,
             };
@@ -240,16 +224,19 @@ impl TryFrom<toml::Value> for Manifest {
             value
                 .get("resources")
                 .ok_or("The resources section is mandatory".to_string())?,
+            &name,
         )?;
         let tools = Tools::try_from(
             value
                 .get("tools")
                 .ok_or("The tools section is mandatory".to_string())?,
+            &name,
         )?;
         let prompts = Prompts::try_from(
             value
                 .get("prompts")
                 .ok_or("The prompts section is mandatory".to_string())?,
+            &name,
         )?;
         Ok(Self {
             name,
