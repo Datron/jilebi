@@ -106,7 +106,7 @@ impl Tools {
             ))?;
             let tool = Tool {
                 name: Cow::from(format!(
-                    "{plugin_name}.{}",
+                    "{plugin_name}_{}",
                     mandatory_extractor(op_table, key, &"name".to_string())?
                 )),
                 description: optional_extractor(op_table, &"description".to_string())

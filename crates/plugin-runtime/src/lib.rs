@@ -13,7 +13,11 @@ where
         timeout: Duration::from_millis(50),
         ..Default::default()
     })?;
+    let handle = runtime.tokio_runtime();
     let module_handle = runtime.load_module(&module)?;
-    let fn_output = runtime.call_function::<T>(Some(&module_handle), &function, &args)?;
-    Ok(fn_output)
+    handle.block_on(async {
+        runtime
+            .call_function_async::<T>(Some(&module_handle), &function, &args)
+            .await
+    })
 }

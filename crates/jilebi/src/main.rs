@@ -27,10 +27,12 @@ async fn main() -> Result<(), String> {
 // Jilebi MVP
 // MCP Server
 // TODO: support SSE, HTTP
+// TODO: support Resource Template
 // TODO: write logs to a file for debugging
 // TODO: Error handling
 // TODO: add pagination support
 // plugins
+// TODO: validate names to not include _
 // TODO: support dynamic file loads (I've hardcoded the path to the JS file)
 // TODO: support async functions
 // TODO: implement custom logging functions

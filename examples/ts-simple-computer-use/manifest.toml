@@ -17,7 +17,7 @@ mime_type = "text/plain"
 function = "get_processes"
 
 [tools.create-directory]
-name = "create directory"
+name = "create-directory"
 description = "create a new directory using the mkdir command on linux"
 input_schema = { type = "object", properties = { name = { type = "string" } }, required = [
 	"name",

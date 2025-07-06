@@ -15,7 +15,7 @@ use rmcp::{
 };
 use tokio::{runtime::Handle, sync::RwLock};
 
-#[derive(Debug, Clone, derive_more::Display)]
+#[derive(Debug, Clone, derive_more::Display, PartialEq)]
 enum McpSection {
     Resource,
     Tool,
@@ -26,13 +26,17 @@ fn get_plugin_and_section_name(
     name: &String,
     mcp_section: McpSection,
 ) -> Result<(String, String), rmcp::Error> {
-    let mut identifier = name.split(".").into_iter();
+    let mut identifier = if mcp_section == McpSection::Tool {
+        name.split("_").into_iter()
+    } else {
+        name.split(".").into_iter()
+    };
     Ok((
         identifier
             .next()
             .map(str::to_string)
             .ok_or(rmcp::Error::invalid_request(
-                "The name of the prompt is incorrect",
+                "The name of the plugin is incorrect",
                 None,
             ))?,
         identifier
@@ -149,10 +153,15 @@ impl ServerHandler for JilebiMcpServer {
         _context: RequestContext<rmcp::RoleServer>,
     ) -> Result<rmcp::model::CallToolResult, rmcp::Error> {
         let plugins = self.plugins.read().await;
-        let code = fs::read_to_string("examples/ts-simple-computer-use/main.js").map_err(|e| {
-            tracing::error!("Could not find JS file: {}", e);
-            rmcp::Error::internal_error("Could not find the JS file that has the function", None)
-        })?;
+        let code =
+            fs::read_to_string("/home/kartik/jilebi/examples/ts-simple-computer-use/main.js")
+                .map_err(|e| {
+                    tracing::error!("Could not find JS file: {}", e);
+                    rmcp::Error::internal_error(
+                        "Could not find the JS file that has the function",
+                        None,
+                    )
+                })?;
 
         let (plugin_name, tool_name) =
             get_plugin_and_section_name(&request.name.into_owned(), McpSection::Tool)?;
