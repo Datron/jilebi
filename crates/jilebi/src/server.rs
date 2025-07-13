@@ -26,11 +26,7 @@ fn get_plugin_and_section_name(
     name: &String,
     mcp_section: McpSection,
 ) -> Result<(String, String), rmcp::Error> {
-    let mut identifier = if mcp_section == McpSection::Tool {
-        name.split("_").into_iter()
-    } else {
-        name.split(".").into_iter()
-    };
+    let mut identifier = name.split("_").into_iter();
     Ok((
         identifier
             .next()
@@ -52,12 +48,14 @@ fn get_plugin_and_section_name(
 #[derive(Clone, Debug, Default)]
 pub struct JilebiMcpServer {
     pub plugins: Plugins,
+    pub plugin_dir: String,
 }
 
 impl JilebiMcpServer {
-    pub fn new(plugins: HashMap<String, Manifest>) -> Self {
+    pub fn new(plugins: HashMap<String, Manifest>, plugin_dir: String) -> Self {
         JilebiMcpServer {
             plugins: Arc::new(RwLock::new(plugins)),
+            plugin_dir,
         }
     }
 
@@ -153,18 +151,14 @@ impl ServerHandler for JilebiMcpServer {
         _context: RequestContext<rmcp::RoleServer>,
     ) -> Result<rmcp::model::CallToolResult, rmcp::Error> {
         let plugins = self.plugins.read().await;
-        let code =
-            fs::read_to_string("/home/kartik/jilebi/examples/ts-simple-computer-use/main.js")
-                .map_err(|e| {
-                    tracing::error!("Could not find JS file: {}", e);
-                    rmcp::Error::internal_error(
-                        "Could not find the JS file that has the function",
-                        None,
-                    )
-                })?;
 
         let (plugin_name, tool_name) =
             get_plugin_and_section_name(&request.name.into_owned(), McpSection::Tool)?;
+        let code_path = format!("{}/{}/main.js", self.plugin_dir, &plugin_name);
+        let code = fs::read_to_string(code_path).map_err(|e| {
+            tracing::error!("Could not find JS file: {}", e);
+            rmcp::Error::internal_error("Could not find the JS file that has the function", None)
+        })?;
         let plugin = plugins
             .get(&plugin_name)
             .cloned()
@@ -185,7 +179,7 @@ impl ServerHandler for JilebiMcpServer {
         let result = handle
             .spawn_blocking(move || {
                 let args = request.arguments.unwrap_or_default();
-                run_code::<rmcp::model::CallToolResult>(&code, &tool.function, json!(args)).map_err(
+                run_code::<rmcp::model::CallToolResult>(&plugin_name, &code, &tool.function, json!(args)).map_err(
                     |e| {
                         rmcp::Error::internal_error(
                             "The function call for this tool failed",
@@ -256,13 +250,15 @@ impl ServerHandler for JilebiMcpServer {
         _context: RequestContext<rmcp::RoleServer>,
     ) -> Result<rmcp::model::ReadResourceResult, rmcp::Error> {
         let plugins = self.plugins.read().await;
-        let code = fs::read_to_string("examples/ts-simple-computer-use/main.js").map_err(|e| {
-            tracing::error!("Could not find JS file: {}", e);
-            rmcp::Error::internal_error("Could not find the JS file that has the function", None)
-        })?;
 
         let (plugin_name, resource_name) =
             get_plugin_and_section_name(&request.uri, McpSection::Resource)?;
+        let code_path = format!("{}/{}/main.js", self.plugin_dir, &plugin_name);
+
+        let code = fs::read_to_string(code_path).map_err(|e| {
+            tracing::error!("Could not find JS file: {}", e);
+            rmcp::Error::internal_error("Could not find the JS file that has the function", None)
+        })?;
         let plugin = plugins
             .get(&plugin_name)
             .cloned()
@@ -283,9 +279,9 @@ impl ServerHandler for JilebiMcpServer {
 
         let result = handle
             .spawn_blocking(move || {
-                run_code::<rmcp::model::ReadResourceResult>(&code, &resource.function, json!({}))
+                run_code::<rmcp::model::ReadResourceResult>(&plugin_name, &code, &resource.function, json!({}))
                     .map_err(|e| {
-						tracing::error!("Error while running the resource function {}", e);
+                        tracing::error!("Error while running the resource function {}", e);
                         rmcp::Error::internal_error(
                             "The function call for this resource failed",
                             Some(json!(e)),

@@ -52,7 +52,7 @@ impl Resources {
             let resource_name = mandatory_extractor(op_table, key, &"name".to_string())?;
             let resource = Resource::new(
                 RawResource {
-                    uri: format!("{plugin_name}.{resource_name}"),
+                    uri: format!("{plugin_name}_{resource_name}"),
                     name: resource_name,
                     description: optional_extractor(op_table, &"description".to_string()),
                     mime_type: optional_extractor(op_table, &"mime_type".to_string()),
@@ -166,7 +166,7 @@ impl Prompts {
                 });
             let prompt = Prompt {
                 name: format!(
-                    "{plugin_name}.{}",
+                    "{plugin_name}_{}",
                     mandatory_extractor(op_table, key, &"name".to_string())?
                 ),
                 description: optional_extractor(op_table, &"description".to_string()),

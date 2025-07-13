@@ -6,10 +6,10 @@ use server::JilebiMcpServer;
 use tracing::{Level, error, event, info, span};
 use tracing_subscriber::{EnvFilter, fmt, layer::SubscriberExt, util::SubscriberInitExt};
 
-fn load_plugins() -> Result<HashMap<String, Manifest>, String> {
+fn load_plugins() -> Result<(String, HashMap<String, Manifest>), String> {
     let plugin_directory = dotenvy::var("PLUGIN_DIR").unwrap_or("./".into());
     info!("Plugin directory being used -> {}", plugin_directory);
-    let plugin_toml_path = plugin_directory + "/plugins.toml";
+    let plugin_toml_path = plugin_directory.clone() + "/plugins.toml";
     let plugin_toml =
         fs::read_to_string(Path::new(&plugin_toml_path)).map_err(|e| e.to_string())?;
     let plugin_toml = toml::from_str::<toml::Value>(&plugin_toml).map_err(|e| e.to_string())?;
@@ -25,7 +25,8 @@ fn load_plugins() -> Result<HashMap<String, Manifest>, String> {
                 .as_str()
                 .and_then(|manifest_path| {
                     let manifest =
-                        fs::read_to_string(manifest_path).expect("Manifest file not found");
+                        fs::read_to_string(plugin_directory.clone() + "/" + manifest_path)
+                            .expect("Manifest file not found");
                     let manifest = toml::from_str::<toml::Value>(&manifest)
                         .expect("Could not parse toml file");
                     Manifest::try_from(manifest).map_err(|e| error!(e)).ok()
@@ -34,13 +35,13 @@ fn load_plugins() -> Result<HashMap<String, Manifest>, String> {
             (manifest.name.clone(), manifest)
         })
         .collect::<HashMap<String, Manifest>>();
-    Ok(manifests)
+    Ok((plugin_directory, manifests))
 }
 
 #[tokio::main]
 async fn main() -> Result<(), String> {
     dotenvy::dotenv().map_err(|e| e.to_string())?;
-    let file_appender = tracing_appender::rolling::hourly(
+    let file_appender = tracing_appender::rolling::never(
         dotenvy::var("LOG_PATH").unwrap_or("./logs".into()),
         dotenvy::var("LOG_FILE").unwrap_or("jilebi.log".into()),
     );
@@ -52,10 +53,10 @@ async fn main() -> Result<(), String> {
 
     let main_span = span!(Level::INFO, "Jilebi Server started");
     let _ = main_span.enter();
-    let plugins = load_plugins()?;
+    let (dir, plugins) = load_plugins()?;
 
     event!(Level::INFO, ?plugins, "Plugins and manifests loaded");
-    let server = JilebiMcpServer::new(plugins);
+    let server = JilebiMcpServer::new(plugins, dir);
 
     let service = server.serve(stdio()).await.map_err(|e| {
         tracing::error!("Serving error: {:?}", e);

@@ -1,9 +1,9 @@
 export function get_files(request, env) {
-	// console.log("get_files called with args ", request, env);
+	console.info("get_files called with args ", request, env);
 	return {
 		contents: [
 			{
-				uri: "file://main.js",
+				uri: "file://man.js",
 				text: "main.js"
 			}
 		]

@@ -960,10 +960,15 @@ dependencies = [
 name = "dosa"
 version = "0.1.0"
 dependencies = [
+ "deno_core",
+ "dotenvy",
  "rustyscript",
  "serde",
  "serde_json",
  "tokio",
+ "tracing",
+ "tracing-appender",
+ "tracing-subscriber",
 ]
 
 [[package]]
