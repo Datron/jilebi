@@ -49,24 +49,24 @@ fn get_plugin_and_section_name(
     ))
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct JilebiMcpServer {
     pub plugins: Plugins,
 }
 
 impl JilebiMcpServer {
-    pub fn new() -> Self {
+    pub fn new(plugins: HashMap<String, Manifest>) -> Self {
         JilebiMcpServer {
-            plugins: Arc::new(RwLock::new(HashMap::new())),
+            plugins: Arc::new(RwLock::new(plugins)),
         }
     }
 
-    pub async fn add(&mut self, plugin: Manifest) {
-        self.plugins
-            .write()
-            .await
-            .insert(plugin.name.clone(), plugin);
-    }
+    // pub async fn add(&mut self, plugin: Manifest) {
+    //     self.plugins
+    //         .write()
+    //         .await
+    //         .insert(plugin.name.clone(), plugin);
+    // }
 }
 
 impl ServerHandler for JilebiMcpServer {
