@@ -29,6 +29,7 @@ fn load_plugins() -> Result<(String, HashMap<String, Manifest>), String> {
                             .expect("Manifest file not found");
                     let manifest = toml::from_str::<toml::Value>(&manifest)
                         .expect("Could not parse toml file");
+					tracing::info!("Toml file loaded for path {manifest_path}: {manifest:#?}");
                     Manifest::try_from(manifest).map_err(|e| error!(e)).ok()
                 })
                 .expect("Could not parse manifest file");
@@ -73,14 +74,20 @@ async fn main() -> Result<(), String> {
 // TODO: Error handling
 // TODO: add pagination support
 // plugins
+// TODO: Support * to allow_all in permissions
 // TODO: validate names to not include _
-// TODO: implement custom logging functions
+// TODO: Write 10 most popular MCPs as plugins
 // TODO: implement custom file read/write functions
-// TODO: implement custom network functions
 
+// installing plugins
+// TODO: think about a UI (leptos) and TUI over ssh (ratatui) for remote stuff
 // TODO: make it easy to manage with a store
 // TODO: let folks specify mc plugins from github or file system or URL
 
 // Beyond MVP
 // UI
-// TODO: think about a UI (leptos) and TUI over ssh (ratatui) for remote stuff
+// TODO: implement the permissions module
+		// - Let users choose which resources, prompts and tools can be shown to the llm
+		// - Let users choose the permissions allowed - which files, directories can be accessed
+		// - Let users choose the permissions allowed - which domains can be hit
+// TODO: show plugin logs and configs in the UI

@@ -9,6 +9,13 @@ name = "list files"
 description = "list some files from a directory"
 mime_type = "text/plain"
 function = "get_files"
+[resources.list-files.permissions]
+urls = ["https://jsonplaceholder.typicode.com/todos/1"]
+config_keys = [""]
+read_files = [""]
+write_files = [""]
+read_dirs = [""]
+write_dirs = [""]
 
 [resources.list-processes]
 name = "list processes"

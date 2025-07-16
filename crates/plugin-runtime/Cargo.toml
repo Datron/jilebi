@@ -4,7 +4,12 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-rustyscript = "0.11.0"
+jilebi_types = { path = "../jilebi_types" }
+reqwest = "=0.12.8"
+rustyscript = { version = "0.11.0", default-features = false, features = [
+	"fs",
+	"web",
+] }
 deno_core = "0.323.0"
 dotenvy = { workspace = true }
 serde = { workspace = true }

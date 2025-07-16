@@ -179,14 +179,19 @@ impl ServerHandler for JilebiMcpServer {
         let result = handle
             .spawn_blocking(move || {
                 let args = request.arguments.unwrap_or_default();
-                run_code::<rmcp::model::CallToolResult>(&plugin_name, &code, &tool.function, json!(args)).map_err(
-                    |e| {
-                        rmcp::Error::internal_error(
-                            "The function call for this tool failed",
-                            Some(json!(e)),
-                        )
-                    },
+                run_code::<rmcp::model::CallToolResult>(
+                    &plugin_name,
+                    &code,
+                    &tool.function,
+                    json!(args),
+                    &tool.permissions,
                 )
+                .map_err(|e| {
+                    rmcp::Error::internal_error(
+                        "The function call for this tool failed",
+                        Some(json!(e)),
+                    )
+                })
             })
             .await
             .map_err(|e| {
@@ -279,14 +284,20 @@ impl ServerHandler for JilebiMcpServer {
 
         let result = handle
             .spawn_blocking(move || {
-                run_code::<rmcp::model::ReadResourceResult>(&plugin_name, &code, &resource.function, json!({}))
-                    .map_err(|e| {
-                        tracing::error!("Error while running the resource function {}", e);
-                        rmcp::Error::internal_error(
-                            "The function call for this resource failed",
-                            Some(json!(e)),
-                        )
-                    })
+                run_code::<rmcp::model::ReadResourceResult>(
+                    &plugin_name,
+                    &code,
+                    &resource.function,
+                    json!({}),
+                    &resource.permissions,
+                )
+                .map_err(|e| {
+                    tracing::error!("Error while running the resource function {}", e);
+                    rmcp::Error::internal_error(
+                        "The function call for this resource failed",
+                        Some(json!(e)),
+                    )
+                })
             })
             .await
             .map_err(|e| {

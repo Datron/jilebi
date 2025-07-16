@@ -7,7 +7,6 @@ fn op_trace(#[string] msg: &str) {
 
 #[op2(fast)]
 fn op_info(#[string] msg: &str) {
-    tracing::info!("Hello from console.info");
     tracing::info!(msg);
 }
 

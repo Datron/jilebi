@@ -8,6 +8,26 @@ use rmcp::model::{
 use serde::{Deserialize, Serialize};
 use toml::Table;
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Permissions {
+	#[serde(default = "Vec::new")]
+    pub hosts: Vec<String>,
+	#[serde(default = "Vec::new")]
+    pub urls: Vec<String>,
+	#[serde(default = "Vec::new")]
+    pub http_methods: Vec<String>,
+	#[serde(default = "Vec::new")]
+    pub config_keys: Vec<String>,
+	#[serde(default = "Vec::new")]
+    pub read_files: Vec<String>,
+	#[serde(default = "Vec::new")]
+    pub write_files: Vec<String>,
+	#[serde(default = "Vec::new")]
+    pub read_dirs: Vec<String>,
+	#[serde(default = "Vec::new")]
+    pub write_dirs: Vec<String>,
+}
+
 fn mandatory_extractor(op_table: &Table, key: &String, field: &String) -> Result<String, String> {
     op_table
         .get(field)
@@ -25,12 +45,20 @@ fn optional_extractor(op_table: &Table, field: &String) -> Option<String> {
         .and_then(|i| i.as_str().map(str::to_string))
 }
 
+fn permissions_extractor(op_table: &Table) -> Option<Permissions> {
+    op_table
+        .get("permissions")
+        .cloned()
+        .and_then(|permissions| permissions.try_into().ok())
+}
+
 pub type ResourceKey = String;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct JilebiResource {
     pub resource: Resource,
     pub function: String,
+    pub permissions: Option<Permissions>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Deref)]
@@ -64,6 +92,7 @@ impl Resources {
             let jilebi_resource = JilebiResource {
                 resource,
                 function: mandatory_extractor(op_table, key, &"function".to_string())?,
+                permissions: permissions_extractor(op_table),
             };
             resource_map.insert(key.to_string(), jilebi_resource);
         }
@@ -77,6 +106,7 @@ pub type ToolKey = String;
 pub struct JilebiTool {
     pub tool: Tool,
     pub function: String,
+    pub permissions: Option<Permissions>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Deref)]
@@ -117,6 +147,7 @@ impl Tools {
             let jilebi_tool = JilebiTool {
                 tool,
                 function: mandatory_extractor(op_table, key, &"function".to_string())?,
+                permissions: permissions_extractor(op_table),
             };
             tools_map.insert(key.to_string(), jilebi_tool);
         }
