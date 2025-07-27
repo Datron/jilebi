@@ -10,18 +10,22 @@ description = "list some files from a directory"
 mime_type = "text/plain"
 function = "get_files"
 [resources.list-files.permissions]
+# hosts = ["https://jsonplaceholder.typicode.com"]
 urls = ["https://jsonplaceholder.typicode.com/todos/1"]
-config_keys = [""]
-read_files = [""]
-write_files = [""]
-read_dirs = [""]
-write_dirs = [""]
+# config_keys = [""]
+# read_files = [""]
+# write_files = [""]
+# read_dirs = [""]
+# write_dirs = [""]
 
 [resources.list-processes]
 name = "list processes"
 description = "list all processes running"
 mime_type = "text/plain"
 function = "get_processes"
+[resources.list-processes.permissions]
+# read_files = ["/home/kartik/jilebi/plugins/ts-simple-computer-use/test.txt"]
+read_dirs = ["/home/kartik/jilebi/plugins/ts-simple-computer-use"]
 
 [tools.create-directory]
 name = "create-directory"

@@ -17,11 +17,8 @@ export async function get_files(request, env) {
 
 export async function get_processes(request, env) {
 	console.log("get_processes called with args ", request, env);
-	let response = await fetch('https://jsonplaceholder.typicode.com/todos/1');
-	let data = await response.json();
-	console.log(data);
-	// let file = Deno.readTextFileSync("/home/kartik/jilebi/plugins/ts-simple-computer-use/main.js");
-	// console.log("disallowed file read", file);
+	let file = Deno.readTextFileSync("/home/kartik/jilebi/plugins/ts-simple-computer-use/test.txt");
+	console.log("allowed file read", file);
 	return {
 		contents: [
 			{

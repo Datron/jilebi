@@ -8,25 +8,7 @@ use rmcp::model::{
 use serde::{Deserialize, Serialize};
 use toml::Table;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Permissions {
-	#[serde(default = "Vec::new")]
-    pub hosts: Vec<String>,
-	#[serde(default = "Vec::new")]
-    pub urls: Vec<String>,
-	#[serde(default = "Vec::new")]
-    pub http_methods: Vec<String>,
-	#[serde(default = "Vec::new")]
-    pub config_keys: Vec<String>,
-	#[serde(default = "Vec::new")]
-    pub read_files: Vec<String>,
-	#[serde(default = "Vec::new")]
-    pub write_files: Vec<String>,
-	#[serde(default = "Vec::new")]
-    pub read_dirs: Vec<String>,
-	#[serde(default = "Vec::new")]
-    pub write_dirs: Vec<String>,
-}
+use crate::permissions::JilebiPermissions;
 
 fn mandatory_extractor(op_table: &Table, key: &String, field: &String) -> Result<String, String> {
     op_table
@@ -45,7 +27,7 @@ fn optional_extractor(op_table: &Table, field: &String) -> Option<String> {
         .and_then(|i| i.as_str().map(str::to_string))
 }
 
-fn permissions_extractor(op_table: &Table) -> Option<Permissions> {
+fn permissions_extractor(op_table: &Table) -> Option<JilebiPermissions> {
     op_table
         .get("permissions")
         .cloned()
@@ -58,7 +40,7 @@ pub type ResourceKey = String;
 pub struct JilebiResource {
     pub resource: Resource,
     pub function: String,
-    pub permissions: Option<Permissions>,
+    pub permissions: Option<JilebiPermissions>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Deref)]
@@ -106,7 +88,7 @@ pub type ToolKey = String;
 pub struct JilebiTool {
     pub tool: Tool,
     pub function: String,
-    pub permissions: Option<Permissions>,
+    pub permissions: Option<JilebiPermissions>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Deref)]

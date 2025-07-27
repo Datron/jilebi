@@ -1183,11 +1183,11 @@ dependencies = [
 
 [[package]]
 name = "deno_unsync"
-version = "0.4.2"
+version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d774fd83f26b24f0805a6ab8b26834a0d06ceac0db517b769b1e4633c96a2057"
+checksum = "6742a724e8becb372a74c650a1aefb8924a5b8107f7d75b3848763ea24b27a87"
 dependencies = [
- "futures",
+ "futures-util",
  "parking_lot",
  "tokio",
 ]
@@ -2371,6 +2371,7 @@ dependencies = [
  "jsonschema",
  "mime",
  "rmcp",
+ "rustyscript",
  "serde",
  "serde_json",
  "strum 0.27.1",

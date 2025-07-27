@@ -70,22 +70,23 @@ async fn main() -> Result<(), String> {
 // Jilebi MVP
 // MCP Server
 // TODO: support SSE, HTTP
-// TODO: support Resource Template
 // TODO: Error handling
+// TODO: support Resource Template
 // TODO: add pagination support
 // plugins
-// TODO: Support * to allow_all in permissions
+// TODO: (Is this needed?) Support * to allow_all in permissions
 // TODO: validate names to not include _
 // TODO: Write 10 most popular MCPs as plugins
-// TODO: implement custom file read/write functions
 
 // installing plugins
-// TODO: think about a UI (leptos) and TUI over ssh (ratatui) for remote stuff
-// TODO: make it easy to manage with a store
 // TODO: let folks specify mc plugins from github or file system or URL
 
 // Beyond MVP
+// plugin management
+// TODO: make it easy to manage with a store
 // UI
+// TODO: think about a UI (leptos) and TUI over ssh (ratatui) for remote stuff
+// plugins
 // TODO: implement the permissions module
 		// - Let users choose which resources, prompts and tools can be shown to the llm
 		// - Let users choose the permissions allowed - which files, directories can be accessed
