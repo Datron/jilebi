@@ -1,3 +1,1 @@
-manifest = [
-	"ts-simple-computer-use/manifest.toml"
-]
+manifest = ["ts-simple-computer-use/manifest.toml", "time/manifest.toml"]

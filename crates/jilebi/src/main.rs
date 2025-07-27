@@ -53,7 +53,7 @@ async fn main() -> Result<(), String> {
         .init();
 
     let main_span = span!(Level::INFO, "Jilebi Server started");
-    let _ = main_span.enter();
+    let _guard = main_span.enter();
     let (dir, plugins) = load_plugins()?;
 
     event!(Level::INFO, ?plugins, "Plugins and manifests loaded");
@@ -77,6 +77,15 @@ async fn main() -> Result<(), String> {
 // TODO: (Is this needed?) Support * to allow_all in permissions
 // TODO: validate names to not include _
 // TODO: Write 10 most popular MCPs as plugins
+//			- Memory
+//			- Sequential thinking
+//			- Git
+//			- Playwright 
+//			- filesystem
+//			- https://github.com/awslabs/mcp/tree/main/src/aws-documentation-mcp-server
+//			- https://github.com/abhiemj/manim-mcp-server
+//			- https://github.com/microsoft/playwright-mcp
+//			- https://github.com/upstash/context7
 
 // installing plugins
 // TODO: let folks specify mc plugins from github or file system or URL

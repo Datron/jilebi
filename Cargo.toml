@@ -14,7 +14,7 @@ toml = "0.8.20"
 tracing = "0.1.41"
 tracing-appender = "0.2.3"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
-rmcp = { git = "https://github.com/modelcontextprotocol/rust-sdk", rev = "a66f66ae345a0fafde1e2ee496ec137d77aef82a", features = [
+rmcp = { version = "0.3.0", features = [
 	"server",
 	"transport-io",
 	"transport-sse-server",

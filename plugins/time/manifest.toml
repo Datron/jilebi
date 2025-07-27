@@ -1,0 +1,39 @@
+name = "time"
+version = "1.0"
+homepage = "github.com"
+creator = "jilebi"
+contact = "support@jilebi.ai"
+
+[resources]
+
+[tools.get-current-time]
+input_schema = { "type" = "object", "properties" = { "timezone" = { "type" = "string", "description" = "IANA timezone name (e.g., 'America/New_York', 'Europe/London'). Use '{local_tz}' as local timezone if no timezone provided by the user." } }, "required" = [
+	"timezone",
+] }
+name = "get-current-time"
+description = "Get current time in a specific timezones"
+function = "get_current_time"
+[tools.get-current-time.annotations]
+title = "Current Time"
+read_only_hint = false
+destructive_hint = false
+idempotent_hint = true
+open_world_hint = false
+
+[tools.convert-time]
+input_schema = { "type" = "object", "properties" = { "source_timezone" = { "type" = "string", "description" = "IANA timezone name (e.g., 'America/New_York', 'Europe/London'). Use '{local_tz}' as local timezone if no timezone provided by the user." }, "target_timezone" = { "type" = "string", "description" = "IANA timezone name (e.g., 'America/New_York', 'Europe/London'). Use '{local_tz}' as local timezone if no timezone provided by the user." }, "time" = { "type" = "string", "description" = "Time to convert in 24-hour format (HH=MM)" } }, "required" = [
+	"source_timezone",
+	"time",
+	"target_timezone",
+] }
+name = "convert-time"
+description = "Convert time between timezones"
+function = "convert_time"
+[tools.convert-time.annotations]
+title = "Convert Time"
+read_only_hint = false
+destructive_hint = false
+idempotent_hint = true
+open_world_hint = true
+
+[prompts]

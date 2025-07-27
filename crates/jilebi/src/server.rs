@@ -25,20 +25,20 @@ enum McpSection {
 fn get_plugin_and_section_name(
     name: &String,
     mcp_section: McpSection,
-) -> Result<(String, String), rmcp::Error> {
+) -> Result<(String, String), rmcp::ErrorData> {
     let mut identifier = name.split("_").into_iter();
     Ok((
         identifier
             .next()
             .map(str::to_string)
-            .ok_or(rmcp::Error::invalid_request(
+            .ok_or(rmcp::ErrorData::invalid_request(
                 "The name of the plugin is incorrect",
                 None,
             ))?,
         identifier
             .next()
             .map(|p| p.replace(" ", "-"))
-            .ok_or(rmcp::Error::invalid_request(
+            .ok_or(rmcp::ErrorData::invalid_request(
                 format!("The name of the {mcp_section} is incorrect"),
                 None,
             ))?,
@@ -72,7 +72,7 @@ impl ServerHandler for JilebiMcpServer {
         &self,
         request: InitializeRequestParam,
         context: RequestContext<rmcp::RoleServer>,
-    ) -> Result<InitializeResult, rmcp::Error> {
+    ) -> Result<InitializeResult, rmcp::ErrorData> {
         if context.peer.peer_info().is_none() {
             context.peer.set_peer_info(request);
         }
@@ -99,7 +99,7 @@ impl ServerHandler for JilebiMcpServer {
         &self,
         _request: Option<PaginatedRequestParam>,
         _context: RequestContext<rmcp::RoleServer>,
-    ) -> Result<ListPromptsResult, rmcp::Error> {
+    ) -> Result<ListPromptsResult, rmcp::ErrorData> {
         let mut prompts: Vec<Prompt> = Vec::new();
         let plugins = self.plugins.read().await;
         for (_, plugin) in plugins.iter() {
@@ -120,7 +120,7 @@ impl ServerHandler for JilebiMcpServer {
         &self,
         request: GetPromptRequestParam,
         context: RequestContext<rmcp::RoleServer>,
-    ) -> Result<GetPromptResult, rmcp::Error> {
+    ) -> Result<GetPromptResult, rmcp::ErrorData> {
         tracing::debug!("request ID for get_prompt: {}", context.id);
         let (plugin_name, prompt_name) =
             get_plugin_and_section_name(&request.name, McpSection::Prompt)?;
@@ -128,14 +128,14 @@ impl ServerHandler for JilebiMcpServer {
         let plugins = self.plugins.read().await;
         let plugin = plugins
             .get(&plugin_name)
-            .ok_or(rmcp::Error::invalid_request(
+            .ok_or(rmcp::ErrorData::invalid_request(
                 "The plugin name provided is either invalid or has been removed",
                 None,
             ))?;
         let prompt = plugin
             .prompts
             .get(&prompt_name)
-            .ok_or(rmcp::Error::invalid_request(
+            .ok_or(rmcp::ErrorData::invalid_request(
                 "The prompt name provided is either invalid or has been removed",
                 None,
             ))?;
@@ -149,20 +149,20 @@ impl ServerHandler for JilebiMcpServer {
         &self,
         request: rmcp::model::CallToolRequestParam,
         _context: RequestContext<rmcp::RoleServer>,
-    ) -> Result<rmcp::model::CallToolResult, rmcp::Error> {
+    ) -> Result<rmcp::model::CallToolResult, rmcp::ErrorData> {
         let plugins = self.plugins.read().await;
 
         let (plugin_name, tool_name) =
             get_plugin_and_section_name(&request.name.into_owned(), McpSection::Tool)?;
-        let code_path = format!("{}/{}/main.js", self.plugin_dir, &plugin_name);
+        let code_path = format!("{}/{}/index.js", self.plugin_dir, &plugin_name);
         let code = fs::read_to_string(code_path).map_err(|e| {
             tracing::error!("Could not find JS file: {}", e);
-            rmcp::Error::internal_error("Could not find the JS file that has the function", None)
+            rmcp::ErrorData::internal_error("Could not find the JS file that has the function", None)
         })?;
         let plugin = plugins
             .get(&plugin_name)
             .cloned()
-            .ok_or(rmcp::Error::invalid_request(
+            .ok_or(rmcp::ErrorData::invalid_request(
                 "The plugin name provided is either invalid or has been removed",
                 None,
             ))?;
@@ -170,7 +170,7 @@ impl ServerHandler for JilebiMcpServer {
             .tools
             .get(&tool_name)
             .cloned()
-            .ok_or(rmcp::Error::invalid_request(
+            .ok_or(rmcp::ErrorData::invalid_request(
                 "The tool name provided is either invalid or has been removed",
                 None,
             ))?;
@@ -187,7 +187,7 @@ impl ServerHandler for JilebiMcpServer {
                     &tool.permissions,
                 )
                 .map_err(|e| {
-                    rmcp::Error::internal_error(
+                    rmcp::ErrorData::internal_error(
                         "The function call for this tool failed",
                         Some(json!(e)),
                     )
@@ -196,7 +196,7 @@ impl ServerHandler for JilebiMcpServer {
             .await
             .map_err(|e| {
                 tracing::error!("An error occurred while joining the thread: {e}");
-                rmcp::Error::internal_error("The function call for this tool failed", None)
+                rmcp::ErrorData::internal_error("The function call for this tool failed", None)
             })??;
 
         Ok(result)
@@ -206,7 +206,7 @@ impl ServerHandler for JilebiMcpServer {
         &self,
         _request: Option<PaginatedRequestParam>,
         _context: RequestContext<rmcp::RoleServer>,
-    ) -> Result<rmcp::model::ListToolsResult, rmcp::Error> {
+    ) -> Result<rmcp::model::ListToolsResult, rmcp::ErrorData> {
         let mut tools: Vec<Tool> = Vec::new();
         tracing::info!("Listing tools");
         let plugins = self.plugins.read().await;
@@ -232,7 +232,7 @@ impl ServerHandler for JilebiMcpServer {
         &self,
         _request: Option<PaginatedRequestParam>,
         _context: RequestContext<rmcp::RoleServer>,
-    ) -> Result<ListResourcesResult, rmcp::Error> {
+    ) -> Result<ListResourcesResult, rmcp::ErrorData> {
         let mut resources: Vec<Resource> = Vec::new();
         let plugins = self.plugins.read().await;
         for (_, plugin) in plugins.iter() {
@@ -253,21 +253,21 @@ impl ServerHandler for JilebiMcpServer {
         &self,
         request: rmcp::model::ReadResourceRequestParam,
         _context: RequestContext<rmcp::RoleServer>,
-    ) -> Result<rmcp::model::ReadResourceResult, rmcp::Error> {
+    ) -> Result<rmcp::model::ReadResourceResult, rmcp::ErrorData> {
         let plugins = self.plugins.read().await;
 
         let (plugin_name, resource_name) =
             get_plugin_and_section_name(&request.uri, McpSection::Resource)?;
-        let code_path = format!("{}/{}/main.js", self.plugin_dir, &plugin_name);
+        let code_path = format!("{}/{}/index.js", self.plugin_dir, &plugin_name);
 
         let code = fs::read_to_string(code_path).map_err(|e| {
             tracing::error!("Could not find JS file: {}", e);
-            rmcp::Error::internal_error("Could not find the JS file that has the function", None)
+            rmcp::ErrorData::internal_error("Could not find the JS file that has the function", None)
         })?;
         let plugin = plugins
             .get(&plugin_name)
             .cloned()
-            .ok_or(rmcp::Error::invalid_request(
+            .ok_or(rmcp::ErrorData::invalid_request(
                 "The plugin name provided is either invalid or has been removed",
                 None,
             ))?;
@@ -276,7 +276,7 @@ impl ServerHandler for JilebiMcpServer {
                 .resources
                 .get(&resource_name)
                 .cloned()
-                .ok_or(rmcp::Error::invalid_request(
+                .ok_or(rmcp::ErrorData::invalid_request(
                     "The resource name provided is either invalid or has been removed",
                     None,
                 ))?;
@@ -293,7 +293,7 @@ impl ServerHandler for JilebiMcpServer {
                 )
                 .map_err(|e| {
                     tracing::error!("Error while running the resource function {}", e);
-                    rmcp::Error::internal_error(
+                    rmcp::ErrorData::internal_error(
                         "The function call for this resource failed",
                         Some(json!(e)),
                     )
@@ -302,7 +302,7 @@ impl ServerHandler for JilebiMcpServer {
             .await
             .map_err(|e| {
                 tracing::error!("An error occurred while joining the thread: {e}");
-                rmcp::Error::internal_error("The function call for this resource failed", None)
+                rmcp::ErrorData::internal_error("The function call for this resource failed", None)
             })??;
 
         Ok(result)
