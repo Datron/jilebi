@@ -48,7 +48,7 @@ class SequentialThinkingProcessor {
 	private disableThoughtLogging: boolean;
 
 	constructor() {
-		this.disableThoughtLogging = (process.env.DISABLE_THOUGHT_LOGGING || "").toLowerCase() === "true";
+		this.disableThoughtLogging = true;
 	}
 
 	private validateThoughtData(input: SequentialThinkingRequest): ThoughtData {

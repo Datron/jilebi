@@ -29,7 +29,7 @@ fn load_plugins() -> Result<(String, HashMap<String, Manifest>), String> {
                             .expect("Manifest file not found");
                     let manifest = toml::from_str::<toml::Value>(&manifest)
                         .expect("Could not parse toml file");
-					tracing::info!("Toml file loaded for path {manifest_path}: {manifest:#?}");
+                    tracing::info!("Toml file loaded for path {manifest_path}: {manifest:#?}");
                     Manifest::try_from(manifest).map_err(|e| error!(e)).ok()
                 })
                 .expect("Could not parse manifest file");
@@ -41,7 +41,9 @@ fn load_plugins() -> Result<(String, HashMap<String, Manifest>), String> {
 
 #[tokio::main]
 async fn main() -> Result<(), String> {
-    dotenvy::dotenv().map_err(|e| e.to_string())?;
+    dotenvy::dotenv()
+        .map_err(|e| e.to_string())
+        .unwrap_or_default();
     let file_appender = tracing_appender::rolling::never(
         dotenvy::var("LOG_PATH").unwrap_or("./logs".into()),
         dotenvy::var("LOG_FILE").unwrap_or("jilebi.log".into()),
@@ -54,6 +56,7 @@ async fn main() -> Result<(), String> {
 
     let main_span = span!(Level::INFO, "Jilebi Server started");
     let _guard = main_span.enter();
+    info!("Starting Jilebi Server, loading plugins...");
     let (dir, plugins) = load_plugins()?;
 
     event!(Level::INFO, ?plugins, "Plugins and manifests loaded");
@@ -77,14 +80,11 @@ async fn main() -> Result<(), String> {
 // TODO: (Is this needed?) Support * to allow_all in permissions
 // TODO: validate names to not include _
 // TODO: Write 10 most popular MCPs as plugins
-//			- Memory
-//			- Sequential thinking
 //			- Git
-//			- Playwright 
+//			- Playwright = https://github.com/microsoft/playwright-mcp
 //			- filesystem
 //			- https://github.com/awslabs/mcp/tree/main/src/aws-documentation-mcp-server
 //			- https://github.com/abhiemj/manim-mcp-server
-//			- https://github.com/microsoft/playwright-mcp
 //			- https://github.com/upstash/context7
 
 // installing plugins
@@ -97,7 +97,7 @@ async fn main() -> Result<(), String> {
 // TODO: think about a UI (leptos) and TUI over ssh (ratatui) for remote stuff
 // plugins
 // TODO: implement the permissions module
-		// - Let users choose which resources, prompts and tools can be shown to the llm
-		// - Let users choose the permissions allowed - which files, directories can be accessed
-		// - Let users choose the permissions allowed - which domains can be hit
+// - Let users choose which resources, prompts and tools can be shown to the llm
+// - Let users choose the permissions allowed - which files, directories can be accessed
+// - Let users choose the permissions allowed - which domains can be hit
 // TODO: show plugin logs and configs in the UI
