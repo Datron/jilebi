@@ -1,0 +1,151 @@
+name = "memory"
+version = "0.6.3"
+homepage = "github.com"
+creator = "anthropic"
+contact = "support@anthropic.com"
+
+[resources]
+
+[prompts]
+
+[tools.create-entities]
+input_schema = { "type" = "object", "properties" = { "entities" = { "type" = "array", "items" = { "type" = "object", "properties" = { "name" = { "type" = "string", "description" = "The name of the entity" }, "entityType" = { "type" = "string", "description" = "The type of the entity" }, "observations" = { "type" = "array", "items" = { "type" = "string" }, "description" = "An array of observation contents associated with the entity" } }, "required" = [
+	"name",
+	"entityType",
+	"observations",
+] } } }, "required" = [
+	"entities",
+] }
+name = "create-entities"
+description = "Create multiple new entities in the knowledge graph"
+function = "create_entities"
+[tools.create-entities.annotations]
+title = "Create Entities"
+read_only_hint = false
+destructive_hint = false
+idempotent_hint = true
+open_world_hint = false
+
+[tools.create-relations]
+input_schema = { "type" = "object", "properties" = { "relations" = { "type" = "array", "items" = { "type" = "object", "properties" = { "from" = { "type" = "string", "description" = "The name of the entity where the relation starts" }, "to" = { "type" = "string", "description" = "The name of the entity where the relation ends" }, "relationType" = { "type" = "string", "description" = "The type of the relation" } }, "required" = [
+	"from",
+	"to",
+	"relationType",
+] } } }, "required" = [
+	"relations",
+] }
+name = "create-relations"
+description = "Create multiple new relations between entities in the knowledge graph. Relations should be in active voice"
+function = "create_relations"
+[tools.create-relations.annotations]
+title = "Create Relations"
+read_only_hint = false
+destructive_hint = false
+idempotent_hint = true
+open_world_hint = false
+
+[tools.add-observations]
+input_schema = { "type" = "object", "properties" = { "observations" = { "type" = "array", "items" = { "type" = "object", "properties" = { "entityName" = { "type" = "string", "description" = "The name of the entity to add the observations to" }, "contents" = { "type" = "array", "items" = { "type" = "string" }, "description" = "An array of observation contents to add" } }, "required" = [
+	"entityName",
+	"contents",
+] } } }, "required" = [
+	"observations",
+] }
+name = "add-observations"
+description = "Add new observations to existing entities in the knowledge graph"
+function = "add_observations"
+[tools.add-observations.annotations]
+title = "Add Observations"
+read_only_hint = false
+destructive_hint = false
+idempotent_hint = false
+open_world_hint = false
+
+[tools.delete-entities]
+input_schema = { "type" = "object", "properties" = { "entityNames" = { "type" = "array", "items" = { "type" = "string" }, "description" = "An array of entity names to delete" } }, "required" = [
+	"entityNames",
+] }
+name = "delete-entities"
+description = "Delete multiple entities and their associated relations from the knowledge graph"
+function = "delete_entities"
+[tools.delete-entities.annotations]
+title = "Delete Entities"
+read_only_hint = false
+destructive_hint = true
+idempotent_hint = true
+open_world_hint = false
+
+[tools.delete-observations]
+input_schema = { "type" = "object", "properties" = { "deletions" = { "type" = "array", "items" = { "type" = "object", "properties" = { "entityName" = { "type" = "string", "description" = "The name of the entity containing the observations" }, "observations" = { "type" = "array", "items" = { "type" = "string" }, "description" = "An array of observations to delete" } }, "required" = [
+	"entityName",
+	"observations",
+] } } }, "required" = [
+	"deletions",
+] }
+name = "delete-observations"
+description = "Delete specific observations from entities in the knowledge graph"
+function = "delete_observations"
+[tools.delete-observations.annotations]
+title = "Delete Observations"
+read_only_hint = false
+destructive_hint = true
+idempotent_hint = false
+open_world_hint = false
+
+[tools.delete-relations]
+input_schema = { "type" = "object", "properties" = { "relations" = { "type" = "array", "items" = { "type" = "object", "properties" = { "from" = { "type" = "string", "description" = "The name of the entity where the relation starts" }, "to" = { "type" = "string", "description" = "The name of the entity where the relation ends" }, "relationType" = { "type" = "string", "description" = "The type of the relation" } }, "required" = [
+	"from",
+	"to",
+	"relationType",
+] } } }, "required" = [
+	"relations",
+] }
+name = "delete-relations"
+description = "Delete multiple relations from the knowledge graph"
+function = "delete_relations"
+[tools.delete-relations.annotations]
+title = "Delete Relations"
+read_only_hint = false
+destructive_hint = true
+idempotent_hint = true
+open_world_hint = false
+
+[tools.read-graph]
+input_schema = { "type" = "object", "properties" = {} }
+name = "read-graph"
+description = "Read the entire knowledge graph"
+function = "read_graph"
+[tools.read-graph.annotations]
+title = "Read Graph"
+read_only_hint = true
+destructive_hint = false
+idempotent_hint = true
+open_world_hint = false
+
+[tools.search-nodes]
+input_schema = { "type" = "object", "properties" = { "query" = { "type" = "string", "description" = "The search query to match against entity names, types, and observation content" } }, "required" = [
+	"query",
+] }
+name = "search-nodes"
+description = "Search for nodes in the knowledge graph based on a query"
+function = "search_nodes"
+[tools.search-nodes.annotations]
+title = "Search Nodes"
+read_only_hint = true
+destructive_hint = false
+idempotent_hint = true
+open_world_hint = true
+
+[tools.open-nodes]
+input_schema = { "type" = "object", "properties" = { "names" = { "type" = "array", "items" = { "type" = "string" }, "description" = "An array of entity names to retrieve" } }, "required" = [
+	"names",
+] }
+name = "open-nodes"
+description = "Open specific nodes in the knowledge graph by their names"
+function = "open_nodes"
+[tools.open-nodes.annotations]
+title = "Open Nodes"
+read_only_hint = true
+destructive_hint = false
+idempotent_hint = true
+open_world_hint = false
