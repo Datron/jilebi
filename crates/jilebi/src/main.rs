@@ -10,9 +10,19 @@ fn load_plugins() -> Result<(String, HashMap<String, Manifest>), String> {
     let plugin_directory = dotenvy::var("PLUGIN_DIR").unwrap_or("./".into());
     info!("Plugin directory being used -> {}", plugin_directory);
     let plugin_toml_path = plugin_directory.clone() + "/plugins.toml";
-    let plugin_toml =
-        fs::read_to_string(Path::new(&plugin_toml_path)).map_err(|e| e.to_string())?;
-    let plugin_toml = toml::from_str::<toml::Value>(&plugin_toml).map_err(|e| e.to_string())?;
+    let plugin_toml = fs::read_to_string(Path::new(&plugin_toml_path)).map_err(|e| {
+        format!(
+            "Failed while loading plugins from dir -> {}, error -> {}",
+            plugin_toml_path,
+            e.to_string()
+        )
+    })?;
+    let plugin_toml = toml::from_str::<toml::Value>(&plugin_toml).map_err(|e| {
+        format!(
+            "Could not parse the plugins toml directory manifest {}",
+            e.to_string()
+        )
+    })?;
     let manifests = plugin_toml
         .get("manifest")
         .and_then(|manifests| manifests.as_array())
@@ -42,7 +52,7 @@ fn load_plugins() -> Result<(String, HashMap<String, Manifest>), String> {
 #[tokio::main]
 async fn main() -> Result<(), String> {
     dotenvy::dotenv()
-        .map_err(|e| e.to_string())
+        .map_err(|e| format!("error while loading the dotenv file: {}", e.to_string()))
         .unwrap_or_default();
     let file_appender = tracing_appender::rolling::never(
         dotenvy::var("LOG_PATH").unwrap_or("./logs".into()),
