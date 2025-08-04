@@ -1,6 +1,7 @@
 manifest = [
 	"ts-simple-computer-use/manifest.toml",
 	"time/manifest.toml",
+	"filesystem/manifest.toml",
 	"sequential-thinking/manifest.toml",
 	"memory/manifest.toml",
 ]

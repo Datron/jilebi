@@ -157,7 +157,10 @@ impl ServerHandler for JilebiMcpServer {
         let code_path = format!("{}/{}/index.js", self.plugin_dir, &plugin_name);
         let code = fs::read_to_string(code_path).map_err(|e| {
             tracing::error!("Could not find JS file: {}", e);
-            rmcp::ErrorData::internal_error("Could not find the JS file that has the function", None)
+            rmcp::ErrorData::internal_error(
+                "Could not find the JS file that has the function",
+                None,
+            )
         })?;
         let plugin = plugins
             .get(&plugin_name)
@@ -166,16 +169,19 @@ impl ServerHandler for JilebiMcpServer {
                 "The plugin name provided is either invalid or has been removed",
                 None,
             ))?;
-        let tool = plugin
-            .tools
-            .get(&tool_name)
-            .cloned()
-            .ok_or(rmcp::ErrorData::invalid_request(
-                "The tool name provided is either invalid or has been removed",
-                None,
-            ))?;
+        let tool =
+            plugin
+                .tools
+                .get(&tool_name)
+                .cloned()
+                .ok_or(rmcp::ErrorData::invalid_request(
+                    "The tool name provided is either invalid or has been removed",
+                    None,
+                ))?;
         let handle = Handle::current();
-
+        let env = json!({
+            "id": format!("{}_{}", plugin_name, tool_name)
+        });
         let result = handle
             .spawn_blocking(move || {
                 let args = request.arguments.unwrap_or_default();
@@ -184,6 +190,7 @@ impl ServerHandler for JilebiMcpServer {
                     &code,
                     &tool.function,
                     json!(args),
+                    env,
                     &tool.permissions,
                 )
                 .map_err(|e| {
@@ -262,7 +269,10 @@ impl ServerHandler for JilebiMcpServer {
 
         let code = fs::read_to_string(code_path).map_err(|e| {
             tracing::error!("Could not find JS file: {}", e);
-            rmcp::ErrorData::internal_error("Could not find the JS file that has the function", None)
+            rmcp::ErrorData::internal_error(
+                "Could not find the JS file that has the function",
+                None,
+            )
         })?;
         let plugin = plugins
             .get(&plugin_name)
@@ -271,17 +281,16 @@ impl ServerHandler for JilebiMcpServer {
                 "The plugin name provided is either invalid or has been removed",
                 None,
             ))?;
-        let resource =
-            plugin
-                .resources
-                .get(&resource_name)
-                .cloned()
-                .ok_or(rmcp::ErrorData::invalid_request(
-                    "The resource name provided is either invalid or has been removed",
-                    None,
-                ))?;
+        let resource = plugin.resources.get(&resource_name).cloned().ok_or(
+            rmcp::ErrorData::invalid_request(
+                "The resource name provided is either invalid or has been removed",
+                None,
+            ),
+        )?;
         let handle = Handle::current();
-
+        let env = json!({
+            "id": format!("{}_{}", plugin_name, resource_name)
+        });
         let result = handle
             .spawn_blocking(move || {
                 run_code::<rmcp::model::ReadResourceResult>(
@@ -289,6 +298,7 @@ impl ServerHandler for JilebiMcpServer {
                     &code,
                     &resource.function,
                     json!({}),
+                    env,
                     &resource.permissions,
                 )
                 .map_err(|e| {

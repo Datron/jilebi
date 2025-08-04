@@ -3,6 +3,7 @@ export async function get_files(request, env) {
 	let response = await fetch('https://jsonplaceholder.typicode.com/todos/1');
 	let data = await response.json();
 	console.log(data);
+	console.info(env);
 	// let file = Deno.readTextFileSync("/home/kartik/jilebi/plugins/ts-simple-computer-use/manifest.toml");
 	// console.log("allowed file read", file);
 	return {

@@ -3,7 +3,7 @@ mod plugin_functions;
 use std::{sync::Arc, time::Duration};
 
 use jilebi_types::permissions::JilebiPermissions;
-use rustyscript::{Error, Module, Runtime, RuntimeOptions};
+use rustyscript::{Error, Module, Runtime, RuntimeOptions, json_args};
 use serde::de::DeserializeOwned;
 use serde_json::Value;
 use tracing_subscriber::{EnvFilter, fmt, layer::SubscriberExt};
@@ -13,6 +13,7 @@ pub fn run_code<T>(
     code: &String,
     function: &String,
     args: Value,
+    env: Value,
     permissions: &Option<JilebiPermissions>,
 ) -> Result<T, Error>
 where
@@ -45,7 +46,7 @@ where
     let module_handle = runtime.load_module(&module)?;
     handle.block_on(async {
         runtime
-            .call_function_async::<T>(Some(&module_handle), &function, &args)
+            .call_function_async::<T>(Some(&module_handle), &function, json_args!(args, env))
             .await
     })
 }
