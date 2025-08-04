@@ -43,8 +43,8 @@ impl WebPermissions for JilebiPermissions {
             Ok(())
         } else {
             Err(rustyscript::PermissionDenied {
-                access: format!("{api_name} URL check failed"),
-                name: "api_name",
+                access: format!("NETWORK_FETCH_DENIED: {api_name}"),
+                name: "The url is not allowed to be accessed by your plugin. Declare these permissions in your plugin manifest",
             })
         }
     }
@@ -81,17 +81,14 @@ impl WebPermissions for JilebiPermissions {
             Ok(Cow::Borrowed(p))
         } else {
             Err(rustyscript::PermissionDenied {
-                access: format!("{api_name} Read permission denied"),
-                name: "",
+                access: format!("FILE_READ_DENIED: {api_name}"),
+                name: "the file cannot be read because it was not declared in the plugin manifest under read_files, read_dirs",
             })
         }
     }
 
     fn check_read_all(&self, _api_name: Option<&str>) -> Result<(), rustyscript::PermissionDenied> {
-        Err(rustyscript::PermissionDenied {
-            access: format!("Reading all files are not permitted"),
-            name: "",
-        })
+        Ok(())
     }
 
     fn check_read_blind(
@@ -116,17 +113,14 @@ impl WebPermissions for JilebiPermissions {
             Ok(Cow::Borrowed(p))
         } else {
             Err(rustyscript::PermissionDenied {
-                access: format!("{api_name} write permission denied"),
-                name: "",
+                access: format!("FILE_WRITE_DENIED {}", api_name),
+                name: "the file cannot be written to since it has not been declared in the plugin manifest under write_files, write_dirs",
             })
         }
     }
 
     fn check_write_all(&self, _api_name: &str) -> Result<(), rustyscript::PermissionDenied> {
-        Err(rustyscript::PermissionDenied {
-            access: format!("Writing all files are not permitted"),
-            name: "",
-        })
+        Ok(())
     }
 
     fn check_write_blind(
@@ -157,8 +151,8 @@ impl WebPermissions for JilebiPermissions {
             Ok(())
         } else {
             Err(rustyscript::PermissionDenied {
-                access: format!("{api_name} URL check failed"),
-                name: "api_name",
+                access: format!("NETWORK_FETCH_DENIED: {api_name}"),
+                name: "The url is not allowed to be accessed by your plugin. Declare these permissions in your plugin manifest under hosts",
             })
         }
     }
@@ -169,22 +163,22 @@ impl WebPermissions for JilebiPermissions {
         api_name: &str,
     ) -> Result<(), rustyscript::PermissionDenied> {
         Err(rustyscript::PermissionDenied {
-            access: format!("{api_name} system check failed, access denied"),
-            name: "api_name",
+            access: format!("SYS_OP_DENIED: {api_name}"),
+            name: "system calls are not allowed",
         })
     }
 
-    fn check_env(&self, _var: &str) -> Result<(), rustyscript::PermissionDenied> {
+    fn check_env(&self, var: &str) -> Result<(), rustyscript::PermissionDenied> {
         Err(rustyscript::PermissionDenied {
-            access: "Environment variable access has not been granted".into(),
-            name: "",
+            access: format!("ENV_READ_DENIED {var}"),
+            name: "Environment variables cannot be read",
         })
     }
 
     fn check_exec(&self) -> Result<(), rustyscript::PermissionDenied> {
         Err(rustyscript::PermissionDenied {
-            access: "Execution access has not been granted".into(),
-            name: "",
+            access: "EXEC_DENIED".into(),
+            name: "Execution commands are not allowed",
         })
     }
 }

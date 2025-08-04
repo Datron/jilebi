@@ -1,4 +1,4 @@
-// Jilebi Filesystem Plugin - Deno Implementation
+// Jilebi Filesystem Plugin - Deno Implementation with MCP Compatible Returns
 // All functions take (request, env) parameters as required by jilebi
 // Utility functions
 function formatSize(bytes) {
@@ -53,19 +53,36 @@ export async function read_text_file(request, env) {
         if (head && tail) {
             throw new Error("Cannot specify both head and tail parameters simultaneously");
         }
+        let content;
         if (tail) {
-            return await tailFile(path, tail);
+            content = await tailFile(path, tail);
         }
-        if (head) {
-            return await headFile(path, head);
+        else if (head) {
+            content = await headFile(path, head);
         }
-        // @ts-ignore
-        const content = await Deno.readTextFile(path);
-        return content;
+        else {
+            // @ts-ignore
+            content = await Deno.readTextFile(path);
+        }
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: content
+                }
+            ]
+        };
     }
     catch (error) {
-        // @ts-ignore
-        throw new Error(`Failed to read file: ${error.message}`);
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: `Failed to read file: ${error instanceof Error ? error.message : String(error)}`
+                }
+            ],
+            isError: true
+        };
     }
 }
 export async function read_media_file(request, env) {
@@ -90,32 +107,67 @@ export async function read_media_file(request, env) {
             'flac': 'audio/flac',
         };
         const mimeType = mimeTypes[extension || ''] || 'application/octet-stream';
-        return JSON.stringify({
+        const result = {
             data: base64Data,
             mimeType: mimeType,
             size: data.length
-        });
+        };
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: JSON.stringify(result, null, 2)
+                }
+            ]
+        };
     }
     catch (error) {
-        // @ts-ignore
-        throw new Error(`Failed to read media file: ${error.message}`);
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: `Failed to read media file: ${error instanceof Error ? error.message : String(error)}`
+                }
+            ],
+            isError: true
+        };
     }
 }
 export async function read_multiple_files(request, env) {
-    const { paths } = request;
-    const results = [];
-    for (const filePath of paths) {
-        try {
-            // @ts-ignore
-            const content = await Deno.readTextFile(filePath);
-            results.push(`${filePath}:\n${content}\n`);
+    try {
+        const { paths } = request;
+        const results = [];
+        for (const filePath of paths) {
+            try {
+                // @ts-ignore
+                const content = await Deno.readTextFile(filePath);
+                results.push(`${filePath}:\n${content}\n`);
+            }
+            catch (error) {
+                // @ts-ignore
+                results.push(`${filePath}: Error - ${error instanceof Error ? error.message : String(error)}`);
+            }
         }
-        catch (error) {
-            // @ts-ignore
-            results.push(`${filePath}: Error - ${error.message}`);
-        }
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: results.join("\n---\n")
+                }
+            ]
+        };
     }
-    return results.join("\n---\n");
+    catch (error) {
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: `Failed to read multiple files: ${error instanceof Error ? error.message : String(error)}`
+                }
+            ],
+            isError: true
+        };
+    }
 }
 // File writing functions
 export async function write_file(request, env) {
@@ -123,11 +175,25 @@ export async function write_file(request, env) {
         const { path, content } = request;
         // @ts-ignore
         await Deno.writeTextFile(path, content);
-        return `Successfully wrote to ${path}`;
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: `Successfully wrote to ${path}`
+                }
+            ]
+        };
     }
     catch (error) {
-        // @ts-ignore
-        throw new Error(`Failed to write file: ${error.message}`);
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: `Failed to write file: ${error instanceof Error ? error.message : String(error)}`
+                }
+            ],
+            isError: true
+        };
     }
 }
 export async function edit_file(request, env) {
@@ -184,11 +250,25 @@ export async function edit_file(request, env) {
             // @ts-ignore
             await Deno.writeTextFile(path, modifiedContent);
         }
-        return `\`\`\`diff\n${diff}\`\`\`\n\n${dryRun ? 'Dry run - changes not applied' : 'Changes applied successfully'}`;
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: `\`\`\`diff\n${diff}\`\`\`\n\n${dryRun ? 'Dry run - changes not applied' : 'Changes applied successfully'}`
+                }
+            ]
+        };
     }
     catch (error) {
-        // @ts-ignore
-        throw new Error(`Failed to edit file: ${error.message}`);
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: `Failed to edit file: ${error instanceof Error ? error.message : String(error)}`
+                }
+            ],
+            isError: true
+        };
     }
 }
 // Directory operations
@@ -197,11 +277,25 @@ export async function create_directory(request, env) {
         const { path } = request;
         // @ts-ignore
         await Deno.mkdir(path, { recursive: true });
-        return `Successfully created directory ${path}`;
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: `Successfully created directory ${path}`
+                }
+            ]
+        };
     }
     catch (error) {
-        // @ts-ignore
-        throw new Error(`Failed to create directory: ${error.message}`);
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: `Failed to create directory: ${error instanceof Error ? error.message : String(error)}`
+                }
+            ],
+            isError: true
+        };
     }
 }
 export async function list_directory(request, env) {
@@ -213,11 +307,25 @@ export async function list_directory(request, env) {
             const prefix = entry.isDirectory ? "[DIR]" : "[FILE]";
             entries.push(`${prefix} ${entry.name}`);
         }
-        return entries.join("\n");
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: entries.join("\n")
+                }
+            ]
+        };
     }
     catch (error) {
-        // @ts-ignore
-        throw new Error(`Failed to list directory: ${error.message}`);
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: `Failed to list directory: ${error instanceof Error ? error.message : String(error)}`
+                }
+            ],
+            isError: true
+        };
     }
 }
 export async function list_directory_with_sizes(request, env) {
@@ -265,11 +373,25 @@ export async function list_directory_with_sizes(request, env) {
             `Total: ${totalFiles} files, ${totalDirs} directories`,
             `Combined size: ${formatSize(totalSize)}`
         ];
-        return [...formattedEntries, ...summary].join("\n");
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: [...formattedEntries, ...summary].join("\n")
+                }
+            ]
+        };
     }
     catch (error) {
-        // @ts-ignore
-        throw new Error(`Failed to list directory with sizes: ${error.message}`);
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: `Failed to list directory with sizes: ${error instanceof Error ? error.message : String(error)}`
+                }
+            ],
+            isError: true
+        };
     }
 }
 export async function directory_tree(request, env) {
@@ -292,11 +414,25 @@ export async function directory_tree(request, env) {
             return result;
         }
         const treeData = await buildTree(path);
-        return JSON.stringify(treeData, null, 2);
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: JSON.stringify(treeData, null, 2)
+                }
+            ]
+        };
     }
     catch (error) {
-        // @ts-ignore
-        throw new Error(`Failed to create directory tree: ${error.message}`);
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: `Failed to create directory tree: ${error instanceof Error ? error.message : String(error)}`
+                }
+            ],
+            isError: true
+        };
     }
 }
 // File operations
@@ -305,11 +441,25 @@ export async function move_file(request, env) {
         const { source, destination } = request;
         // @ts-ignore
         await Deno.rename(source, destination);
-        return `Successfully moved ${source} to ${destination}`;
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: `Successfully moved ${source} to ${destination}`
+                }
+            ]
+        };
     }
     catch (error) {
-        // @ts-ignore
-        throw new Error(`Failed to move file: ${error.message}`);
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: `Failed to move file: ${error instanceof Error ? error.message : String(error)}`
+                }
+            ],
+            isError: true
+        };
     }
 }
 export async function search_files(request, env) {
@@ -343,11 +493,25 @@ export async function search_files(request, env) {
             }
         }
         await search(path);
-        return results.length > 0 ? results.join("\n") : "No matches found";
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: results.length > 0 ? results.join("\n") : "No matches found"
+                }
+            ]
+        };
     }
     catch (error) {
-        // @ts-ignore
-        throw new Error(`Failed to search files: ${error.message}`);
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: `Failed to search files: ${error instanceof Error ? error.message : String(error)}`
+                }
+            ],
+            isError: true
+        };
     }
 }
 export async function get_file_info(request, env) {
@@ -364,13 +528,28 @@ export async function get_file_info(request, env) {
             isFile: stat.isFile,
             permissions: stat.mode ? stat.mode.toString(8).slice(-3) : '644'
         };
-        return Object.entries(info)
+        const infoText = Object.entries(info)
             .map(([key, value]) => `${key}: ${value}`)
             .join("\n");
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: infoText
+                }
+            ]
+        };
     }
     catch (error) {
-        // @ts-ignore
-        throw new Error(`Failed to get file info: ${error.message}`);
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: `Failed to get file info: ${error instanceof Error ? error.message : String(error)}`
+                }
+            ],
+            isError: true
+        };
     }
 }
 // Helper functions for head/tail operations
