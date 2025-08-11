@@ -180,7 +180,7 @@ impl ServerHandler for JilebiMcpServer {
                 ))?;
         let handle = Handle::current();
         let env = json!({
-            "id": format!("{}_{}", plugin_name, tool_name)
+            "id": format!("{}", plugin_name)
         });
         let result = handle
             .spawn_blocking(move || {
@@ -289,7 +289,7 @@ impl ServerHandler for JilebiMcpServer {
         )?;
         let handle = Handle::current();
         let env = json!({
-            "id": format!("{}_{}", plugin_name, resource_name)
+            "id": format!("{}", plugin_name)
         });
         let result = handle
             .spawn_blocking(move || {

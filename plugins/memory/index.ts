@@ -74,7 +74,7 @@ interface OpenNodesRequest {
 type Environment = any;
 
 // In-memory storage for the knowledge graph
-let knowledgeGraph: KnowledgeGraph = {
+let templateKnowledgeGraph: KnowledgeGraph = {
 	entities: [],
 	relations: []
 };
@@ -84,6 +84,10 @@ let knowledgeGraph: KnowledgeGraph = {
  */
 function create_entities(request: CreateEntitiesRequest, env: Environment): MCPResult {
 	try {
+		console.log("Knowledge graph loading -> ");
+		// @ts-ignore
+		let knowledgeGraph: KnowledgeGraph = getState(env, "knowledgeGraph") ?? templateKnowledgeGraph;
+		console.log("Knowledge graph loaded -> ", knowledgeGraph);
 		const { entities } = request;
 
 		if (!entities || !Array.isArray(entities)) {
@@ -101,6 +105,11 @@ function create_entities(request: CreateEntitiesRequest, env: Environment): MCPR
 		// Add new entities to the graph
 		knowledgeGraph.entities.push(...newEntities);
 
+		// @ts-ignore
+		if (!setState(env, "knowledgeGraph", knowledgeGraph)) {
+			console.log("State was not set, check logs for the error");
+		}
+
 		const summary = newEntities.length > 0
 			? `Created ${newEntities.length} new entities: ${newEntities.map(e => e.name).join(', ')}`
 			: 'No new entities created (all entities already exist)';
@@ -115,6 +124,7 @@ function create_entities(request: CreateEntitiesRequest, env: Environment): MCPR
 		};
 
 	} catch (error) {
+		console.error("Error occurred while creating entities:", error instanceof Error);
 		return {
 			content: [
 				{
@@ -132,6 +142,8 @@ function create_entities(request: CreateEntitiesRequest, env: Environment): MCPR
  */
 function create_relations(request: CreateRelationsRequest, env: Environment): MCPResult {
 	try {
+		// @ts-ignore
+		let knowledgeGraph: KnowledgeGraph = getState(env, "knowledgeGraph") ?? templateKnowledgeGraph;
 		const { relations } = request;
 
 		if (!relations || !Array.isArray(relations)) {
@@ -166,6 +178,11 @@ function create_relations(request: CreateRelationsRequest, env: Environment): MC
 		// Add new relations to the graph
 		knowledgeGraph.relations.push(...newRelations);
 
+		// @ts-ignore
+		if (!setState(env, "knowledgeGraph", knowledgeGraph)) {
+			console.log("State was not set, check logs for the error");
+		}
+
 		const summary = newRelations.length > 0
 			? `Created ${newRelations.length} new relations`
 			: 'No new relations created (all relations already exist)';
@@ -197,6 +214,9 @@ function create_relations(request: CreateRelationsRequest, env: Environment): MC
  */
 function add_observations(request: AddObservationsRequest, env: Environment): MCPResult {
 	try {
+		// @ts-ignore
+		let knowledgeGraph: KnowledgeGraph = getState(env, "knowledgeGraph") ?? templateKnowledgeGraph;
+
 		const { observations } = request;
 
 		if (!observations || !Array.isArray(observations)) {
@@ -231,7 +251,10 @@ function add_observations(request: AddObservationsRequest, env: Environment): MC
 
 		const totalAdded = results.reduce((sum, r) => sum + r.addedObservations.length, 0);
 		const summary = `Added ${totalAdded} new observations across ${results.length} entities`;
-
+		// @ts-ignore
+		if (!setState(env, "knowledgeGraph", knowledgeGraph)) {
+			console.log("State was not set, check logs for the error");
+		}
 		return {
 			content: [
 				{
@@ -259,6 +282,9 @@ function add_observations(request: AddObservationsRequest, env: Environment): MC
  */
 function delete_entities(request: DeleteEntitiesRequest, env: Environment): MCPResult {
 	try {
+		// @ts-ignore
+		let knowledgeGraph: KnowledgeGraph = getState(env, "knowledgeGraph") ?? templateKnowledgeGraph;
+
 		const { entityNames } = request;
 
 		if (!entityNames || !Array.isArray(entityNames)) {
@@ -280,7 +306,10 @@ function delete_entities(request: DeleteEntitiesRequest, env: Environment): MCPR
 
 		const deletedEntities = initialEntityCount - knowledgeGraph.entities.length;
 		const deletedRelations = initialRelationCount - knowledgeGraph.relations.length;
-
+		// @ts-ignore
+		if (!setState(env, "knowledgeGraph", knowledgeGraph)) {
+			console.log("State was not set, check logs for the error");
+		}
 		return {
 			content: [
 				{
@@ -308,6 +337,9 @@ function delete_entities(request: DeleteEntitiesRequest, env: Environment): MCPR
  */
 function delete_observations(request: DeleteObservationsRequest, env: Environment): MCPResult {
 	try {
+		// @ts-ignore
+		let knowledgeGraph: KnowledgeGraph = getState(env, "knowledgeGraph") ?? templateKnowledgeGraph;
+
 		const { deletions } = request;
 
 		if (!deletions || !Array.isArray(deletions)) {
@@ -330,6 +362,11 @@ function delete_observations(request: DeleteObservationsRequest, env: Environmen
 				totalDeleted += initialCount - entity.observations.length;
 			}
 		});
+
+		// @ts-ignore
+		if (!setState(env, "knowledgeGraph", knowledgeGraph)) {
+			console.log("State was not set, check logs for the error");
+		}
 
 		return {
 			content: [
@@ -358,6 +395,9 @@ function delete_observations(request: DeleteObservationsRequest, env: Environmen
  */
 function delete_relations(request: DeleteRelationsRequest, env: Environment): MCPResult {
 	try {
+		// @ts-ignore
+		let knowledgeGraph: KnowledgeGraph = getState(env, "knowledgeGraph") ?? templateKnowledgeGraph;
+
 		const { relations } = request;
 
 		if (!relations || !Array.isArray(relations)) {
@@ -376,7 +416,10 @@ function delete_relations(request: DeleteRelationsRequest, env: Environment): MC
 		);
 
 		const deletedCount = initialCount - knowledgeGraph.relations.length;
-
+		// @ts-ignore
+		if (!setState(env, "knowledgeGraph", knowledgeGraph)) {
+			console.log("State was not set, check logs for the error");
+		}
 		return {
 			content: [
 				{
@@ -404,6 +447,10 @@ function delete_relations(request: DeleteRelationsRequest, env: Environment): MC
  */
 function read_graph(request: ReadGraphRequest, env: Environment): MCPResult {
 	try {
+		// @ts-ignore
+		let knowledgeGraph: KnowledgeGraph = getState(env, "knowledgeGraph") ?? templateKnowledgeGraph;
+		console.log("Knowledge graph loaded in read_graph -> ", knowledgeGraph);
+
 		const summary = `Knowledge Graph Summary:\n• ${knowledgeGraph.entities.length} entities\n• ${knowledgeGraph.relations.length} relations`;
 
 		return {
@@ -433,6 +480,9 @@ function read_graph(request: ReadGraphRequest, env: Environment): MCPResult {
  */
 function search_nodes(request: SearchNodesRequest, env: Environment): MCPResult {
 	try {
+		// @ts-ignore
+		let knowledgeGraph: KnowledgeGraph = getState(env, "knowledgeGraph") ?? templateKnowledgeGraph;
+
 		const { query } = request;
 
 		if (!query || typeof query !== 'string') {
@@ -490,6 +540,9 @@ function search_nodes(request: SearchNodesRequest, env: Environment): MCPResult 
  */
 function open_nodes(request: OpenNodesRequest, env: Environment): MCPResult {
 	try {
+		// @ts-ignore
+		let knowledgeGraph: KnowledgeGraph = getState(env, "knowledgeGraph") ?? templateKnowledgeGraph;
+
 		const { names } = request;
 
 		if (!names || !Array.isArray(names)) {

@@ -2,12 +2,14 @@ use std::{collections::HashMap, fs, path::Path};
 mod server;
 use jilebi_types::plugin::Manifest;
 use rmcp::{ServiceExt, transport::stdio};
+use rusqlite::Connection;
 use server::JilebiMcpServer;
 use tracing::{Level, error, event, info, span};
 use tracing_subscriber::{EnvFilter, fmt, layer::SubscriberExt, util::SubscriberInitExt};
 
 fn load_plugins() -> Result<(String, HashMap<String, Manifest>), String> {
-    let plugin_directory = dotenvy::var("PLUGIN_DIR").unwrap_or("./".into());
+    let plugin_directory =
+        dotenvy::var("PLUGIN_DIR").unwrap_or("./".into());
     info!("Plugin directory being used -> {}", plugin_directory);
     let plugin_toml_path = plugin_directory.clone() + "/plugins.toml";
     let plugin_toml = fs::read_to_string(Path::new(&plugin_toml_path)).map_err(|e| {
@@ -49,6 +51,16 @@ fn load_plugins() -> Result<(String, HashMap<String, Manifest>), String> {
     Ok((plugin_directory, manifests))
 }
 
+fn setup_database() -> Result<(), String> {
+    let connection = Connection::open("./jilebi.db3").map_err(|e| e.to_string())?;
+    connection.execute_batch(
+		"BEGIN;
+		CREATE TABLE IF NOT EXISTS plugin_state (id TEXT NOT NULL, key TEXT NOT NULL, value TEXT NOT NULL, PRIMARY KEY (id, key));
+		COMMIT;"
+	).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
 #[tokio::main]
 async fn main() -> Result<(), String> {
     dotenvy::dotenv()
@@ -63,6 +75,8 @@ async fn main() -> Result<(), String> {
         .with(fmt::layer().with_writer(non_blocking_log_writer))
         .with(EnvFilter::from_default_env())
         .init();
+
+    setup_database()?;
 
     let main_span = span!(Level::INFO, "Jilebi Server started");
     let _guard = main_span.enter();
@@ -87,17 +101,19 @@ async fn main() -> Result<(), String> {
 // TODO: support Resource Template
 // TODO: add pagination support
 // plugins
+// TODO: URGENT! Change state functions to access SQLite DB for state management
+// TODO: Create and read all plugins in home directory
 // TODO: (Is this needed?) Support * to allow_all in permissions
 // TODO: validate names to not include _
 // TODO: Write 10 most popular MCPs as plugins
 //			- Git
 //			- Playwright = https://github.com/microsoft/playwright-mcp
-//			- filesystem
 //			- https://github.com/awslabs/mcp/tree/main/src/aws-documentation-mcp-server
 //			- https://github.com/abhiemj/manim-mcp-server
 //			- https://github.com/upstash/context7
 
-// installing plugins
+// installing plugins + CLI
+// TODO: create a CLI tool to install jilebi + manage plugins
 // TODO: let folks specify mc plugins from github or file system or URL
 
 // Beyond MVP

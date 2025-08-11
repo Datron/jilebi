@@ -2,3 +2,5 @@
 **/node_modules
 .env
 logs
+.vscode/settings.json
+*.db3
