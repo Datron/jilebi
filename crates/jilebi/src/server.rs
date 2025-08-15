@@ -1,7 +1,10 @@
-use std::{borrow::Cow, collections::HashMap, fs, sync::Arc};
+use std::{borrow::Cow, collections::HashMap, fs, path::PathBuf, sync::Arc};
 
 use dosa::run_code;
-use jilebi_types::{Plugins, plugin::Manifest};
+use jilebi_types::{
+    Plugins,
+    plugin::{Manifest, SEPARATOR},
+};
 use rmcp::{
     ServerHandler,
     model::{
@@ -26,7 +29,7 @@ fn get_plugin_and_section_name(
     name: &String,
     mcp_section: McpSection,
 ) -> Result<(String, String), rmcp::ErrorData> {
-    let mut identifier = name.split("_").into_iter();
+    let mut identifier = name.split(SEPARATOR).into_iter();
     Ok((
         identifier
             .next()
@@ -48,11 +51,11 @@ fn get_plugin_and_section_name(
 #[derive(Clone, Debug, Default)]
 pub struct JilebiMcpServer {
     pub plugins: Plugins,
-    pub plugin_dir: String,
+    pub plugin_dir: PathBuf,
 }
 
 impl JilebiMcpServer {
-    pub fn new(plugins: HashMap<String, Manifest>, plugin_dir: String) -> Self {
+    pub fn new(plugins: HashMap<String, Manifest>, plugin_dir: PathBuf) -> Self {
         JilebiMcpServer {
             plugins: Arc::new(RwLock::new(plugins)),
             plugin_dir,
@@ -154,7 +157,7 @@ impl ServerHandler for JilebiMcpServer {
 
         let (plugin_name, tool_name) =
             get_plugin_and_section_name(&request.name.into_owned(), McpSection::Tool)?;
-        let code_path = format!("{}/{}/index.js", self.plugin_dir, &plugin_name);
+        let code_path = self.plugin_dir.join("plugin_name").join("index.js");
         let code = fs::read_to_string(code_path).map_err(|e| {
             tracing::error!("Could not find JS file: {}", e);
             rmcp::ErrorData::internal_error(
@@ -265,7 +268,7 @@ impl ServerHandler for JilebiMcpServer {
 
         let (plugin_name, resource_name) =
             get_plugin_and_section_name(&request.uri, McpSection::Resource)?;
-        let code_path = format!("{}/{}/index.js", self.plugin_dir, &plugin_name);
+        let code_path = self.plugin_dir.join("plugin_name").join("index.js");
 
         let code = fs::read_to_string(code_path).map_err(|e| {
             tracing::error!("Could not find JS file: {}", e);

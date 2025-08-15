@@ -1,6 +1,7 @@
 use std::{borrow::Cow, collections::HashMap, sync::Arc};
 
 use derive_more::Deref;
+use regex::Regex;
 use rmcp::model::{
     Prompt, PromptArgument, PromptMessage, PromptMessageContent, PromptMessageRole, RawResource,
     Resource, Tool,
@@ -9,6 +10,20 @@ use serde::{Deserialize, Serialize};
 use toml::Table;
 
 use crate::permissions::JilebiPermissions;
+
+pub const SEPARATOR: &str = "_";
+pub const NAME_REGEX: &str = r"[a-z0-9_]{30}";
+pub type ResourceKey = String;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct JilebiResource {
+    pub resource: Resource,
+    pub function: String,
+    pub permissions: Option<JilebiPermissions>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Deref)]
+pub struct Resources(pub HashMap<ResourceKey, JilebiResource>);
 
 fn mandatory_extractor(op_table: &Table, key: &String, field: &String) -> Result<String, String> {
     op_table
@@ -34,17 +49,16 @@ fn permissions_extractor(op_table: &Table) -> Option<JilebiPermissions> {
         .and_then(|permissions| permissions.try_into().ok())
 }
 
-pub type ResourceKey = String;
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct JilebiResource {
-    pub resource: Resource,
-    pub function: String,
-    pub permissions: Option<JilebiPermissions>,
+fn validate_name(name: &String) -> Result<(), String> {
+    let regex = Regex::new(NAME_REGEX).map_err(|e| e.to_string())?;
+    if name.len() > 30 || !regex.is_match(name) {
+        Err(format!(
+            "The name set for the tool, resource or prompt has invalid characters. Only lowercase letters, numbers or underscore is allowed"
+        ))
+    } else {
+        Ok(())
+    }
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize, Deref)]
-pub struct Resources(pub HashMap<ResourceKey, JilebiResource>);
 
 impl Resources {
     fn try_from(value: &toml::Value, plugin_name: &String) -> Result<Self, String> {
@@ -60,9 +74,10 @@ impl Resources {
                 ));
             };
             let resource_name = mandatory_extractor(op_table, key, &"name".to_string())?;
+            validate_name(&resource_name)?;
             let resource = Resource::new(
                 RawResource {
-                    uri: format!("{plugin_name}_{resource_name}"),
+                    uri: format!("{plugin_name}{SEPARATOR}{resource_name}"),
                     name: resource_name,
                     description: optional_extractor(op_table, &"description".to_string()),
                     mime_type: optional_extractor(op_table, &"mime_type".to_string()),
@@ -116,11 +131,10 @@ impl Tools {
             .ok_or(format!(
                 "Invalid JSON format for the field input_schema in tool {key}"
             ))?;
+            let tool_name = mandatory_extractor(op_table, key, &"name".to_string())?;
+            validate_name(&tool_name)?;
             let tool = Tool {
-                name: Cow::from(format!(
-                    "{plugin_name}_{}",
-                    mandatory_extractor(op_table, key, &"name".to_string())?
-                )),
+                name: Cow::from(format!("{plugin_name}{SEPARATOR}{tool_name}")),
                 description: optional_extractor(op_table, &"description".to_string())
                     .map(Cow::from),
                 input_schema: Arc::new(schema),
@@ -177,11 +191,10 @@ impl Prompts {
                         })
                         .collect()
                 });
+            let prompt_name = mandatory_extractor(op_table, key, &"name".to_string())?;
+            validate_name(&prompt_name)?;
             let prompt = Prompt {
-                name: format!(
-                    "{plugin_name}_{}",
-                    mandatory_extractor(op_table, key, &"name".to_string())?
-                ),
+                name: format!("{plugin_name}{SEPARATOR}{prompt_name}"),
                 description: optional_extractor(op_table, &"description".to_string()),
                 arguments: arguments,
             };

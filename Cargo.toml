@@ -26,6 +26,7 @@ rustyscript = { version = "0.11.0", default-features = false, features = [
 ] }
 deno_core = "0.323.0"
 rusqlite = { version = "0.37.0",  features = ["bundled"] }
+directories = "=6.0.0"
 
 [patch.crates-io]
 deno_media_type = { git = 'https://github.com/denoland/deno_media_type', tag = "0.2.6" }

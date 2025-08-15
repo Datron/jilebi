@@ -7,6 +7,7 @@ edition = "2024"
 derive_more = { workspace = true }
 jsonschema = "0.29.1"
 mime = "0.3.17"
+regex = "1.11.1"
 rmcp = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

@@ -1,5 +1,10 @@
-use std::{collections::HashMap, fs, path::Path};
+use std::{
+    collections::HashMap,
+    fs,
+    path::{Path, PathBuf},
+};
 mod server;
+use directories::ProjectDirs;
 use jilebi_types::plugin::Manifest;
 use rmcp::{ServiceExt, transport::stdio};
 use rusqlite::Connection;
@@ -7,15 +12,26 @@ use server::JilebiMcpServer;
 use tracing::{Level, error, event, info, span};
 use tracing_subscriber::{EnvFilter, fmt, layer::SubscriberExt, util::SubscriberInitExt};
 
-fn load_plugins() -> Result<(String, HashMap<String, Manifest>), String> {
-    let plugin_directory =
-        dotenvy::var("PLUGIN_DIR").unwrap_or("./".into());
-    info!("Plugin directory being used -> {}", plugin_directory);
-    let plugin_toml_path = plugin_directory.clone() + "/plugins.toml";
-    let plugin_toml = fs::read_to_string(Path::new(&plugin_toml_path)).map_err(|e| {
+fn generate_path(base_path: &Path, new_folder: &str, is_dir: bool) -> Result<PathBuf, String> {
+    let path = base_path.join(Path::new(new_folder));
+    if !path.exists() && is_dir {
+        fs::create_dir_all(&path).map_err(|e| e.to_string())?;
+    }
+    Ok(path)
+}
+
+fn load_plugins(dir: &Path) -> Result<(PathBuf, HashMap<String, Manifest>), String> {
+    let default_plugin_path = generate_path(dir, "plugins", true)?;
+
+    let plugin_directory = dotenvy::var("PLUGIN_DIR")
+        .map(PathBuf::from)
+        .unwrap_or(default_plugin_path);
+    info!("Plugin directory being used -> {:?}", plugin_directory);
+    let plugin_toml_path = plugin_directory.join(Path::new("plugins.toml"));
+    let plugin_toml = fs::read_to_string(plugin_toml_path).map_err(|e| {
         format!(
-            "Failed while loading plugins from dir -> {}, error -> {}",
-            plugin_toml_path,
+            "Failed while loading plugins from dir -> {:?}, error -> {}",
+            plugin_directory,
             e.to_string()
         )
     })?;
@@ -36,9 +52,8 @@ fn load_plugins() -> Result<(String, HashMap<String, Manifest>), String> {
             let manifest = m
                 .as_str()
                 .and_then(|manifest_path| {
-                    let manifest =
-                        fs::read_to_string(plugin_directory.clone() + "/" + manifest_path)
-                            .expect("Manifest file not found");
+                    let manifest = fs::read_to_string(plugin_directory.join(manifest_path))
+                        .expect("Manifest file not found");
                     let manifest = toml::from_str::<toml::Value>(&manifest)
                         .expect("Could not parse toml file");
                     tracing::info!("Toml file loaded for path {manifest_path}: {manifest:#?}");
@@ -51,8 +66,9 @@ fn load_plugins() -> Result<(String, HashMap<String, Manifest>), String> {
     Ok((plugin_directory, manifests))
 }
 
-fn setup_database() -> Result<(), String> {
-    let connection = Connection::open("./jilebi.db3").map_err(|e| e.to_string())?;
+fn setup_database(dir: &Path) -> Result<(), String> {
+    let db_path = generate_path(dir, "jilebi.db3", false)?;
+    let connection = Connection::open(db_path).map_err(|e| e.to_string())?;
     connection.execute_batch(
 		"BEGIN;
 		CREATE TABLE IF NOT EXISTS plugin_state (id TEXT NOT NULL, key TEXT NOT NULL, value TEXT NOT NULL, PRIMARY KEY (id, key));
@@ -66,22 +82,33 @@ async fn main() -> Result<(), String> {
     dotenvy::dotenv()
         .map_err(|e| format!("error while loading the dotenv file: {}", e.to_string()))
         .unwrap_or_default();
-    let file_appender = tracing_appender::rolling::never(
-        dotenvy::var("LOG_PATH").unwrap_or("./logs".into()),
-        dotenvy::var("LOG_FILE").unwrap_or("jilebi.log".into()),
-    );
+
+    let base_jilebi_dir = ProjectDirs::from("ai", "jilebi", "jilebi-server")
+        .ok_or(String::from("Could not create ProjectDirs struct"))?;
+
+    let log_folder_path = generate_path(base_jilebi_dir.data_dir(), "logs", true)?;
+    let log_file_path = generate_path(Path::new(&log_folder_path), "jilebi.log", false)?;
+
+    let log_path = dotenvy::var("LOG_PATH")
+        .map(PathBuf::from)
+        .unwrap_or(log_folder_path);
+    let log_file = dotenvy::var("LOG_FILE")
+        .map(PathBuf::from)
+        .unwrap_or(log_file_path);
+
+    let file_appender = tracing_appender::rolling::never(log_path, log_file);
     let (non_blocking_log_writer, _guard) = tracing_appender::non_blocking(file_appender);
     tracing_subscriber::registry()
         .with(fmt::layer().with_writer(non_blocking_log_writer))
         .with(EnvFilter::from_default_env())
         .init();
 
-    setup_database()?;
+    setup_database(base_jilebi_dir.data_dir())?;
 
     let main_span = span!(Level::INFO, "Jilebi Server started");
     let _guard = main_span.enter();
     info!("Starting Jilebi Server, loading plugins...");
-    let (dir, plugins) = load_plugins()?;
+    let (dir, plugins) = load_plugins(base_jilebi_dir.data_dir())?;
 
     event!(Level::INFO, ?plugins, "Plugins and manifests loaded");
     let server = JilebiMcpServer::new(plugins, dir);
@@ -94,18 +121,22 @@ async fn main() -> Result<(), String> {
     Ok(())
 }
 
+// TOP PRIORITY
+// TODO: write a plugin that can help LLMs generate plugins based on another MCP
+// TODO: support SSE, HTTP and Authentication
+// TODO: create a CLI tool to install jilebi + manage plugins
+// TODO: add a @types/*  jilebi typescript support so that type hints are available for plugin writers and LLMs
+// TODO: Document it all with website + docusaurus
+
 // Jilebi MVP
 // MCP Server
-// TODO: support SSE, HTTP
 // TODO: Error handling
 // TODO: support Resource Template
 // TODO: add pagination support
 // plugins
-// TODO: URGENT! Change state functions to access SQLite DB for state management
-// TODO: Create and read all plugins in home directory
 // TODO: (Is this needed?) Support * to allow_all in permissions
-// TODO: validate names to not include _
 // TODO: Write 10 most popular MCPs as plugins
+//			- Fetch
 //			- Git
 //			- Playwright = https://github.com/microsoft/playwright-mcp
 //			- https://github.com/awslabs/mcp/tree/main/src/aws-documentation-mcp-server
@@ -113,14 +144,13 @@ async fn main() -> Result<(), String> {
 //			- https://github.com/upstash/context7
 
 // installing plugins + CLI
-// TODO: create a CLI tool to install jilebi + manage plugins
 // TODO: let folks specify mc plugins from github or file system or URL
 
 // Beyond MVP
 // plugin management
 // TODO: make it easy to manage with a store
 // UI
-// TODO: think about a UI (leptos) and TUI over ssh (ratatui) for remote stuff
+// TODO: think about a UI (leptos) and TUI over ssh (ratatui) for remote stuff in the CLI
 // plugins
 // TODO: implement the permissions module
 // - Let users choose which resources, prompts and tools can be shown to the llm
