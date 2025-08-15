@@ -42,7 +42,7 @@ idempotent_hint = true
 open_world_hint = false
 
 [prompts.git-commit]
-name = "git commit"
+name = "git-commit"
 description = "Generate a Git commit message"
 arguments = [
 	{ name = "changes", description = "Git diff or description of changes", required = true },

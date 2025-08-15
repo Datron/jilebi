@@ -157,7 +157,7 @@ impl ServerHandler for JilebiMcpServer {
 
         let (plugin_name, tool_name) =
             get_plugin_and_section_name(&request.name.into_owned(), McpSection::Tool)?;
-        let code_path = self.plugin_dir.join("plugin_name").join("index.js");
+        let code_path = self.plugin_dir.join(&plugin_name).join("index.js");
         let code = fs::read_to_string(code_path).map_err(|e| {
             tracing::error!("Could not find JS file: {}", e);
             rmcp::ErrorData::internal_error(
@@ -268,7 +268,7 @@ impl ServerHandler for JilebiMcpServer {
 
         let (plugin_name, resource_name) =
             get_plugin_and_section_name(&request.uri, McpSection::Resource)?;
-        let code_path = self.plugin_dir.join("plugin_name").join("index.js");
+        let code_path = self.plugin_dir.join(&plugin_name).join("index.js");
 
         let code = fs::read_to_string(code_path).map_err(|e| {
             tracing::error!("Could not find JS file: {}", e);

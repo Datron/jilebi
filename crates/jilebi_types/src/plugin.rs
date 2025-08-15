@@ -12,7 +12,7 @@ use toml::Table;
 use crate::permissions::JilebiPermissions;
 
 pub const SEPARATOR: &str = "_";
-pub const NAME_REGEX: &str = r"[a-z0-9_]{30}";
+pub const NAME_REGEX: &str = r"[a-z0-9\-].+";
 pub type ResourceKey = String;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -49,11 +49,11 @@ fn permissions_extractor(op_table: &Table) -> Option<JilebiPermissions> {
         .and_then(|permissions| permissions.try_into().ok())
 }
 
-fn validate_name(name: &String) -> Result<(), String> {
+fn validate_section_key_name(name: &String) -> Result<(), String> {
     let regex = Regex::new(NAME_REGEX).map_err(|e| e.to_string())?;
-    if name.len() > 30 || !regex.is_match(name) {
+    if !regex.is_match(name) {
         Err(format!(
-            "The name set for the tool, resource or prompt has invalid characters. Only lowercase letters, numbers or underscore is allowed"
+            "The name set for the tool, resource or prompt has invalid characters. Only lowercase letters, numbers or hyphens are allowed"
         ))
     } else {
         Ok(())
@@ -74,7 +74,7 @@ impl Resources {
                 ));
             };
             let resource_name = mandatory_extractor(op_table, key, &"name".to_string())?;
-            validate_name(&resource_name)?;
+            validate_section_key_name(key)?;
             let resource = Resource::new(
                 RawResource {
                     uri: format!("{plugin_name}{SEPARATOR}{resource_name}"),
@@ -132,7 +132,7 @@ impl Tools {
                 "Invalid JSON format for the field input_schema in tool {key}"
             ))?;
             let tool_name = mandatory_extractor(op_table, key, &"name".to_string())?;
-            validate_name(&tool_name)?;
+            validate_section_key_name(key)?;
             let tool = Tool {
                 name: Cow::from(format!("{plugin_name}{SEPARATOR}{tool_name}")),
                 description: optional_extractor(op_table, &"description".to_string())
@@ -192,7 +192,7 @@ impl Prompts {
                         .collect()
                 });
             let prompt_name = mandatory_extractor(op_table, key, &"name".to_string())?;
-            validate_name(&prompt_name)?;
+            validate_section_key_name(key)?;
             let prompt = Prompt {
                 name: format!("{plugin_name}{SEPARATOR}{prompt_name}"),
                 description: optional_extractor(op_table, &"description".to_string()),

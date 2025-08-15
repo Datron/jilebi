@@ -33,13 +33,21 @@ impl WebPermissions for JilebiPermissions {
         url: &rustyscript::deno_core::url::Url,
         api_name: &str,
     ) -> Result<(), rustyscript::PermissionDenied> {
-        let url = url.to_string();
+        let url = String::from(url.as_str());
 
         let hostname_match = self
             .hosts
             .iter()
             .any(|host_name| url.starts_with(host_name));
-        if hostname_match || self.urls.contains(&url) {
+
+        let url_match = self.urls.contains(&url);
+        tracing::info!(
+            "Checking URL permissions: url = {}, hostname_match={}, url_match={}",
+            url,
+            hostname_match,
+            url_match
+        );
+        if hostname_match || url_match {
             Ok(())
         } else {
             Err(rustyscript::PermissionDenied {

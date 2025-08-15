@@ -1,0 +1,53 @@
+name = "context7"
+version = "1.0.13"
+homepage = "https://github.com/upstash/context7"
+creator = "upstash"
+contact = "support@upstash.com"
+
+[resources]
+
+
+[tools.resolve-library-id]
+name = "resolve-library-id"
+description = "Resolves a package/product name to a Context7-compatible library ID and returns a list of matching libraries"
+input_schema = { type = "object", properties = { libraryName = { type = "string", description = "Library name to search for and retrieve a Context7-compatible library ID" } }, required = [
+	"libraryName",
+] }
+function = "resolve_library_id"
+[tools.resolve-library-id.annotations]
+title = "resolve library ID"
+read_only_hint = true
+destructive_hint = false
+idempotent_hint = true
+open_world_hint = false
+[tools.resolve-library-id.permissions]
+urls = ["https://context7.com/api/v1/search"]
+hosts = ["https://context7.com"]
+
+[tools.get-library-docs]
+name = "get-library-docs"
+description = "Fetches up-to-date documentation for a library using exact Context7-compatible library ID"
+input_schema = { type = "object", properties = { context7CompatibleLibraryID = { type = "string", description = "Exact Context7-compatible library ID (e.g., '/mongodb/docs', '/vercel/next.js')" }, topic = { type = "string", description = "Topic to focus documentation on (e.g., 'hooks', 'routing')" }, tokens = { type = "number", description = "Maximum number of tokens of documentation to retrieve (default: 10000)" } }, required = [
+	"context7CompatibleLibraryID",
+] }
+function = "get_library_documentation"
+[tools.get-library-docs.annotations]
+title = "get documentation"
+read_only_hint = true
+destructive_hint = false
+idempotent_hint = true
+open_world_hint = false
+[tools.get-library-docs.permissions]
+hosts = ["https://context7.com"]
+
+
+[prompts.library-summary]
+name = "library-summary"
+description = "Generate a summary of a library's capabilities and usage"
+arguments = [
+	{ name = "libraryId", description = "The Context7-compatible library ID", required = true },
+	{ name = "focus", description = "Specific aspect to focus on (optional)", required = false },
+]
+messages = [
+	{ role = "user", type = "text", content = "Provide a comprehensive summary of the library ${request.params.arguments?.libraryId}${request.params.arguments?.focus ? ' with focus on ' + request.params.arguments.focus : ''}. Include key features, installation instructions, and common use cases." },
+]

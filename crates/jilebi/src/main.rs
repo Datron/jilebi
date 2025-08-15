@@ -52,14 +52,16 @@ fn load_plugins(dir: &Path) -> Result<(PathBuf, HashMap<String, Manifest>), Stri
             let manifest = m
                 .as_str()
                 .and_then(|manifest_path| {
-                    let manifest = fs::read_to_string(plugin_directory.join(manifest_path))
+					let manifest_pathbuf = plugin_directory.join(manifest_path);
+					tracing::info!("Loading manifest file from path: {:?}", manifest_pathbuf);
+                    let manifest = fs::read_to_string(manifest_pathbuf)
                         .expect("Manifest file not found");
                     let manifest = toml::from_str::<toml::Value>(&manifest)
                         .expect("Could not parse toml file");
                     tracing::info!("Toml file loaded for path {manifest_path}: {manifest:#?}");
                     Manifest::try_from(manifest).map_err(|e| error!(e)).ok()
                 })
-                .expect("Could not parse manifest file");
+                .expect(format!("Could not parse manifest file {:?}", m).as_str());
             (manifest.name.clone(), manifest)
         })
         .collect::<HashMap<String, Manifest>>();
@@ -122,8 +124,8 @@ async fn main() -> Result<(), String> {
 }
 
 // TOP PRIORITY
-// TODO: write a plugin that can help LLMs generate plugins based on another MCP
 // TODO: support SSE, HTTP and Authentication
+// TODO: write a plugin that can help LLMs generate plugins based on another MCP
 // TODO: create a CLI tool to install jilebi + manage plugins
 // TODO: add a @types/*  jilebi typescript support so that type hints are available for plugin writers and LLMs
 // TODO: Document it all with website + docusaurus
