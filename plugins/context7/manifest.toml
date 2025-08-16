@@ -21,7 +21,6 @@ destructive_hint = false
 idempotent_hint = true
 open_world_hint = false
 [tools.resolve-library-id.permissions]
-urls = ["https://context7.com/api/v1/search"]
 hosts = ["https://context7.com"]
 
 [tools.get-library-docs]

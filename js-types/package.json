@@ -1,0 +1,32 @@
+{
+	"name": "@jilebi/types",
+	"version": "1.0.0",
+	"description": "Jilebi Type definitions for writing plugins",
+	"main": "index.d.ts",
+	"types": "index.d.ts",
+	"keywords": [
+		"jilebi",
+		"types",
+		"typescript",
+		"plugin",
+		"mcp"
+	],
+	"author": "datron",
+	"license": "MIT",
+	"files": [
+		"*.d.ts",
+		"README.md",
+		"LICENSE"
+	],
+	"publishConfig": {
+		"access": "public"
+	},
+	"scripts": {
+		"test": "tsc --noEmit --skipLibCheck index.d.ts",
+		"validate": "tsc --noEmit --strict index.d.ts",
+		"prepublishOnly": "npm run validate"
+	},
+	"devDependencies": {
+		"typescript": "^5.9.2"
+	}
+}
