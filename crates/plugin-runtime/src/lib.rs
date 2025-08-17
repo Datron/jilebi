@@ -1,6 +1,6 @@
 mod plugin_functions;
 
-use std::{sync::Arc, time::Duration};
+use std::{path::PathBuf, sync::Arc, time::Duration};
 
 use jilebi_types::permissions::JilebiPermissions;
 use rustyscript::{Error, Module, Runtime, RuntimeOptions, json_args};
@@ -15,14 +15,12 @@ pub fn run_code<T>(
     args: Value,
     env: Value,
     permissions: &Option<JilebiPermissions>,
+    log_path: &PathBuf,
 ) -> Result<T, Error>
 where
     T: DeserializeOwned + Clone,
 {
-    let file_appender = tracing_appender::rolling::never(
-        dotenvy::var("LOG_PATH").unwrap_or("./logs".into()),
-        plugin_name.clone() + ".logs",
-    );
+    let file_appender = tracing_appender::rolling::never(log_path, plugin_name.clone() + ".logs");
     let (non_blocking_log_writer, _guard) = tracing_appender::non_blocking(file_appender);
     let subscriber = tracing_subscriber::registry()
         .with(fmt::layer().pretty().with_writer(non_blocking_log_writer))
@@ -31,7 +29,7 @@ where
     let _logguard = tracing::subscriber::set_default(subscriber);
 
     let logging = plugin_functions::logging::logging::init_ops_and_esm();
-	let state_management = plugin_functions::state::state::init_ops_and_esm();
+    let state_management = plugin_functions::state::state::init_ops_and_esm();
     let permissions = permissions.clone().map(Arc::new);
     let module = Module::new("script.js", code);
     let mut runtime_options = RuntimeOptions {

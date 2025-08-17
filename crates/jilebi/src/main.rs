@@ -3,7 +3,9 @@ use std::{
     fs,
     path::{Path, PathBuf},
 };
+mod cli;
 mod server;
+use clap::Parser;
 use directories::ProjectDirs;
 use jilebi_types::plugin::Manifest;
 use rmcp::{ServiceExt, transport::stdio};
@@ -11,6 +13,8 @@ use rusqlite::Connection;
 use server::JilebiMcpServer;
 use tracing::{Level, error, event, info, span};
 use tracing_subscriber::{EnvFilter, fmt, layer::SubscriberExt, util::SubscriberInitExt};
+
+use crate::cli::{JilebiCli, plugin_command_handler, read_log_file};
 
 fn generate_path(base_path: &Path, new_folder: &str, is_dir: bool) -> Result<PathBuf, String> {
     let path = base_path.join(Path::new(new_folder));
@@ -52,10 +56,10 @@ fn load_plugins(dir: &Path) -> Result<(PathBuf, HashMap<String, Manifest>), Stri
             let manifest = m
                 .as_str()
                 .and_then(|manifest_path| {
-					let manifest_pathbuf = plugin_directory.join(manifest_path);
-					tracing::info!("Loading manifest file from path: {:?}", manifest_pathbuf);
-                    let manifest = fs::read_to_string(manifest_pathbuf)
-                        .expect("Manifest file not found");
+                    let manifest_pathbuf = plugin_directory.join(manifest_path);
+                    tracing::info!("Loading manifest file from path: {:?}", manifest_pathbuf);
+                    let manifest =
+                        fs::read_to_string(manifest_pathbuf).expect("Manifest file not found");
                     let manifest = toml::from_str::<toml::Value>(&manifest)
                         .expect("Could not parse toml file");
                     tracing::info!("Toml file loaded for path {manifest_path}: {manifest:#?}");
@@ -98,29 +102,40 @@ async fn main() -> Result<(), String> {
         .map(PathBuf::from)
         .unwrap_or(log_file_path);
 
-    let file_appender = tracing_appender::rolling::never(log_path, log_file);
+    let file_appender = tracing_appender::rolling::never(&log_path, &log_file);
     let (non_blocking_log_writer, _guard) = tracing_appender::non_blocking(file_appender);
     tracing_subscriber::registry()
         .with(fmt::layer().with_writer(non_blocking_log_writer))
         .with(EnvFilter::from_default_env())
         .init();
 
-    setup_database(base_jilebi_dir.data_dir())?;
+    let jilebi_cli = JilebiCli::parse();
 
-    let main_span = span!(Level::INFO, "Jilebi Server started");
-    let _guard = main_span.enter();
-    info!("Starting Jilebi Server, loading plugins...");
-    let (dir, plugins) = load_plugins(base_jilebi_dir.data_dir())?;
+    match jilebi_cli.subcommand {
+        cli::SubCommands::Stdio => {
+            setup_database(base_jilebi_dir.data_dir())?;
 
-    event!(Level::INFO, ?plugins, "Plugins and manifests loaded");
-    let server = JilebiMcpServer::new(plugins, dir);
+            let main_span = span!(Level::INFO, "Jilebi Server started");
+            let _guard = main_span.enter();
+            info!("Starting Jilebi Server, loading plugins...");
+            let (dir, plugins) = load_plugins(base_jilebi_dir.data_dir())?;
 
-    let service = server.serve(stdio()).await.map_err(|e| {
-        tracing::error!("Serving error: {:?}", e);
-        e.to_string()
-    })?;
-    service.waiting().await.map_err(|e| e.to_string())?;
-    Ok(())
+            event!(Level::INFO, ?plugins, "Plugins and manifests loaded");
+            let server = JilebiMcpServer::new(plugins, dir, log_path);
+
+            let service = server.serve(stdio()).await.map_err(|e| {
+                tracing::error!("Serving error: {:?}", e);
+                e.to_string()
+            })?;
+            service.waiting().await.map_err(|e| e.to_string())?;
+            Ok(())
+        }
+        cli::SubCommands::Plugins { subcommand } => plugin_command_handler(subcommand),
+        cli::SubCommands::Log => {
+            read_log_file(&log_file);
+            Ok(())
+        }
+    }
 }
 
 // TOP PRIORITY
@@ -130,10 +145,9 @@ async fn main() -> Result<(), String> {
 // - `jilebi stdio` starts the jilebi stdio mcp
 // - `jilebi plugin add <id>` installs a plugin
 // - `jilebi plugin remove <id>` removes a plugin
-// - `jilebi plugin log <id>` read log file for  a plugin
-// - `jilebi plugin publish` publish a plugin, everything is public for now
+// - `jilebi plugin log <id>` read log file for a plugin
+// - `jilebi plugin create` create a new plugin
 // - `jilebi log` read log file for jilebi
-// - `jilebi ` read log file for jilebi
 
 // TODO: Document it all with website + docusaurus
 
@@ -145,6 +159,7 @@ async fn main() -> Result<(), String> {
 // plugins
 // TODO: Let users also specify permissions
 // TODO: Add regex support to permissions
+// TODO: Add `jilebi plugin publish` publish a plugin, everything is public for now
 // TODO: Write 10 most popular MCPs as plugins
 //			- Exa search
 //			- Fetch

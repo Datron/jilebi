@@ -16,3 +16,4 @@ tokio = { workspace = true }
 dotenvy = { workspace = true }
 rusqlite = { workspace = true }
 directories = { workspace = true }
+clap = { version = "4.5.45", features = ["derive"] }

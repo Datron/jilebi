@@ -52,13 +52,19 @@ fn get_plugin_and_section_name(
 pub struct JilebiMcpServer {
     pub plugins: Plugins,
     pub plugin_dir: PathBuf,
+    pub plugin_log_dir: PathBuf,
 }
 
 impl JilebiMcpServer {
-    pub fn new(plugins: HashMap<String, Manifest>, plugin_dir: PathBuf) -> Self {
+    pub fn new(
+        plugins: HashMap<String, Manifest>,
+        plugin_dir: PathBuf,
+        plugin_log_dir: PathBuf,
+    ) -> Self {
         JilebiMcpServer {
             plugins: Arc::new(RwLock::new(plugins)),
             plugin_dir,
+            plugin_log_dir,
         }
     }
 
@@ -185,6 +191,7 @@ impl ServerHandler for JilebiMcpServer {
         let env = json!({
             "id": format!("{}", plugin_name)
         });
+        let log_path = self.plugin_log_dir.clone();
         let result = handle
             .spawn_blocking(move || {
                 let args = request.arguments.unwrap_or_default();
@@ -195,6 +202,7 @@ impl ServerHandler for JilebiMcpServer {
                     json!(args),
                     env,
                     &tool.permissions,
+                    &log_path,
                 )
                 .map_err(|e| {
                     rmcp::ErrorData::internal_error(
@@ -294,6 +302,7 @@ impl ServerHandler for JilebiMcpServer {
         let env = json!({
             "id": format!("{}", plugin_name)
         });
+        let log_path = self.plugin_log_dir.clone();
         let result = handle
             .spawn_blocking(move || {
                 run_code::<rmcp::model::ReadResourceResult>(
@@ -303,6 +312,7 @@ impl ServerHandler for JilebiMcpServer {
                     json!({}),
                     env,
                     &resource.permissions,
+                    &log_path,
                 )
                 .map_err(|e| {
                     tracing::error!("Error while running the resource function {}", e);
