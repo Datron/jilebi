@@ -70,9 +70,6 @@ interface OpenNodesRequest {
 	names: string[];
 }
 
-// Environment type
-type Environment = any;
-
 // In-memory storage for the knowledge graph
 let templateKnowledgeGraph: KnowledgeGraph = {
 	entities: [],
@@ -85,8 +82,7 @@ let templateKnowledgeGraph: KnowledgeGraph = {
 function create_entities(request: CreateEntitiesRequest, env: Environment): MCPResult {
 	try {
 		console.log("Knowledge graph loading -> ");
-		// @ts-ignore
-		let knowledgeGraph: KnowledgeGraph = getState(env, "knowledgeGraph") ?? templateKnowledgeGraph;
+		let knowledgeGraph = getState(env, "knowledgeGraph") as KnowledgeGraph ?? templateKnowledgeGraph;
 		console.log("Knowledge graph loaded -> ", knowledgeGraph);
 		const { entities } = request;
 
@@ -105,7 +101,6 @@ function create_entities(request: CreateEntitiesRequest, env: Environment): MCPR
 		// Add new entities to the graph
 		knowledgeGraph.entities.push(...newEntities);
 
-		// @ts-ignore
 		if (!setState(env, "knowledgeGraph", knowledgeGraph)) {
 			console.log("State was not set, check logs for the error");
 		}
@@ -142,8 +137,7 @@ function create_entities(request: CreateEntitiesRequest, env: Environment): MCPR
  */
 function create_relations(request: CreateRelationsRequest, env: Environment): MCPResult {
 	try {
-		// @ts-ignore
-		let knowledgeGraph: KnowledgeGraph = getState(env, "knowledgeGraph") ?? templateKnowledgeGraph;
+		let knowledgeGraph = getState(env, "knowledgeGraph") as KnowledgeGraph ?? templateKnowledgeGraph;
 		const { relations } = request;
 
 		if (!relations || !Array.isArray(relations)) {
@@ -178,7 +172,6 @@ function create_relations(request: CreateRelationsRequest, env: Environment): MC
 		// Add new relations to the graph
 		knowledgeGraph.relations.push(...newRelations);
 
-		// @ts-ignore
 		if (!setState(env, "knowledgeGraph", knowledgeGraph)) {
 			console.log("State was not set, check logs for the error");
 		}
@@ -214,8 +207,7 @@ function create_relations(request: CreateRelationsRequest, env: Environment): MC
  */
 function add_observations(request: AddObservationsRequest, env: Environment): MCPResult {
 	try {
-		// @ts-ignore
-		let knowledgeGraph: KnowledgeGraph = getState(env, "knowledgeGraph") ?? templateKnowledgeGraph;
+		let knowledgeGraph = getState(env, "knowledgeGraph") as KnowledgeGraph ?? templateKnowledgeGraph;
 
 		const { observations } = request;
 
@@ -251,7 +243,6 @@ function add_observations(request: AddObservationsRequest, env: Environment): MC
 
 		const totalAdded = results.reduce((sum, r) => sum + r.addedObservations.length, 0);
 		const summary = `Added ${totalAdded} new observations across ${results.length} entities`;
-		// @ts-ignore
 		if (!setState(env, "knowledgeGraph", knowledgeGraph)) {
 			console.log("State was not set, check logs for the error");
 		}
@@ -282,8 +273,7 @@ function add_observations(request: AddObservationsRequest, env: Environment): MC
  */
 function delete_entities(request: DeleteEntitiesRequest, env: Environment): MCPResult {
 	try {
-		// @ts-ignore
-		let knowledgeGraph: KnowledgeGraph = getState(env, "knowledgeGraph") ?? templateKnowledgeGraph;
+		let knowledgeGraph = getState(env, "knowledgeGraph") as KnowledgeGraph ?? templateKnowledgeGraph;
 
 		const { entityNames } = request;
 
@@ -306,7 +296,6 @@ function delete_entities(request: DeleteEntitiesRequest, env: Environment): MCPR
 
 		const deletedEntities = initialEntityCount - knowledgeGraph.entities.length;
 		const deletedRelations = initialRelationCount - knowledgeGraph.relations.length;
-		// @ts-ignore
 		if (!setState(env, "knowledgeGraph", knowledgeGraph)) {
 			console.log("State was not set, check logs for the error");
 		}
@@ -337,8 +326,7 @@ function delete_entities(request: DeleteEntitiesRequest, env: Environment): MCPR
  */
 function delete_observations(request: DeleteObservationsRequest, env: Environment): MCPResult {
 	try {
-		// @ts-ignore
-		let knowledgeGraph: KnowledgeGraph = getState(env, "knowledgeGraph") ?? templateKnowledgeGraph;
+		let knowledgeGraph = getState(env, "knowledgeGraph") as KnowledgeGraph ?? templateKnowledgeGraph;
 
 		const { deletions } = request;
 
@@ -363,7 +351,6 @@ function delete_observations(request: DeleteObservationsRequest, env: Environmen
 			}
 		});
 
-		// @ts-ignore
 		if (!setState(env, "knowledgeGraph", knowledgeGraph)) {
 			console.log("State was not set, check logs for the error");
 		}
@@ -395,8 +382,7 @@ function delete_observations(request: DeleteObservationsRequest, env: Environmen
  */
 function delete_relations(request: DeleteRelationsRequest, env: Environment): MCPResult {
 	try {
-		// @ts-ignore
-		let knowledgeGraph: KnowledgeGraph = getState(env, "knowledgeGraph") ?? templateKnowledgeGraph;
+		let knowledgeGraph = getState(env, "knowledgeGraph") as KnowledgeGraph ?? templateKnowledgeGraph;
 
 		const { relations } = request;
 
@@ -416,7 +402,6 @@ function delete_relations(request: DeleteRelationsRequest, env: Environment): MC
 		);
 
 		const deletedCount = initialCount - knowledgeGraph.relations.length;
-		// @ts-ignore
 		if (!setState(env, "knowledgeGraph", knowledgeGraph)) {
 			console.log("State was not set, check logs for the error");
 		}
@@ -447,8 +432,7 @@ function delete_relations(request: DeleteRelationsRequest, env: Environment): MC
  */
 function read_graph(request: ReadGraphRequest, env: Environment): MCPResult {
 	try {
-		// @ts-ignore
-		let knowledgeGraph: KnowledgeGraph = getState(env, "knowledgeGraph") ?? templateKnowledgeGraph;
+		let knowledgeGraph = getState(env, "knowledgeGraph") as KnowledgeGraph ?? templateKnowledgeGraph;
 		console.log("Knowledge graph loaded in read_graph -> ", knowledgeGraph);
 
 		const summary = `Knowledge Graph Summary:\n• ${knowledgeGraph.entities.length} entities\n• ${knowledgeGraph.relations.length} relations`;
@@ -480,8 +464,7 @@ function read_graph(request: ReadGraphRequest, env: Environment): MCPResult {
  */
 function search_nodes(request: SearchNodesRequest, env: Environment): MCPResult {
 	try {
-		// @ts-ignore
-		let knowledgeGraph: KnowledgeGraph = getState(env, "knowledgeGraph") ?? templateKnowledgeGraph;
+		let knowledgeGraph = getState(env, "knowledgeGraph") as KnowledgeGraph ?? templateKnowledgeGraph;
 
 		const { query } = request;
 
@@ -540,8 +523,7 @@ function search_nodes(request: SearchNodesRequest, env: Environment): MCPResult 
  */
 function open_nodes(request: OpenNodesRequest, env: Environment): MCPResult {
 	try {
-		// @ts-ignore
-		let knowledgeGraph: KnowledgeGraph = getState(env, "knowledgeGraph") ?? templateKnowledgeGraph;
+		let knowledgeGraph = getState(env, "knowledgeGraph") as KnowledgeGraph ?? templateKnowledgeGraph;
 
 		const { names } = request;
 

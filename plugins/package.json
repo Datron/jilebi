@@ -8,6 +8,9 @@
     "sequential-thinking",
     "time",
     "filesystem",
-	"context7"
-  ]
+    "context7"
+  ],
+  "devDependencies": {
+    "@jilebi/types": "file:../js-types"
+  }
 }

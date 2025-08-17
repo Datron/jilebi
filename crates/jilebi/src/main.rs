@@ -126,8 +126,16 @@ async fn main() -> Result<(), String> {
 // TOP PRIORITY
 // TODO: support SSE, HTTP and Authentication
 // TODO: create a CLI tool to install jilebi + manage plugins
+// cli tool jilebi has 3 commands
+// - `jilebi stdio` starts the jilebi stdio mcp
+// - `jilebi plugin add <id>` installs a plugin
+// - `jilebi plugin remove <id>` removes a plugin
+// - `jilebi plugin log <id>` read log file for  a plugin
+// - `jilebi plugin publish` publish a plugin, everything is public for now
+// - `jilebi log` read log file for jilebi
+// - `jilebi ` read log file for jilebi
+
 // TODO: Document it all with website + docusaurus
-// TODO: write a plugin that can help LLMs generate plugins based on another MCP
 
 // Jilebi MVP
 // MCP Server
@@ -138,11 +146,13 @@ async fn main() -> Result<(), String> {
 // TODO: Let users also specify permissions
 // TODO: Add regex support to permissions
 // TODO: Write 10 most popular MCPs as plugins
+//			- Exa search
 //			- Fetch
 //			- Git
 //			- Playwright = https://github.com/microsoft/playwright-mcp
 //			- https://github.com/awslabs/mcp/tree/main/src/aws-documentation-mcp-server
 //			- https://github.com/abhiemj/manim-mcp-server
+// TODO: write a plugin that can help LLMs generate plugins based on another MCP
 
 // installing plugins + CLI
 // TODO: let folks specify mc plugins from github or file system or URL

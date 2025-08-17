@@ -12,16 +12,6 @@ interface MCPResult {
 	isError?: boolean;
 }
 
-interface FileInfo {
-	size: number;
-	created: Date;
-	modified: Date;
-	accessed: Date;
-	isDirectory: boolean;
-	isFile: boolean;
-	permissions: string;
-}
-
 interface TreeEntry {
 	name: string;
 	type: 'file' | 'directory';
@@ -79,7 +69,7 @@ function createUnifiedDiff(originalContent: string, newContent: string, filepath
 }
 
 // File reading functions
-export async function read_text_file(request: any, env: any): Promise<MCPResult> {
+export async function read_text_file(request: any, env: Environment): Promise<MCPResult> {
 	try {
 		const { path, head, tail } = request;
 
@@ -93,7 +83,6 @@ export async function read_text_file(request: any, env: any): Promise<MCPResult>
 		} else if (head) {
 			content = await headFile(path, head);
 		} else {
-			// @ts-ignore
 			content = await Deno.readTextFile(path);
 		}
 
@@ -118,10 +107,9 @@ export async function read_text_file(request: any, env: any): Promise<MCPResult>
 	}
 }
 
-export async function read_media_file(request: any, env: any): Promise<MCPResult> {
+export async function read_media_file(request: any, env: Environment): Promise<MCPResult> {
 	try {
 		const { path } = request;
-		// @ts-ignore
 		const data = await Deno.readFile(path);
 		const base64Data = btoa(String.fromCharCode(...data));
 
@@ -170,18 +158,16 @@ export async function read_media_file(request: any, env: any): Promise<MCPResult
 	}
 }
 
-export async function read_multiple_files(request: any, env: any): Promise<MCPResult> {
+export async function read_multiple_files(request: any, env: Environment): Promise<MCPResult> {
 	try {
 		const { paths } = request;
 		const results: string[] = [];
 
 		for (const filePath of paths) {
 			try {
-				// @ts-ignore
 				const content = await Deno.readTextFile(filePath);
 				results.push(`${filePath}:\n${content}\n`);
 			} catch (error) {
-				// @ts-ignore
 				results.push(`${filePath}: Error - ${error instanceof Error ? error.message : String(error)}`);
 			}
 		}
@@ -208,10 +194,9 @@ export async function read_multiple_files(request: any, env: any): Promise<MCPRe
 }
 
 // File writing functions
-export async function write_file(request: any, env: any): Promise<MCPResult> {
+export async function write_file(request: any, env: Environment): Promise<MCPResult> {
 	try {
 		const { path, content } = request;
-		// @ts-ignore
 		await Deno.writeTextFile(path, content);
 
 		return {
@@ -235,12 +220,11 @@ export async function write_file(request: any, env: any): Promise<MCPResult> {
 	}
 }
 
-export async function edit_file(request: any, env: any): Promise<MCPResult> {
+export async function edit_file(request: any, env: Environment): Promise<MCPResult> {
 	try {
 		const { path, edits, dryRun = false } = request;
 
 		// Read file content
-		// @ts-ignore
 		const content = normalizeLineEndings(await Deno.readTextFile(path));
 
 		// Apply edits sequentially
@@ -296,7 +280,6 @@ export async function edit_file(request: any, env: any): Promise<MCPResult> {
 		const diff = createUnifiedDiff(content, modifiedContent, path);
 
 		if (!dryRun) {
-			// @ts-ignore
 			await Deno.writeTextFile(path, modifiedContent);
 		}
 
@@ -322,10 +305,9 @@ export async function edit_file(request: any, env: any): Promise<MCPResult> {
 }
 
 // Directory operations
-export async function create_directory(request: any, env: any): Promise<MCPResult> {
+export async function create_directory(request: any, env: Environment): Promise<MCPResult> {
 	try {
 		const { path } = request;
-		// @ts-ignore
 		await Deno.mkdir(path, { recursive: true });
 
 		return {
@@ -349,12 +331,11 @@ export async function create_directory(request: any, env: any): Promise<MCPResul
 	}
 }
 
-export async function list_directory(request: any, env: any): Promise<MCPResult> {
+export async function list_directory(request: any, env: Environment): Promise<MCPResult> {
 	try {
 		const { path } = request;
 		const entries: string[] = [];
 
-		// @ts-ignore
 		for await (const entry of Deno.readDir(path)) {
 			const prefix = entry.isDirectory ? "[DIR]" : "[FILE]";
 			entries.push(`${prefix} ${entry.name}`);
@@ -381,19 +362,17 @@ export async function list_directory(request: any, env: any): Promise<MCPResult>
 	}
 }
 
-export async function list_directory_with_sizes(request: any, env: any): Promise<MCPResult> {
+export async function list_directory_with_sizes(request: any, env: Environment): Promise<MCPResult> {
 	try {
 		const { path, sortBy = 'name' } = request;
 		const entries: Array<{ name: string, isDirectory: boolean, size: number }> = [];
 
-		// @ts-ignore
 		for await (const entry of Deno.readDir(path)) {
 			const entryPath = `${path}/${entry.name}`;
 			let size = 0;
 
 			try {
 				if (entry.isFile) {
-					// @ts-ignore
 					const stat = await Deno.stat(entryPath);
 					size = stat.size;
 				}
@@ -453,13 +432,12 @@ export async function list_directory_with_sizes(request: any, env: any): Promise
 	}
 }
 
-export async function directory_tree(request: any, env: any): Promise<MCPResult> {
+export async function directory_tree(request: any, env: Environment): Promise<MCPResult> {
 	try {
 		const { path } = request;
 
 		async function buildTree(currentPath: string): Promise<TreeEntry[]> {
 			const result: TreeEntry[] = [];
-			// @ts-ignore
 			for await (const entry of Deno.readDir(currentPath)) {
 				const entryData: TreeEntry = {
 					name: entry.name,
@@ -501,10 +479,9 @@ export async function directory_tree(request: any, env: any): Promise<MCPResult>
 }
 
 // File operations
-export async function move_file(request: any, env: any): Promise<MCPResult> {
+export async function move_file(request: any, env: Environment): Promise<MCPResult> {
 	try {
 		const { source, destination } = request;
-		// @ts-ignore
 		await Deno.rename(source, destination);
 
 		return {
@@ -528,13 +505,12 @@ export async function move_file(request: any, env: any): Promise<MCPResult> {
 	}
 }
 
-export async function search_files(request: any, env: any): Promise<MCPResult> {
+export async function search_files(request: any, env: Environment): Promise<MCPResult> {
 	try {
 		const { path, pattern, excludePatterns = [] } = request;
 		const results: string[] = [];
 
 		async function search(currentPath: string): Promise<void> {
-			// @ts-ignore
 			for await (const entry of Deno.readDir(currentPath)) {
 				const fullPath = `${currentPath}/${entry.name}`;
 
@@ -586,23 +562,12 @@ export async function search_files(request: any, env: any): Promise<MCPResult> {
 	}
 }
 
-export async function get_file_info(request: any, env: any): Promise<MCPResult> {
+export async function get_file_info(request: any, env: Environment): Promise<MCPResult> {
 	try {
 		const { path } = request;
-		// @ts-ignore
 		const stat = await Deno.stat(path);
 
-		const info: FileInfo = {
-			size: stat.size,
-			created: stat.birthtime || stat.mtime,
-			modified: stat.mtime,
-			accessed: stat.atime || stat.mtime,
-			isDirectory: stat.isDirectory,
-			isFile: stat.isFile,
-			permissions: stat.mode ? stat.mode.toString(8).slice(-3) : '644'
-		};
-
-		const infoText = Object.entries(info)
+		const infoText = Object.entries(stat)
 			.map(([key, value]) => `${key}: ${value}`)
 			.join("\n");
 
@@ -629,14 +594,12 @@ export async function get_file_info(request: any, env: any): Promise<MCPResult> 
 
 // Helper functions for head/tail operations
 async function headFile(filePath: string, numLines: number): Promise<string> {
-	// @ts-ignore
 	const content = await Deno.readTextFile(filePath);
 	const lines = content.split('\n');
 	return lines.slice(0, numLines).join('\n');
 }
 
 async function tailFile(filePath: string, numLines: number): Promise<string> {
-	// @ts-ignore
 	const content = await Deno.readTextFile(filePath);
 	const lines = content.split('\n');
 	return lines.slice(-numLines).join('\n');

@@ -25,9 +25,6 @@ interface ConvertTimeRequest {
 	time: string;
 }
 
-// Environment type set to any for now
-type Environment = any;
-
 /**
  * Get current time in a specific timezone
  * @param request - The request object containing timezone parameter

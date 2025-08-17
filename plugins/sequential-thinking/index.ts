@@ -39,9 +39,6 @@ interface ThoughtData {
 	nextThoughtNeeded: boolean;
 }
 
-// Environment type set to any for now
-type Environment = any;
-
 class SequentialThinkingProcessor {
 	private thoughtHistory: ThoughtData[] = [];
 	private branches: Record<string, ThoughtData[]> = {};
