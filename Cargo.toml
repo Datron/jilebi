@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["crates/jilebi", "crates/jilebi_types", "crates/plugin-runtime"]
+members = ["crates/jilebi", "crates/jilebi_types", "crates/plugin-runtime", "crates/store"]
 
 [workspace.dependencies]
 tokio = { version = "1.44.1", features = ["full"] }
@@ -20,13 +20,13 @@ rmcp = { version = "0.3.0", features = [
 	"transport-sse-server",
 	"transport-streamable-http-server",
 ] }
-rustyscript = { version = "0.11.0", default-features = false, features = [
+rustyscript = { version = "0.12.2", default-features = false, features = [
 	"fs",
 	"web",
 ] }
-deno_core = "0.323.0"
+deno_core = "0.355.0"
 rusqlite = { version = "0.37.0",  features = ["bundled"] }
 directories = "=6.0.0"
+aws-config = { version = "1.1.7", features = ["behavior-version-latest"] }
+aws-sdk-s3 = "1.103.0"
 
-[patch.crates-io]
-deno_media_type = { git = 'https://github.com/denoland/deno_media_type', tag = "0.2.6" }

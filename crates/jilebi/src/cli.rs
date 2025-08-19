@@ -77,8 +77,8 @@ pub fn plugin_command_handler(
                 .with_prompt("plugin name")
                 .interact_text()
                 .map_err(|e| e.to_string())?;
-            let manifest_code = manifest_code.replace("<replace>", &plugin_name);
-            let plugin_path = Input::<String>::new()
+            let _manifest_code = manifest_code.replace("<replace>", &plugin_name);
+            let _plugin_path = Input::<String>::new()
                 .with_prompt("path for the plugin")
                 .default(user_dirs.home_dir().join(plugin_name).display().to_string())
                 .interact_text()
@@ -89,8 +89,8 @@ pub fn plugin_command_handler(
                 .items(&languages)
                 .interact()
                 .map_err(|e| e.to_string())?;
-            let language = languages[language].to_lowercase();
-            let complex_plugin = Select::new()
+            let _language = languages[language].to_lowercase();
+            let _complex_plugin = Select::new()
                 .with_prompt(
                     "Include Rollup for builds? Use this if you are writing a complex plugin",
                 )

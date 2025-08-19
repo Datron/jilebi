@@ -28,8 +28,8 @@ where
 
     let _logguard = tracing::subscriber::set_default(subscriber);
 
-    let logging = plugin_functions::logging::logging::init_ops_and_esm();
-    let state_management = plugin_functions::state::state::init_ops_and_esm();
+    let logging = plugin_functions::logging::logging::init();
+    let state_management = plugin_functions::state::state::init();
     let permissions = permissions.clone().map(Arc::new);
     let module = Module::new("script.js", code);
     let mut runtime_options = RuntimeOptions {
