@@ -17,3 +17,6 @@ dotenvy = { workspace = true }
 rusqlite = { workspace = true }
 directories = { workspace = true }
 clap = { version = "4.5.45", features = ["derive"] }
+dialoguer = "0.11.0"
+indicatif = "0.18.0"
+zip = "4.3.0"

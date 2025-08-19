@@ -108,17 +108,17 @@ async fn main() -> Result<(), String> {
         .with(fmt::layer().with_writer(non_blocking_log_writer))
         .with(EnvFilter::from_default_env())
         .init();
-
+	
+	let (dir, plugins) = load_plugins(base_jilebi_dir.data_dir())?;
     let jilebi_cli = JilebiCli::parse();
 
     match jilebi_cli.subcommand {
-        cli::SubCommands::Stdio => {
-            setup_database(base_jilebi_dir.data_dir())?;
-
+		cli::SubCommands::Stdio => {
+			setup_database(base_jilebi_dir.data_dir())?;
+			
             let main_span = span!(Level::INFO, "Jilebi Server started");
+			info!("Starting Jilebi Server, loading plugins...");
             let _guard = main_span.enter();
-            info!("Starting Jilebi Server, loading plugins...");
-            let (dir, plugins) = load_plugins(base_jilebi_dir.data_dir())?;
 
             event!(Level::INFO, ?plugins, "Plugins and manifests loaded");
             let server = JilebiMcpServer::new(plugins, dir, log_path);
@@ -130,7 +130,7 @@ async fn main() -> Result<(), String> {
             service.waiting().await.map_err(|e| e.to_string())?;
             Ok(())
         }
-        cli::SubCommands::Plugins { subcommand } => plugin_command_handler(subcommand),
+        cli::SubCommands::Plugins { subcommand } => plugin_command_handler(subcommand, &log_file, &dir),
         cli::SubCommands::Log => {
             read_log_file(&log_file);
             Ok(())
