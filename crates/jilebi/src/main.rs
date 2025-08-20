@@ -130,7 +130,7 @@ async fn main() -> Result<(), String> {
             service.waiting().await.map_err(|e| e.to_string())?;
             Ok(())
         }
-        cli::SubCommands::Plugins { subcommand } => plugin_command_handler(subcommand, &log_file, &dir),
+        cli::SubCommands::Plugins { subcommand } => plugin_command_handler(subcommand, &log_file, &dir).await,
         cli::SubCommands::Log => {
             read_log_file(&log_file);
             Ok(())

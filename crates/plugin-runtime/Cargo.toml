@@ -5,7 +5,7 @@ edition = "2024"
 
 [dependencies]
 jilebi_types = { path = "../jilebi_types" }
-reqwest = "=0.12.8"
+reqwest = { workspace = true }
 rustyscript = { workspace = true }
 deno_core = { workspace = true }
 dotenvy = { workspace = true }

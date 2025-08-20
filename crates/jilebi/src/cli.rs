@@ -3,7 +3,7 @@ use std::{
     io::{BufRead, BufReader},
     path::PathBuf,
 };
-
+mod download;
 use clap::{Parser, Subcommand};
 use dialoguer::{Input, Select};
 use directories::UserDirs;
@@ -52,7 +52,7 @@ pub fn read_log_file(path: &PathBuf) {
     }
 }
 
-pub fn plugin_command_handler(
+pub async fn plugin_command_handler(
     subcommand: PluginSubCommands,
     log_file: &PathBuf,
     plugin_dir: &PathBuf,
@@ -77,10 +77,16 @@ pub fn plugin_command_handler(
                 .with_prompt("plugin name")
                 .interact_text()
                 .map_err(|e| e.to_string())?;
-            let _manifest_code = manifest_code.replace("<replace>", &plugin_name);
-            let _plugin_path = Input::<String>::new()
+            let manifest_code = manifest_code.replace("<replace>", &plugin_name);
+            let plugin_path = Input::<String>::new()
                 .with_prompt("path for the plugin")
-                .default(user_dirs.home_dir().join(plugin_name).display().to_string())
+                .default(
+                    user_dirs
+                        .home_dir()
+                        .join(&plugin_name)
+                        .display()
+                        .to_string(),
+                )
                 .interact_text()
                 .map_err(|e| e.to_string())?;
             let languages = ["JavaScript", "TypeScript"];
@@ -89,8 +95,8 @@ pub fn plugin_command_handler(
                 .items(&languages)
                 .interact()
                 .map_err(|e| e.to_string())?;
-            let _language = languages[language].to_lowercase();
-            let _complex_plugin = Select::new()
+            let language = languages[language].to_lowercase();
+            let complex_plugin = Select::new()
                 .with_prompt(
                     "Include Rollup for builds? Use this if you are writing a complex plugin",
                 )
@@ -98,14 +104,19 @@ pub fn plugin_command_handler(
                 .interact()
                 .map_err(|e| e.to_string())?
                 == 0;
-
+            download::download_and_init_template(
+                &plugin_name,
+                &manifest_code,
+                &PathBuf::from(plugin_path),
+                &language,
+                complex_plugin,
+            ).await?;
             Ok(())
         }
         PluginSubCommands::Add { id } => {
-            let plugin_path = plugin_dir.join(id);
+            let plugin_path = plugin_dir.join(&id);
             tracing::info!("Adding plugin at path: {}", plugin_path.display());
-            // download plugin zip from storage
-
+            download::download_and_init_plugin(&id, &plugin_path).await?;
             Ok(())
         }
         PluginSubCommands::Remove { id } => {

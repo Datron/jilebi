@@ -3643,6 +3643,7 @@ dependencies = [
  "dotenvy",
  "indicatif",
  "jilebi_types",
+ "reqwest",
  "rmcp",
  "rusqlite",
  "tokio",
