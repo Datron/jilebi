@@ -8,6 +8,8 @@ use clap::{Parser, Subcommand};
 use dialoguer::{Input, Select};
 use directories::UserDirs;
 
+use crate::cli::download::remove_plugin_to_toml;
+
 #[derive(Debug, Clone, Subcommand)]
 pub enum SubCommands {
     /// Run jilebi as a process
@@ -78,7 +80,7 @@ pub async fn plugin_command_handler(
                 .interact_text()
                 .map_err(|e| e.to_string())?;
             let manifest_code = manifest_code.replace("<replace>", &plugin_name);
-            let plugin_path = Input::<String>::new()
+            let new_plugin_path = Input::<String>::new()
                 .with_prompt("path for the plugin")
                 .default(
                     user_dirs
@@ -107,25 +109,27 @@ pub async fn plugin_command_handler(
             download::download_and_init_template(
                 &plugin_name,
                 &manifest_code,
-                &PathBuf::from(plugin_path),
+                &PathBuf::from(new_plugin_path),
                 &language,
                 complex_plugin,
-            ).await?;
+                plugin_dir,
+            )
+            .await?;
             Ok(())
         }
         PluginSubCommands::Add { id } => {
             let plugin_path = plugin_dir.join(&id);
             tracing::info!("Adding plugin at path: {}", plugin_path.display());
-            download::download_and_init_plugin(&id, &plugin_path).await?;
+            download::download_and_init_plugin(&id, &plugin_path, plugin_dir).await?;
             Ok(())
         }
         PluginSubCommands::Remove { id } => {
-            let plugin_path = plugin_dir.join(id);
+            let plugin_path = plugin_dir.join(&id);
             tracing::info!("Removing plugin at path: {}", plugin_path.display());
             if plugin_path.exists() {
-                fs::remove_dir(plugin_path).map_err(|e| e.to_string())?;
+                fs::remove_dir_all(plugin_path).map_err(|e| e.to_string())?;
             }
-            Ok(())
+            remove_plugin_to_toml(plugin_dir, &id)
         }
         PluginSubCommands::Log { id } => {
             read_log_file(&log_file.join(format!("{}.log", id)));

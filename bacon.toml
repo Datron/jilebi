@@ -38,7 +38,7 @@ command = ["cargo", "clippy", "--all-targets"]
 need_stdout = false
 
 [jobs.build]
-command = ["cargo", "build"]
+command = ["cargo", "build", "--package", "jilebi"]
 need_stdout = true
 
 # This job lets you run

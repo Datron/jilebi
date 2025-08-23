@@ -16,6 +16,10 @@ use tracing_subscriber::{EnvFilter, fmt, layer::SubscriberExt, util::SubscriberI
 
 use crate::cli::{JilebiCli, plugin_command_handler, read_log_file};
 
+const PLUGIN_MANIFEST_FORMAT: &str = r#"
+manifest = []
+"#;
+
 fn generate_path(base_path: &Path, new_folder: &str, is_dir: bool) -> Result<PathBuf, String> {
     let path = base_path.join(Path::new(new_folder));
     if !path.exists() && is_dir {
@@ -32,6 +36,9 @@ fn load_plugins(dir: &Path) -> Result<(PathBuf, HashMap<String, Manifest>), Stri
         .unwrap_or(default_plugin_path);
     info!("Plugin directory being used -> {:?}", plugin_directory);
     let plugin_toml_path = plugin_directory.join(Path::new("plugins.toml"));
+    if !plugin_toml_path.exists() {
+        fs::write(&plugin_toml_path, PLUGIN_MANIFEST_FORMAT).map_err(|e| e.to_string())?;
+    }
     let plugin_toml = fs::read_to_string(plugin_toml_path).map_err(|e| {
         format!(
             "Failed while loading plugins from dir -> {:?}, error -> {}",
@@ -108,16 +115,16 @@ async fn main() -> Result<(), String> {
         .with(fmt::layer().with_writer(non_blocking_log_writer))
         .with(EnvFilter::from_default_env())
         .init();
-	
-	let (dir, plugins) = load_plugins(base_jilebi_dir.data_dir())?;
+
+    let (dir, plugins) = load_plugins(base_jilebi_dir.data_dir())?;
     let jilebi_cli = JilebiCli::parse();
 
     match jilebi_cli.subcommand {
-		cli::SubCommands::Stdio => {
-			setup_database(base_jilebi_dir.data_dir())?;
-			
+        cli::SubCommands::Stdio => {
+            setup_database(base_jilebi_dir.data_dir())?;
+
             let main_span = span!(Level::INFO, "Jilebi Server started");
-			info!("Starting Jilebi Server, loading plugins...");
+            info!("Starting Jilebi Server, loading plugins...");
             let _guard = main_span.enter();
 
             event!(Level::INFO, ?plugins, "Plugins and manifests loaded");
@@ -130,7 +137,9 @@ async fn main() -> Result<(), String> {
             service.waiting().await.map_err(|e| e.to_string())?;
             Ok(())
         }
-        cli::SubCommands::Plugins { subcommand } => plugin_command_handler(subcommand, &log_file, &dir).await,
+        cli::SubCommands::Plugins { subcommand } => {
+            plugin_command_handler(subcommand, &log_file, &dir).await
+        }
         cli::SubCommands::Log => {
             read_log_file(&log_file);
             Ok(())
