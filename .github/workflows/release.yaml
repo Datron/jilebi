@@ -1,0 +1,73 @@
+name: Create jilebi release
+
+on: workflow_dispatch
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  generate-rust-binary:
+    if: github.ref == 'refs/heads/master'
+    strategy:
+      max-parallel: 5
+      matrix:
+        platform:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            jilebi_bin_name: jilebi
+            jilebi_zip_name: jilebi-x86_64-unknown-linux-gnu.zip
+          - os: macos-13
+            target: x86_64-apple-darwin
+            jilebi_bin_name: jilebi
+            jilebi_zip_name: jilebi-x86_64-apple-darwin.zip
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            jilebi_bin_name: jilebi
+            jilebi_zip_name: jilebi-aarch64-apple-darwin.zip
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            jilebi_bin_name: jilebi.exe
+            jilebi_zip_name: jilebi-x86_64-pc-windows-msvc.zip
+
+    runs-on: ${{ matrix.platform.os }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.88.0
+          targets: ${{ matrix.platform.target }}
+          components: rustfmt, clippy
+
+      - name: Build and package for ${{ matrix.platform.os }}
+        if: matrix.platform.os != 'windows-latest'
+        run: |
+          cargo build --package jilebi --release --target ${{ matrix.platform.target }}
+          mkdir -p bin
+          ls -la target/${{ matrix.platform.target }}/release
+          mv target/${{ matrix.platform.target }}/release/${{ matrix.platform.jilebi_bin_name }} ${{ matrix.platform.jilebi_bin_name }}
+          zip -r bin/${{ matrix.platform.jilebi_zip_name }} ${{ matrix.platform.jilebi_bin_name }}
+
+      - name: Build and package for ${{ matrix.platform.os }} on windows
+        if: matrix.platform.os == 'windows-latest'
+        run: |
+          cargo build --package jilebi --release --target ${{ matrix.platform.target }}
+          ls target\${{ matrix.platform.target }}\release
+          New-Item -ItemType Directory -Path "bin"
+          Move-Item -Path "target\${{ matrix.platform.target }}\release\${{ matrix.platform.jilebi_bin_name }}" -Destination "${{ matrix.platform.jilebi_bin_name }}"
+          Compress-Archive -Path "${{ matrix.platform.jilebi_bin_name }}"  -DestinationPath "bin\${{ matrix.platform.jilebi_zip_name }}"
+
+
+      - uses: ryand56/r2-upload-action@latest
+        with:
+          r2-account-id: ${{ secrets.R2_ACCOUNT_ID }}
+          r2-access-key-id: ${{ secrets.R2_ACCESS_KEY_ID }}
+          r2-secret-access-key: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          r2-bucket: jilebi
+          source-dir: bin
+          destination-dir: bin
