@@ -132,7 +132,7 @@ pub async fn plugin_command_handler(
             remove_plugin_to_toml(plugin_dir, &id)
         }
         PluginSubCommands::Log { id } => {
-            read_log_file(&log_file.join(format!("{}.log", id)));
+            read_log_file(&log_file.parent().unwrap().join(format!("{}.logs", id)));
             Ok(())
         }
     }
