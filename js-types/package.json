@@ -1,6 +1,6 @@
 {
 	"name": "@jilebi/types",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "Jilebi Type definitions for writing plugins",
 	"main": "index.d.ts",
 	"types": "index.d.ts",
@@ -20,11 +20,6 @@
 	],
 	"publishConfig": {
 		"access": "public"
-	},
-	"scripts": {
-		"test": "tsc --noEmit --skipLibCheck index.d.ts",
-		"validate": "tsc --noEmit --strict index.d.ts",
-		"prepublishOnly": "npm run validate"
 	},
 	"devDependencies": {
 		"typescript": "^5.9.2"
