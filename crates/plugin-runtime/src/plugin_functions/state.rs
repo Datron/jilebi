@@ -1,9 +1,15 @@
 use deno_core::{extension, op2};
+use directories::ProjectDirs;
 use rusqlite::{Connection, params};
 
 #[op2(fast)]
 fn set_state(#[string] id: &str, #[string] key: &str, #[string] value: &str) -> bool {
-    let connection = match Connection::open("./jilebi.db3") {
+    let Some(base_jilebi_dir) = ProjectDirs::from("ai", "jilebi", "jilebi-server") else {
+        tracing::error!("Could not create ProjectDirs struct");
+        return false;
+    };
+    let db_file = base_jilebi_dir.data_dir().join("jilebi.db3");
+    let connection = match Connection::open(db_file) {
         Ok(conn) => conn,
         Err(err) => {
             tracing::error!("Plugin state could not be fetched {}", err);
@@ -33,7 +39,12 @@ fn set_state(#[string] id: &str, #[string] key: &str, #[string] value: &str) -> 
 #[op2]
 #[string]
 fn get_state(#[string] id: &str, #[string] key: &str) -> String {
-    let connection = match Connection::open("./jilebi.db3") {
+    let Some(base_jilebi_dir) = ProjectDirs::from("ai", "jilebi", "jilebi-server") else {
+        tracing::error!("Could not create ProjectDirs struct");
+        return String::from("null");
+    };
+    let db_file = base_jilebi_dir.data_dir().join("jilebi.db3");
+    let connection = match Connection::open(db_file) {
         Ok(conn) => conn,
         Err(err) => {
             tracing::error!("Plugin state could not be fetched {}", err);
@@ -58,7 +69,12 @@ fn get_state(#[string] id: &str, #[string] key: &str) -> String {
 
 #[op2(fast)]
 fn delete_state(#[string] id: &str, #[string] key: &str) -> bool {
-    let connection = match Connection::open("./jilebi.db3") {
+    let Some(base_jilebi_dir) = ProjectDirs::from("ai", "jilebi", "jilebi-server") else {
+        tracing::error!("Could not create ProjectDirs struct");
+        return false;
+    };
+    let db_file = base_jilebi_dir.data_dir().join("jilebi.db3");
+    let connection = match Connection::open(db_file) {
         Ok(conn) => conn,
         Err(err) => {
             tracing::error!("Plugin state could not be fetched {}", err);

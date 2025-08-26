@@ -2325,6 +2325,7 @@ name = "dosa"
 version = "0.1.0"
 dependencies = [
  "deno_core",
+ "directories",
  "dotenvy",
  "jilebi_types",
  "reqwest",
