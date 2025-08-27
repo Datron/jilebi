@@ -149,9 +149,11 @@ async fn main() -> Result<(), String> {
 
 // TOP PRIORITY
 // TODO: support SSE, HTTP and Authentication
-// TODO: Document it all with website + docusaurus
+// TODO: Pass ENVs and secrets through env variables (needed for github)
 // TODO: Let users also specify permissions
-// TODO: write a plugin that can help LLMs generate plugins based on another MCP
+// TODO: add compile time flags for using postgres (saas) vs sqlite (stdio)
+// TODO: Document it all with website + docusaurus
+// TODO: Finish plugin store + login + management dashboard + API keys + payments
 
 // Jilebi MVP
 // MCP Server
@@ -163,6 +165,7 @@ async fn main() -> Result<(), String> {
 // TODO: Add `jilebi plugin publish` publish a plugin, everything is public for now
 // TODO: Write 10 most popular MCPs as plugins
 //			- Exa search -> important
+//			- github -> https://github.com/github/github-mcp-server
 //			- Fetch -> important
 //			- Git
 //			- Playwright = https://github.com/microsoft/playwright-mcp -> important

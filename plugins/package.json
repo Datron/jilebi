@@ -1,16 +1,17 @@
 {
-  "name": "plugins",
-  "version": "1.0.0",
-  "private": true,
-  "description": "Example plugins for jilebi",
-  "workspaces": [
-    "memory",
-    "sequential-thinking",
-    "time",
-    "filesystem",
-    "context7"
-  ],
-  "devDependencies": {
-    "@jilebi/types": "file:../js-types"
-  }
+	"name": "plugins",
+	"version": "1.0.0",
+	"private": true,
+	"description": "Example plugins for jilebi",
+	"workspaces": [
+		"memory",
+		"sequential-thinking",
+		"time",
+		"filesystem",
+		"context7",
+		"jilebi-gen"
+	],
+	"devDependencies": {
+		"@jilebi/types": "file:../js-types"
+	}
 }

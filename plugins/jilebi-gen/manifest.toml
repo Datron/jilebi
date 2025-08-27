@@ -1,0 +1,35 @@
+
+name = "jilebi-gen"
+version = "1.0.0"
+homepage = "jilebi.ai"
+creator = "jilebi"
+contact = "support@jilebi.ai"
+
+[resources.manifest-schema]
+name = "manifest schema"
+description = "The schema for the plugin manifest"
+mime_type = "text/plain"
+function = "get_manifest_format"
+
+[resources.example-manifest-schema]
+name = "example manifest schema"
+description = "An example schema for the plugin"
+mime_type = "text/plain"
+function = "get_manifest_example"
+
+[resources.example-index-file]
+name = "example index file"
+description = "An example index file for the plugin"
+mime_type = "text/plain"
+function = "get_index_example"
+
+
+[prompts.generate-plugin]
+name = "generate plugin"
+description = "a prompt to generate plugin manifest and code"
+messages = [
+	{ role = "assistant", type = "text", content = "You are a jilebi plugin creation assistant. The manifest of a plugin is defined in toml. The user will provide a description of the tools, resources and prompts that they wish to generate as a jilebi plugin - please write the code based on the project structure and use resources like manifest-schema, example-manifest-schema and example-index-file. Use JS/TS mcp responses as the return types for functions written. Use other tools if available, like context7, sequential-thinking and memory" },
+	{ role = "user", type = "text", content = "Please build the following plugin {name} with the tools: {tool list + description} resources: {resource list + description} and prompts: {prompt list + description}" },
+]
+
+[tools]
