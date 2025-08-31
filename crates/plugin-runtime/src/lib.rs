@@ -1,3 +1,4 @@
+#![deny(unused_crate_dependencies)]
 mod plugin_functions;
 
 use std::{path::PathBuf, sync::Arc, time::Duration};

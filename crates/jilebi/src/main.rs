@@ -1,3 +1,4 @@
+#![deny(unused_crate_dependencies)]
 use std::{
     collections::HashMap,
     fs,
@@ -28,12 +29,7 @@ fn generate_path(base_path: &Path, new_folder: &str, is_dir: bool) -> Result<Pat
     Ok(path)
 }
 
-fn load_plugins(dir: &Path) -> Result<(PathBuf, HashMap<String, Manifest>), String> {
-    let default_plugin_path = generate_path(dir, "plugins", true)?;
-
-    let plugin_directory = dotenvy::var("PLUGIN_DIR")
-        .map(PathBuf::from)
-        .unwrap_or(default_plugin_path);
+fn load_plugins(plugin_directory: &PathBuf) -> Result<HashMap<String, Manifest>, String> {
     info!("Plugin directory being used -> {:?}", plugin_directory);
     let plugin_toml_path = plugin_directory.join(Path::new("plugins.toml"));
     if !plugin_toml_path.exists() {
@@ -76,25 +72,44 @@ fn load_plugins(dir: &Path) -> Result<(PathBuf, HashMap<String, Manifest>), Stri
             (manifest.name.clone(), manifest)
         })
         .collect::<HashMap<String, Manifest>>();
-    Ok((plugin_directory, manifests))
+    Ok(manifests)
 }
 
-fn setup_database(dir: &Path) -> Result<(), String> {
+fn setup_database(dir: &Path) -> Result<Connection, String> {
     let db_path = generate_path(dir, "jilebi.db3", false)?;
     let connection = Connection::open(db_path).map_err(|e| e.to_string())?;
-    connection.execute_batch(
-		"BEGIN;
-		CREATE TABLE IF NOT EXISTS plugin_state (id TEXT NOT NULL, key TEXT NOT NULL, value TEXT NOT NULL, PRIMARY KEY (id, key));
-		COMMIT;"
-	).map_err(|e| e.to_string())?;
-    Ok(())
+    connection
+        .execute_batch(
+            "BEGIN;
+		CREATE TABLE IF NOT EXISTS plugin_state (
+			id TEXT NOT NULL, 
+			key TEXT NOT NULL, 
+			value TEXT NOT NULL, 
+			PRIMARY KEY (id, key)
+		);
+		CREATE TABLE IF NOT EXISTS plugin_env(
+			id TEXT NOT NULL, 
+			type TEXT NOT NULL CHECK(type IN ('normal', 'secret')), 
+			env_name TEXT NOT NULL,
+			schema TEXT NOT NULL,
+			value TEXT NOT NULL, 
+			PRIMARY KEY (id, env_name)
+		);
+		CREATE TABLE IF NOT EXISTS plugin_permissions(
+			id TEXT NOT NULL, 
+			resource_name TEXT NOT NULL, 
+			value TEXT NOT NULL, 
+			PRIMARY KEY (id, resource_name)
+		);
+		COMMIT;",
+        )
+        .map_err(|e| e.to_string())?;
+    Ok(connection)
 }
 
 #[tokio::main]
 async fn main() -> Result<(), String> {
-    dotenvy::dotenv()
-        .map_err(|e| format!("error while loading the dotenv file: {}", e.to_string()))
-        .unwrap_or_default();
+    dotenvy::dotenv().unwrap_or_default();
 
     let base_jilebi_dir = ProjectDirs::from("ai", "jilebi", "jilebi-server")
         .ok_or(String::from("Could not create ProjectDirs struct"))?;
@@ -116,19 +131,30 @@ async fn main() -> Result<(), String> {
         .with(EnvFilter::from_default_env())
         .init();
 
-    let (dir, plugins) = load_plugins(base_jilebi_dir.data_dir())?;
+    let default_plugin_path = generate_path(base_jilebi_dir.data_dir(), "plugins", true)?;
+
+    let plugin_directory = dotenvy::var("PLUGIN_DIR")
+        .map(PathBuf::from)
+        .unwrap_or(default_plugin_path);
+
     let jilebi_cli = JilebiCli::parse();
 
+    let db = setup_database(base_jilebi_dir.data_dir())?;
     match jilebi_cli.subcommand {
         cli::SubCommands::Stdio => {
-            setup_database(base_jilebi_dir.data_dir())?;
+            let plugins = load_plugins(&plugin_directory)?;
 
             let main_span = span!(Level::INFO, "Jilebi Server started");
             info!("Starting Jilebi Server, loading plugins...");
             let _guard = main_span.enter();
 
             event!(Level::INFO, ?plugins, "Plugins and manifests loaded");
-            let server = JilebiMcpServer::new(plugins, dir, log_path);
+            let server = JilebiMcpServer::new(
+                plugins,
+                plugin_directory,
+                log_path,
+                base_jilebi_dir.data_dir().to_path_buf(),
+            );
 
             let service = server.serve(stdio()).await.map_err(|e| {
                 tracing::error!("Serving error: {:?}", e);
@@ -138,7 +164,7 @@ async fn main() -> Result<(), String> {
             Ok(())
         }
         cli::SubCommands::Plugins { subcommand } => {
-            plugin_command_handler(subcommand, &log_file, &dir).await
+            plugin_command_handler(subcommand, &log_file, &plugin_directory, db).await
         }
         cli::SubCommands::Log => {
             read_log_file(&log_file);
@@ -148,12 +174,22 @@ async fn main() -> Result<(), String> {
 }
 
 // TOP PRIORITY
-// TODO: support SSE, HTTP and Authentication
 // TODO: Pass ENVs and secrets through env variables (needed for github)
 // TODO: Let users also specify permissions
+// - Let users choose which resources, prompts and tools can be shown to the llm
+// - Let users choose the permissions allowed - which files, directories can be accessed
+// - Let users choose the permissions allowed - which domains can be hit
+// TODO: support SSE, HTTP and Authentication
 // TODO: add compile time flags for using postgres (saas) vs sqlite (stdio)
-// TODO: Document it all with website + docusaurus
-// TODO: Finish plugin store + login + management dashboard + API keys + payments
+// TODO: add a frontend
+// 			- plugin store
+// 			- login
+// 			- management dashboard
+// 			- API keys
+// 			- show plugin logs and configs in the UI
+// 			- payments
+//			- website
+//			- docs (docusaurus or starlight)
 
 // Jilebi MVP
 // MCP Server
@@ -177,12 +213,7 @@ async fn main() -> Result<(), String> {
 
 // Beyond MVP
 // plugin management
-// TODO: make it easy to manage with a store
+
 // UI
 // TODO: think about a UI (leptos) and TUI over ssh (ratatui) for remote stuff in the CLI
 // plugins
-// TODO: implement the permissions module
-// - Let users choose which resources, prompts and tools can be shown to the llm
-// - Let users choose the permissions allowed - which files, directories can be accessed
-// - Let users choose the permissions allowed - which domains can be hit
-// TODO: show plugin logs and configs in the UI

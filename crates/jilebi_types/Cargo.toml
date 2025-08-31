@@ -5,15 +5,13 @@ edition = "2024"
 
 [dependencies]
 derive_more = { workspace = true }
-jsonschema = "0.29.1"
-mime = "0.3.17"
 regex = "1.11.1"
 rmcp = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-strum = { workspace = true }
-strum_macros = { workspace = true }
 tokio = { workspace = true }
 toml = { workspace = true }
 rustyscript = { workspace = true }
 tracing = { workspace = true }
+strum = { workspace = true }
+strum_macros = { workspace = true }

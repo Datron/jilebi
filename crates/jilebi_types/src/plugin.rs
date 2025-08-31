@@ -230,7 +230,6 @@ impl Prompts {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Manifest {
     pub name: String,
-    // pub identifier: String,
     pub resources: Resources,
     pub tools: Tools,
     pub prompts: Prompts,

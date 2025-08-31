@@ -1,6 +1,11 @@
 [workspace]
 resolver = "2"
-members = ["crates/jilebi", "crates/jilebi_types", "crates/plugin-runtime", "crates/store"]
+members = [
+	"crates/jilebi",
+	"crates/jilebi_types",
+	"crates/plugin-runtime",
+	"crates/store",
+]
 
 [workspace.dependencies]
 tokio = { version = "1.44.1", features = ["full"] }
@@ -25,8 +30,14 @@ rustyscript = { version = "0.12.2", default-features = false, features = [
 	"web",
 ] }
 deno_core = "0.355.0"
-rusqlite = { version = "0.37.0",  features = ["bundled"] }
+rusqlite = { version = "0.37.0", features = ["bundled"] }
 directories = "=6.0.0"
 aws-config = { version = "1.1.7", features = ["behavior-version-latest"] }
 aws-sdk-s3 = "1.103.0"
 reqwest = "=0.12.8"
+keyring = { version = "3.6.3", features = [
+	"apple-native",
+	"windows-native",
+	"linux-native",
+] }
+jsonschema = "0.33.0"

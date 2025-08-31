@@ -1,8 +1,15 @@
-name = "ts-simple-computer-use"
+name = "test"
 version = "1.0"
 homepage = "github.com"
 creator = "jilebi"
 contact = "support@jilebi.ai"
+
+[env]
+RUNTIME_VERSION = { schema = { type = "integer" }, default = 1 }
+HOST_URL = { schema = { type = "string" }, default = "http://localhost:3000" }
+
+[secrets]
+HOST_API_KEY = { schema = { type = "string" } }
 
 [resources.list-files]
 name = "list files"

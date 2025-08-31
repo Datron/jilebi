@@ -21,3 +21,7 @@ clap = { version = "4.5.45", features = ["derive"] }
 dialoguer = "0.11.0"
 indicatif = "0.18.0"
 zip = "4.3.0"
+keyring = { workspace = true }
+strum = { workspace = true }
+jsonschema = { workspace = true }
+serde_json = { workspace = true }

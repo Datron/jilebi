@@ -18,6 +18,8 @@ use rmcp::{
 };
 use tokio::{runtime::Handle, sync::RwLock};
 
+use crate::generate_path;
+
 #[derive(Debug, Clone, derive_more::Display, PartialEq)]
 enum McpSection {
     Resource,
@@ -48,11 +50,44 @@ fn get_plugin_and_section_name(
     ))
 }
 
+fn generate_plugin_environment(
+    base_dir: &PathBuf,
+    plugin_name: &str,
+) -> Result<serde_json::Value, rmcp::ErrorData> {
+    let db_path =
+        generate_path(base_dir, "jilebi.db3", false).map_err(|e| {
+            tracing::error!("Could not generate the path for the jilebi DB: {}", e);
+            rmcp::ErrorData::internal_error(
+                "Could not fetch environment variables from the jilebi DB",
+                None,
+            )
+        })?;
+    let connection = rusqlite::Connection::open(db_path).map_err(|e| {
+        tracing::error!("Could not open the jilebi DB: {}", e);
+        rmcp::ErrorData::internal_error(
+            "Could not open the jilebi DB",
+            Some(serde_json::Value::String(e.to_string())),
+        )
+    })?;
+    let envs = crate::cli::env::fetch_envs(&connection, &plugin_name).map_err(|e| {
+        rmcp::ErrorData::internal_error(
+            "Could not fetch environment variables from the jilebi DB",
+            Some(serde_json::Value::String(e)),
+        )
+    })?;
+    let mut env = serde_json::Map::new();
+    env.insert("id".to_string(), json!(plugin_name));
+    for plugin_env in envs.iter() {
+        env.insert(plugin_env.env_name.clone(), json!(plugin_env.value));
+    }
+    Ok(json!(env))
+}
 #[derive(Clone, Debug, Default)]
 pub struct JilebiMcpServer {
     pub plugins: Plugins,
     pub plugin_dir: PathBuf,
     pub plugin_log_dir: PathBuf,
+    pub jilebi_base_dir: PathBuf,
 }
 
 impl JilebiMcpServer {
@@ -60,11 +95,13 @@ impl JilebiMcpServer {
         plugins: HashMap<String, Manifest>,
         plugin_dir: PathBuf,
         plugin_log_dir: PathBuf,
+		jilebi_base_dir: PathBuf,
     ) -> Self {
         JilebiMcpServer {
             plugins: Arc::new(RwLock::new(plugins)),
             plugin_dir,
             plugin_log_dir,
+            jilebi_base_dir,
         }
     }
 
@@ -187,10 +224,9 @@ impl ServerHandler for JilebiMcpServer {
                     "The tool name provided is either invalid or has been removed",
                     None,
                 ))?;
+
         let handle = Handle::current();
-        let env = json!({
-            "id": format!("{}", plugin_name)
-        });
+        let env = generate_plugin_environment(&self.jilebi_base_dir, &plugin_name)?;
         let log_path = self.plugin_log_dir.clone();
         let result = handle
             .spawn_blocking(move || {
@@ -278,8 +314,8 @@ impl ServerHandler for JilebiMcpServer {
             get_plugin_and_section_name(&request.uri, McpSection::Resource)?;
         let code_path = self.plugin_dir.join(&plugin_name).join("index.js");
 
-        let code = fs::read_to_string(code_path).map_err(|e| {
-            tracing::error!("Could not find JS file: {}", e);
+        let code = fs::read_to_string(&code_path).map_err(|e| {
+            tracing::error!("Could not find JS file at {}: {}", &code_path.display(), e);
             rmcp::ErrorData::internal_error(
                 "Could not find the JS file that has the function",
                 None,
@@ -298,10 +334,8 @@ impl ServerHandler for JilebiMcpServer {
                 None,
             ),
         )?;
+        let env = generate_plugin_environment(&self.jilebi_base_dir, &plugin_name)?;
         let handle = Handle::current();
-        let env = json!({
-            "id": format!("{}", plugin_name)
-        });
         let log_path = self.plugin_log_dir.clone();
         let result = handle
             .spawn_blocking(move || {
