@@ -3647,7 +3647,6 @@ dependencies = [
  "rmcp",
  "rusqlite",
  "serde_json",
- "strum",
  "tokio",
  "toml",
  "tracing",

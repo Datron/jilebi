@@ -114,7 +114,6 @@ async fn main() -> Result<(), String> {
 }
 
 // TOP PRIORITY
-// TODO: setup envs and permissions when a plugin is installed
 // TODO: replace plugins.toml with plugins table in the database
 // TODO: support SSE, HTTP and Authentication
 // TODO: add compile time flags for using postgres (saas) vs sqlite (stdio)

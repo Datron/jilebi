@@ -54,7 +54,7 @@ fn generate_plugin_environment(
     connection: &rusqlite::Connection,
     plugin_name: &str,
 ) -> Result<serde_json::Value, rmcp::ErrorData> {
-    let envs = crate::cli::env::fetch_envs(&connection, &plugin_name).map_err(|e| {
+    let envs = crate::cli::env::fetch_envs_from_db(&connection, &plugin_name).map_err(|e| {
         rmcp::ErrorData::internal_error(
             "Could not fetch environment variables from the jilebi DB",
             Some(serde_json::Value::String(e)),
@@ -113,7 +113,7 @@ impl ServerHandler for JilebiMcpServer {
                 .build(),
             server_info: Implementation {
                 name: "Jilebi".into(),
-                version: "aplha-1".into(),
+                version: "alpha-2".into(),
             },
             instructions: None,
         }

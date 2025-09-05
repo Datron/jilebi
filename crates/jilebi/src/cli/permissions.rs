@@ -1,5 +1,6 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, path::PathBuf};
 
+use dialoguer::Input;
 use jilebi_types::permissions::JilebiPermissions;
 use rusqlite::{Connection, OptionalExtension};
 
@@ -11,29 +12,156 @@ fn sql_to_plugin_permissions(row: &rusqlite::Row) -> Result<JilebiPermissions, r
     Ok(permissions)
 }
 
-pub fn _fetch_permissions_for_plugin(
+pub fn query_permissions_from_the_user(
+    entity: &String,
+    permissions: &JilebiPermissions,
+) -> Result<JilebiPermissions, String> {
+    let hosts = if permissions.hosts.contains("user_defined") {
+        let user_defined: String = Input::new()
+            .with_prompt(format!(
+                "Enter hosts for {}, use a comma to separate multiple entries",
+                entity
+            ))
+            .interact_text()
+            .map_err(|e| e.to_string())?;
+        user_defined
+            .split(',')
+            .map(|s| s.trim().to_string())
+            .collect()
+    } else {
+        permissions.hosts.clone()
+    };
+    let read_dirs = if permissions.read_dirs.contains("user_defined") {
+        let user_defined: String = Input::new()
+						.with_prompt(format!("Enter directories that the plugin is allowed to read from for {}, use a comma to separate multiple entries", entity))
+						.interact_text()
+						.map_err(|e| e.to_string())?;
+        user_defined
+            .split(',')
+            .map(|s| s.trim().to_string())
+            .collect()
+    } else {
+        permissions.read_dirs.clone()
+    };
+    let write_dirs = if permissions.write_dirs.contains("user_defined") {
+        let user_defined: String = Input::new()
+						.with_prompt(format!("Enter directories that the plugin is allowed to write to for {}, use a comma to separate multiple entries", entity))
+						.interact_text()
+						.map_err(|e| e.to_string())?;
+        user_defined
+            .split(',')
+            .map(|s| s.trim().to_string())
+            .collect()
+    } else {
+        permissions.write_dirs.clone()
+    };
+
+    let urls = if permissions.urls.contains("user_defined") {
+        let user_defined: String = Input::new()
+						.with_prompt(format!("Enter URLs that the plugin is allowed to access for {}, use a comma to separate multiple entries", entity))
+						.interact_text()
+						.map_err(|e| e.to_string())?;
+        user_defined
+            .split(',')
+            .map(|s| s.trim().to_string())
+            .collect()
+    } else {
+        permissions.urls.clone()
+    };
+
+    let read_files = if permissions.read_files.contains("user_defined") {
+        let user_defined: String = Input::new()
+						.with_prompt(format!("Enter files that the plugin is allowed to read from for {}, use a comma to separate multiple entries", entity))
+						.interact_text()
+						.map_err(|e| e.to_string())?;
+        user_defined
+            .split(',')
+            .map(|s| s.trim().to_string())
+            .collect()
+    } else {
+        permissions.read_files.clone()
+    };
+
+    let write_files = if permissions.write_files.contains("user_defined") {
+        let user_defined: String = Input::new()
+						.with_prompt(format!("Enter files that the plugin is allowed to write to for {}, use a comma to separate multiple entries", entity))
+						.interact_text()
+						.map_err(|e| e.to_string())?;
+        user_defined
+            .split(',')
+            .map(|s| s.trim().to_string())
+            .collect()
+    } else {
+        permissions.write_files.clone()
+    };
+    Ok(JilebiPermissions {
+        hosts,
+        read_dirs,
+        write_dirs,
+        urls,
+        read_files,
+        write_files,
+    })
+}
+
+pub fn get_permissions_from_manifest(
+    plugin_dir: &PathBuf,
+    plugin_name: &str,
+) -> Result<HashMap<String, JilebiPermissions>, String> {
+    let manifest = crate::utils::get_plugin_manifest(plugin_dir, plugin_name)?;
+    let mut permission_requirements: HashMap<String, JilebiPermissions> = HashMap::new();
+    for (name, resource) in manifest.resources.iter() {
+        if let Some(ref perms) = resource.permissions {
+            permission_requirements.insert(name.clone(), perms.clone());
+        }
+    }
+
+    for (name, tool) in manifest.tools.iter() {
+        if let Some(ref perms) = tool.permissions {
+            permission_requirements.insert(name.clone(), perms.clone());
+        }
+    }
+
+    Ok(permission_requirements)
+}
+
+pub fn setup_permissions(
+    db: &Connection,
+    plugin_dir: &PathBuf,
+    plugin_name: &str,
+    permissions: Option<HashMap<String, JilebiPermissions>>,
+) -> Result<(), String> {
+    let permission_requirements = if permissions.is_some() {
+        permissions.unwrap()
+    } else {
+        get_permissions_from_manifest(plugin_dir, &plugin_name)?
+    };
+    for (entity, existing_permissions) in permission_requirements.iter() {
+        let new_permissions = query_permissions_from_the_user(entity, existing_permissions)?;
+        set_permissions(&db, &plugin_name, entity, &new_permissions)?;
+    }
+    Ok(())
+}
+
+pub fn fetch_permissions_for_plugin(
     connection: &Connection,
     plugin_id: &str,
-    entities: &[&str],
 ) -> Result<HashMap<String, JilebiPermissions>, String> {
-    let query = format!(
-        "SELECT resource_name, value FROM plugin_permissions WHERE id = ?1 AND resource_name IN ({})",
-        vec!["?"; entities.len()].join(",")
-    );
-    let mut stmt = connection.prepare(&query).map_err(|e| e.to_string())?;
-    let mut params = vec![plugin_id];
-    for resource in entities {
-        params.push(resource);
-    }
-    let mut rows = stmt
-        .query(rusqlite::params_from_iter(params))
+    let mut stmt = connection
+        .prepare("SELECT resource_name, value FROM plugin_permissions WHERE id = ?1")
         .map_err(|e| e.to_string())?;
-    let mut permissions = HashMap::new();
-    while let Some(row) = rows.next().map_err(|e| e.to_string())? {
-        let resource_name: String = row.get(0).map_err(|e| e.to_string())?;
-        let value: String = row.get(1).map_err(|e| e.to_string())?;
-        let value = serde_json::from_str::<JilebiPermissions>(&value).map_err(|e| e.to_string())?;
-        permissions.insert(resource_name, value);
+    let params = vec![plugin_id];
+    let rows = stmt
+        .query_map(rusqlite::params_from_iter(params), |row| {
+            let resource_name: String = row.get(0)?;
+            let permissions = sql_to_plugin_permissions(row)?;
+            Ok((resource_name, permissions))
+        })
+        .map_err(|e| e.to_string())?;
+    let mut permissions: HashMap<String, JilebiPermissions> = HashMap::new();
+    for row in rows {
+        let (resource_name, perms) = row.map_err(|e| e.to_string())?;
+        permissions.insert(resource_name, perms);
     }
     Ok(permissions)
 }
@@ -50,7 +178,7 @@ pub fn fetch_permissions_for_entity(
             rusqlite::params![entity, plugin_id],
             sql_to_plugin_permissions,
         )
-		.optional()
+        .optional()
         .map_err(|e| e.to_string())?;
     Ok(permissions)
 }

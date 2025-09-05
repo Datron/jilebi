@@ -20,7 +20,7 @@ function = "get_files"
 # hosts = ["https://jsonplaceholder.typicode.com"]
 urls = ["https://jsonplaceholder.typicode.com/todos/1"]
 # config_keys = [""]
-# read_files = [""]
+read_files = ["user_defined"]
 # write_files = [""]
 # read_dirs = [""]
 # write_dirs = [""]
@@ -32,7 +32,7 @@ mime_type = "text/plain"
 function = "get_processes"
 [resources.list-processes.permissions]
 # read_files = ["/home/kartik/jilebi/plugins/ts-simple-computer-use/test.txt"]
-read_dirs = ["/home/kartik/jilebi/plugins/ts-simple-computer-use"]
+read_dirs = ["user_defined"]
 
 [tools.create-directory]
 name = "create-directory"
