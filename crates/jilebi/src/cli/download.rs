@@ -93,7 +93,6 @@ pub async fn download_and_init_template(
     new_plugin_path: &PathBuf,
     language: &str,
     complex_plugin: bool,
-    jilebi_plugin_dir: &PathBuf,
 ) -> Result<(), String> {
     let file_name = format!("{}.zip", language);
     let url = format!("{}/templates/{}", DOWNLOAD_BUCKET, file_name);
@@ -118,6 +117,5 @@ pub async fn download_and_init_template(
     };
     fs::write(new_plugin_path.join("package.json"), package_json).map_err(|e| e.to_string())?;
     fs::write(new_plugin_path.join("manifest.toml"), manifest_code).map_err(|e| e.to_string())?;
-    add_plugin_to_toml(jilebi_plugin_dir, new_plugin_path)?;
     Ok(())
 }

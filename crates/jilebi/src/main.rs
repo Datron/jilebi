@@ -1,82 +1,19 @@
 #![deny(unused_crate_dependencies)]
-use std::{
-    collections::HashMap,
-    fs,
-    path::{Path, PathBuf},
-};
+use std::path::{Path, PathBuf};
 mod cli;
 mod server;
+mod utils;
 use clap::Parser;
 use directories::ProjectDirs;
-use jilebi_types::plugin::Manifest;
 use rmcp::{ServiceExt, transport::stdio};
 use rusqlite::Connection;
 use server::JilebiMcpServer;
-use tracing::{Level, error, event, info, span};
 use tracing_subscriber::{EnvFilter, fmt, layer::SubscriberExt, util::SubscriberInitExt};
 
 use crate::cli::{JilebiCli, plugin_command_handler, read_log_file};
 
-const PLUGIN_MANIFEST_FORMAT: &str = r#"
-manifest = []
-"#;
-
-fn generate_path(base_path: &Path, new_folder: &str, is_dir: bool) -> Result<PathBuf, String> {
-    let path = base_path.join(Path::new(new_folder));
-    if !path.exists() && is_dir {
-        fs::create_dir_all(&path).map_err(|e| e.to_string())?;
-    }
-    Ok(path)
-}
-
-fn load_plugins(plugin_directory: &PathBuf) -> Result<HashMap<String, Manifest>, String> {
-    info!("Plugin directory being used -> {:?}", plugin_directory);
-    let plugin_toml_path = plugin_directory.join(Path::new("plugins.toml"));
-    if !plugin_toml_path.exists() {
-        fs::write(&plugin_toml_path, PLUGIN_MANIFEST_FORMAT).map_err(|e| e.to_string())?;
-    }
-    let plugin_toml = fs::read_to_string(plugin_toml_path).map_err(|e| {
-        format!(
-            "Failed while loading plugins from dir -> {:?}, error -> {}",
-            plugin_directory,
-            e.to_string()
-        )
-    })?;
-    let plugin_toml = toml::from_str::<toml::Value>(&plugin_toml).map_err(|e| {
-        format!(
-            "Could not parse the plugins toml directory manifest {}",
-            e.to_string()
-        )
-    })?;
-    let manifests = plugin_toml
-        .get("manifest")
-        .and_then(|manifests| manifests.as_array())
-        .ok_or(String::from(
-            "Define an array for plugin manifests. Check the docs",
-        ))?
-        .into_iter()
-        .map(|m| {
-            let manifest = m
-                .as_str()
-                .and_then(|manifest_path| {
-                    let manifest_pathbuf = plugin_directory.join(manifest_path);
-                    tracing::info!("Loading manifest file from path: {:?}", manifest_pathbuf);
-                    let manifest =
-                        fs::read_to_string(manifest_pathbuf).expect("Manifest file not found");
-                    let manifest = toml::from_str::<toml::Value>(&manifest)
-                        .expect("Could not parse toml file");
-                    tracing::info!("Toml file loaded for path {manifest_path}: {manifest:#?}");
-                    Manifest::try_from(manifest).map_err(|e| error!(e)).ok()
-                })
-                .expect(format!("Could not parse manifest file {:?}", m).as_str());
-            (manifest.name.clone(), manifest)
-        })
-        .collect::<HashMap<String, Manifest>>();
-    Ok(manifests)
-}
-
 fn setup_database(dir: &Path) -> Result<Connection, String> {
-    let db_path = generate_path(dir, "jilebi.db3", false)?;
+    let db_path = utils::generate_path(dir, "jilebi.db3", false)?;
     let connection = Connection::open(db_path).map_err(|e| e.to_string())?;
     connection
         .execute_batch(
@@ -106,7 +43,6 @@ fn setup_database(dir: &Path) -> Result<Connection, String> {
         .map_err(|e| e.to_string())?;
     Ok(connection)
 }
-
 #[tokio::main]
 async fn main() -> Result<(), String> {
     dotenvy::dotenv().unwrap_or_default();
@@ -114,8 +50,8 @@ async fn main() -> Result<(), String> {
     let base_jilebi_dir = ProjectDirs::from("ai", "jilebi", "jilebi-server")
         .ok_or(String::from("Could not create ProjectDirs struct"))?;
 
-    let log_folder_path = generate_path(base_jilebi_dir.data_dir(), "logs", true)?;
-    let log_file_path = generate_path(Path::new(&log_folder_path), "jilebi.log", false)?;
+    let log_folder_path = utils::generate_path(base_jilebi_dir.data_dir(), "logs", true)?;
+    let log_file_path = utils::generate_path(Path::new(&log_folder_path), "jilebi.log", false)?;
 
     let log_path = dotenvy::var("LOG_PATH")
         .map(PathBuf::from)
@@ -131,7 +67,7 @@ async fn main() -> Result<(), String> {
         .with(EnvFilter::from_default_env())
         .init();
 
-    let default_plugin_path = generate_path(base_jilebi_dir.data_dir(), "plugins", true)?;
+    let default_plugin_path = utils::generate_path(base_jilebi_dir.data_dir(), "plugins", true)?;
 
     let plugin_directory = dotenvy::var("PLUGIN_DIR")
         .map(PathBuf::from)
@@ -142,13 +78,17 @@ async fn main() -> Result<(), String> {
     let db = setup_database(base_jilebi_dir.data_dir())?;
     match jilebi_cli.subcommand {
         cli::SubCommands::Stdio => {
-            let plugins = load_plugins(&plugin_directory)?;
+            let plugins = utils::load_plugins(&plugin_directory)?;
 
-            let main_span = span!(Level::INFO, "Jilebi Server started");
-            info!("Starting Jilebi Server, loading plugins...");
+            let main_span = tracing::span!(tracing::Level::INFO, "Jilebi Server started");
+            tracing::info!("Starting Jilebi Server, loading plugins...");
             let _guard = main_span.enter();
 
-            event!(Level::INFO, ?plugins, "Plugins and manifests loaded");
+            tracing::event!(
+                tracing::Level::INFO,
+                ?plugins,
+                "Plugins and manifests loaded"
+            );
             let server = JilebiMcpServer::new(
                 plugins,
                 plugin_directory,
@@ -174,11 +114,8 @@ async fn main() -> Result<(), String> {
 }
 
 // TOP PRIORITY
-// TODO: Pass ENVs and secrets through env variables (needed for github)
-// TODO: Let users also specify permissions
-// - Let users choose which resources, prompts and tools can be shown to the llm
-// - Let users choose the permissions allowed - which files, directories can be accessed
-// - Let users choose the permissions allowed - which domains can be hit
+// TODO: setup envs and permissions when a plugin is installed
+// TODO: replace plugins.toml with plugins table in the database
 // TODO: support SSE, HTTP and Authentication
 // TODO: add compile time flags for using postgres (saas) vs sqlite (stdio)
 // TODO: add a frontend
@@ -197,6 +134,7 @@ async fn main() -> Result<(), String> {
 // TODO: support Resource Template
 // TODO: add pagination support
 // plugins
+// TODO: Let users choose which resources, prompts and tools can be shown to the llm
 // TODO: Add regex support to permissions
 // TODO: Add `jilebi plugin publish` publish a plugin, everything is public for now
 // TODO: Write 10 most popular MCPs as plugins

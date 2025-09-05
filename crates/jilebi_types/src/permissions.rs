@@ -10,10 +10,6 @@ pub struct JilebiPermissions {
     #[serde(default = "HashSet::new")]
     pub urls: HashSet<String>,
     #[serde(default = "HashSet::new")]
-    pub http_methods: HashSet<String>,
-    #[serde(default = "HashSet::new")]
-    pub config_keys: HashSet<String>,
-    #[serde(default = "HashSet::new")]
     pub read_files: HashSet<String>,
     #[serde(default = "HashSet::new")]
     pub write_files: HashSet<String>,

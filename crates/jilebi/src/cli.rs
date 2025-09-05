@@ -1,4 +1,5 @@
 use std::{
+    collections::HashMap,
     fs::{self, File},
     io::{BufRead, BufReader},
     path::PathBuf,
@@ -6,11 +7,15 @@ use std::{
 };
 pub(crate) mod download;
 pub(crate) mod env;
+pub(crate) mod permissions;
 use clap::{Parser, Subcommand};
 use dialoguer::{Confirm, Input, Select};
 use directories::UserDirs;
 use indicatif::ProgressBar;
-use jilebi_types::env::{EnvType, PluginEnv};
+use jilebi_types::{
+    env::{EnvType, PluginEnv},
+    permissions::JilebiPermissions,
+};
 use keyring::Entry;
 use rusqlite::Connection;
 
@@ -57,6 +62,8 @@ pub enum PluginSubCommands {
     Create,
     /// Add/Install a plugin to use with Jilebi
     Add { id: String },
+    /// TODO: Setup a plugin, if the plugin was installed manually
+    // Setup { id: String },
     /// Remove a plugin from jilebi and delete its state
     Remove { id: String },
     /// Manage environment variables for a specific plugin
@@ -135,7 +142,6 @@ pub async fn plugin_command_handler(
                 &PathBuf::from(&new_plugin_path),
                 &language,
                 complex_plugin,
-                plugin_dir,
             )
             .await
             .map_err(|e| {
@@ -143,13 +149,15 @@ pub async fn plugin_command_handler(
                 bar.abandon_with_message(format!("Failed to create plugin: {}", e));
                 e
             })?;
-
+            let local_plugin_path = plugin_dir.join(&plugin_name);
             #[cfg(unix)]
-            symlink(&new_plugin_path, plugin_dir.join(&plugin_name)).map_err(|e| e.to_string())?;
+            symlink(&new_plugin_path, &local_plugin_path).map_err(|e| e.to_string())?;
 
             #[cfg(windows)]
-            symlink_dir(&new_plugin_path, plugin_dir.join(&plugin_name))
-                .map_err(|e| e.to_string())?;
+            symlink_dir(&new_plugin_path, &local_plugin_path).map_err(|e| e.to_string())?;
+
+            download::add_plugin_to_toml(plugin_dir, &local_plugin_path)?;
+
             bar.finish_with_message(format!(
                 "Successfully created {} at {}",
                 plugin_name, new_plugin_path
@@ -174,6 +182,7 @@ pub async fn plugin_command_handler(
                 "Successfully added {id} at {}. You can restart jilebi for it to show up.",
                 plugin_path.display()
             ));
+
             Ok(())
         }
         PluginSubCommands::Remove { id } => {
@@ -257,6 +266,141 @@ pub async fn plugin_command_handler(
             .map_err(|e| e.to_string())?;
             Ok(())
         }
-        PluginSubCommands::Permissions { id: _ } => todo!(),
+        PluginSubCommands::Permissions { id } => {
+            let manifest = crate::utils::get_plugin_manifest(plugin_dir, &id)?;
+            let mut permission_requirements: HashMap<&String, &JilebiPermissions> = HashMap::new();
+            for (name, resource) in manifest.resources.iter() {
+                if let Some(ref perms) = resource.permissions {
+                    permission_requirements.insert(name, perms);
+                }
+            }
+
+            for (name, tool) in manifest.tools.iter() {
+                if let Some(ref perms) = tool.permissions {
+                    permission_requirements.insert(name, perms);
+                }
+            }
+
+            let mut potential_entities = permission_requirements
+                .keys()
+                .map(|k| *k)
+                .collect::<Vec<&String>>();
+
+            let all_option = "All".to_string();
+            potential_entities.push(&all_option);
+
+            let entity_name = Select::new()
+                .with_prompt("Select entity")
+                .items(&potential_entities)
+                .interact()
+                .map_err(|e| e.to_string())?;
+            let selected_entity = potential_entities[entity_name];
+
+            let permission_query_closure = |entity: &String,
+                                            permissions: &JilebiPermissions|
+             -> Result<JilebiPermissions, String> {
+                let hosts = if permissions.hosts.contains("user_defined") {
+                    let user_defined: String = Input::new()
+                        .with_prompt(format!(
+                            "Enter hosts for {}, use a comma to separate multiple entries",
+                            entity
+                        ))
+                        .interact_text()
+                        .map_err(|e| e.to_string())?;
+                    user_defined
+                        .split(',')
+                        .map(|s| s.trim().to_string())
+                        .collect()
+                } else {
+                    permissions.hosts.clone()
+                };
+                let read_dirs = if permissions.read_dirs.contains("user_defined") {
+                    let user_defined: String = Input::new()
+						.with_prompt(format!("Enter directories that the plugin is allowed to read from for {}, use a comma to separate multiple entries", entity))
+						.interact_text()
+						.map_err(|e| e.to_string())?;
+                    user_defined
+                        .split(',')
+                        .map(|s| s.trim().to_string())
+                        .collect()
+                } else {
+                    permissions.read_dirs.clone()
+                };
+                let write_dirs = if permissions.write_dirs.contains("user_defined") {
+                    let user_defined: String = Input::new()
+						.with_prompt(format!("Enter directories that the plugin is allowed to write to for {}, use a comma to separate multiple entries", entity))
+						.interact_text()
+						.map_err(|e| e.to_string())?;
+                    user_defined
+                        .split(',')
+                        .map(|s| s.trim().to_string())
+                        .collect()
+                } else {
+                    permissions.write_dirs.clone()
+                };
+
+                let urls = if permissions.urls.contains("user_defined") {
+                    let user_defined: String = Input::new()
+						.with_prompt(format!("Enter URLs that the plugin is allowed to access for {}, use a comma to separate multiple entries", entity))
+						.interact_text()
+						.map_err(|e| e.to_string())?;
+                    user_defined
+                        .split(',')
+                        .map(|s| s.trim().to_string())
+                        .collect()
+                } else {
+                    permissions.read_dirs.clone()
+                };
+
+                let read_files = if permissions.read_files.contains("user_defined") {
+                    let user_defined: String = Input::new()
+						.with_prompt(format!("Enter files that the plugin is allowed to read from for {}, use a comma to separate multiple entries", entity))
+						.interact_text()
+						.map_err(|e| e.to_string())?;
+                    user_defined
+                        .split(',')
+                        .map(|s| s.trim().to_string())
+                        .collect()
+                } else {
+                    permissions.read_files.clone()
+                };
+
+                let write_files = if permissions.write_files.contains("user_defined") {
+                    let user_defined: String = Input::new()
+						.with_prompt(format!("Enter files that the plugin is allowed to write to for {}, use a comma to separate multiple entries", entity))
+						.interact_text()
+						.map_err(|e| e.to_string())?;
+                    user_defined
+                        .split(',')
+                        .map(|s| s.trim().to_string())
+                        .collect()
+                } else {
+                    permissions.write_files.clone()
+                };
+                Ok(JilebiPermissions {
+                    hosts,
+                    read_dirs,
+                    write_dirs,
+                    urls,
+                    read_files,
+                    write_files,
+                })
+            };
+
+            if selected_entity == &all_option {
+                for (entity, existing_permissions) in permission_requirements.iter() {
+                    let new_permissions = permission_query_closure(entity, existing_permissions)?;
+                    permissions::set_permissions(&db, &id, entity, &new_permissions)?;
+                }
+            } else {
+                let permissions = permission_requirements.get(selected_entity).ok_or(format!(
+                    "Could not find permissions for entity {}",
+                    selected_entity
+                ))?;
+                let new_permissions = permission_query_closure(selected_entity, permissions)?;
+                permissions::set_permissions(&db, &id, selected_entity, &new_permissions)?;
+            };
+            Ok(())
+        }
     }
 }

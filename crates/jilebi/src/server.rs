@@ -18,7 +18,7 @@ use rmcp::{
 };
 use tokio::{runtime::Handle, sync::RwLock};
 
-use crate::generate_path;
+use crate::cli::permissions;
 
 #[derive(Debug, Clone, derive_more::Display, PartialEq)]
 enum McpSection {
@@ -51,24 +51,9 @@ fn get_plugin_and_section_name(
 }
 
 fn generate_plugin_environment(
-    base_dir: &PathBuf,
+    connection: &rusqlite::Connection,
     plugin_name: &str,
 ) -> Result<serde_json::Value, rmcp::ErrorData> {
-    let db_path =
-        generate_path(base_dir, "jilebi.db3", false).map_err(|e| {
-            tracing::error!("Could not generate the path for the jilebi DB: {}", e);
-            rmcp::ErrorData::internal_error(
-                "Could not fetch environment variables from the jilebi DB",
-                None,
-            )
-        })?;
-    let connection = rusqlite::Connection::open(db_path).map_err(|e| {
-        tracing::error!("Could not open the jilebi DB: {}", e);
-        rmcp::ErrorData::internal_error(
-            "Could not open the jilebi DB",
-            Some(serde_json::Value::String(e.to_string())),
-        )
-    })?;
     let envs = crate::cli::env::fetch_envs(&connection, &plugin_name).map_err(|e| {
         rmcp::ErrorData::internal_error(
             "Could not fetch environment variables from the jilebi DB",
@@ -95,7 +80,7 @@ impl JilebiMcpServer {
         plugins: HashMap<String, Manifest>,
         plugin_dir: PathBuf,
         plugin_log_dir: PathBuf,
-		jilebi_base_dir: PathBuf,
+        jilebi_base_dir: PathBuf,
     ) -> Self {
         JilebiMcpServer {
             plugins: Arc::new(RwLock::new(plugins)),
@@ -104,13 +89,6 @@ impl JilebiMcpServer {
             jilebi_base_dir,
         }
     }
-
-    // pub async fn add(&mut self, plugin: Manifest) {
-    //     self.plugins
-    //         .write()
-    //         .await
-    //         .insert(plugin.name.clone(), plugin);
-    // }
 }
 
 impl ServerHandler for JilebiMcpServer {
@@ -196,6 +174,21 @@ impl ServerHandler for JilebiMcpServer {
         request: rmcp::model::CallToolRequestParam,
         _context: RequestContext<rmcp::RoleServer>,
     ) -> Result<rmcp::model::CallToolResult, rmcp::ErrorData> {
+        let db_path = crate::utils::generate_path(&self.jilebi_base_dir, "jilebi.db3", false)
+            .map_err(|e| {
+                tracing::error!("Could not generate the path for the jilebi DB: {}", e);
+                rmcp::ErrorData::internal_error(
+                    "Could not fetch environment variables from the jilebi DB",
+                    None,
+                )
+            })?;
+        let connection = rusqlite::Connection::open(db_path).map_err(|e| {
+            tracing::error!("Could not open the jilebi DB: {}", e);
+            rmcp::ErrorData::internal_error(
+                "Could not open the jilebi DB",
+                Some(serde_json::Value::String(e.to_string())),
+            )
+        })?;
         let plugins = self.plugins.read().await;
 
         let (plugin_name, tool_name) =
@@ -226,7 +219,16 @@ impl ServerHandler for JilebiMcpServer {
                 ))?;
 
         let handle = Handle::current();
-        let env = generate_plugin_environment(&self.jilebi_base_dir, &plugin_name)?;
+        let env = generate_plugin_environment(&connection, &plugin_name)?;
+        let permissions =
+            permissions::fetch_permissions_for_entity(&connection, &plugin_name, &tool_name)
+                .map_err(|e| {
+                    tracing::error!("Could not fetch permissions for tool {}: {}", tool_name, e);
+                    rmcp::ErrorData::internal_error(
+                        "Could not fetch permissions for tool",
+                        Some(serde_json::Value::String(e.to_string())),
+                    )
+                })?;
         let log_path = self.plugin_log_dir.clone();
         let result = handle
             .spawn_blocking(move || {
@@ -237,7 +239,7 @@ impl ServerHandler for JilebiMcpServer {
                     &tool.function,
                     json!(args),
                     env,
-                    &tool.permissions,
+                    &permissions,
                     &log_path,
                 )
                 .map_err(|e| {
@@ -308,6 +310,21 @@ impl ServerHandler for JilebiMcpServer {
         request: rmcp::model::ReadResourceRequestParam,
         _context: RequestContext<rmcp::RoleServer>,
     ) -> Result<rmcp::model::ReadResourceResult, rmcp::ErrorData> {
+        let db_path = crate::utils::generate_path(&self.jilebi_base_dir, "jilebi.db3", false)
+            .map_err(|e| {
+                tracing::error!("Could not generate the path for the jilebi DB: {}", e);
+                rmcp::ErrorData::internal_error(
+                    "Could not fetch environment variables from the jilebi DB",
+                    None,
+                )
+            })?;
+        let connection = rusqlite::Connection::open(db_path).map_err(|e| {
+            tracing::error!("Could not open the jilebi DB: {}", e);
+            rmcp::ErrorData::internal_error(
+                "Could not open the jilebi DB",
+                Some(serde_json::Value::String(e.to_string())),
+            )
+        })?;
         let plugins = self.plugins.read().await;
 
         let (plugin_name, resource_name) =
@@ -334,7 +351,20 @@ impl ServerHandler for JilebiMcpServer {
                 None,
             ),
         )?;
-        let env = generate_plugin_environment(&self.jilebi_base_dir, &plugin_name)?;
+        let env = generate_plugin_environment(&connection, &plugin_name)?;
+        let permissions =
+            permissions::fetch_permissions_for_entity(&connection, &plugin_name, &resource_name)
+                .map_err(|e| {
+                    tracing::error!(
+                        "Could not fetch permissions for resource {}: {}",
+                        resource_name,
+                        e
+                    );
+                    rmcp::ErrorData::internal_error(
+                        "Could not fetch permissions for resource",
+                        Some(serde_json::Value::String(e.to_string())),
+                    )
+                })?;
         let handle = Handle::current();
         let log_path = self.plugin_log_dir.clone();
         let result = handle
@@ -345,7 +375,7 @@ impl ServerHandler for JilebiMcpServer {
                     &resource.function,
                     json!({}),
                     env,
-                    &resource.permissions,
+                    &permissions,
                     &log_path,
                 )
                 .map_err(|e| {

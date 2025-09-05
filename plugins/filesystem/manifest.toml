@@ -16,7 +16,7 @@ input_schema = { type = "object", properties = { path = { type = "string", descr
 ] }
 function = "read_text_file"
 [tools.read-text-file.permissions]
-read_dirs = ["/home/kartik/jilebi/plugins/filesystem/filesandbox"]
+read_dirs = ["user_defined"]
 
 [tools.read-media-file]
 name = "read-media-file"
@@ -26,7 +26,7 @@ input_schema = { type = "object", properties = { path = { type = "string", descr
 ] }
 function = "read_media_file"
 [tools.read-media-file.permissions]
-read_dirs = ["/home/kartik/jilebi/plugins/filesystem/filesandbox"]
+read_dirs = ["user_defined"]
 
 [tools.read-multiple-files]
 name = "read-multiple-files"
@@ -36,7 +36,7 @@ input_schema = { type = "object", properties = { paths = { type = "array", items
 ] }
 function = "read_multiple_files"
 [tools.read-multiple-files.permissions]
-read_dirs = ["/home/kartik/jilebi/plugins/filesystem/filesandbox"]
+read_dirs = ["user_defined"]
 
 [tools.write-file]
 name = "write-file"
@@ -47,7 +47,7 @@ input_schema = { type = "object", properties = { path = { type = "string", descr
 ] }
 function = "write_file"
 [tools.write-file.permissions]
-write_dirs = ["/home/kartik/jilebi/plugins/filesystem/filesandbox"]
+write_dirs = ["user_defined"]
 
 [tools.edit-file]
 name = "edit-file"
@@ -61,8 +61,8 @@ input_schema = { type = "object", properties = { path = { type = "string", descr
 ] }
 function = "edit_file"
 [tools.edit-file.permissions]
-read_dirs = ["/home/kartik/jilebi/plugins/filesystem/filesandbox"]
-write_dirs = ["/home/kartik/jilebi/plugins/filesystem/filesandbox"]
+read_dirs = ["user_defined"]
+write_dirs = ["user_defined"]
 
 [tools.create-directory]
 name = "create-directory"
@@ -72,7 +72,7 @@ input_schema = { type = "object", properties = { path = { type = "string", descr
 ] }
 function = "create_directory"
 [tools.create-directory.permissions]
-write_dirs = ["/home/kartik/jilebi/plugins/filesystem/filesandbox"]
+write_dirs = ["user_defined"]
 
 [tools.list-directory]
 name = "list-directory"
@@ -82,7 +82,7 @@ input_schema = { type = "object", properties = { path = { type = "string", descr
 ] }
 function = "list_directory"
 [tools.list-directory.permissions]
-read_dirs = ["/home/kartik/jilebi/plugins/filesystem/filesandbox"]
+read_dirs = ["user_defined"]
 
 [tools.list-directory-with-sizes]
 name = "list-directory-with-sizes"
@@ -95,7 +95,7 @@ input_schema = { type = "object", properties = { path = { type = "string", descr
 ] }
 function = "list_directory_with_sizes"
 [tools.list-directory-with-sizes.permissions]
-read_dirs = ["/home/kartik/jilebi/plugins/filesystem/filesandbox"]
+read_dirs = ["user_defined"]
 
 [tools.directory-tree]
 name = "directory-tree"
@@ -105,7 +105,7 @@ input_schema = { type = "object", properties = { path = { type = "string", descr
 ] }
 function = "directory_tree"
 [tools.directory-tree.permissions]
-read_dirs = ["/home/kartik/jilebi/plugins/filesystem/filesandbox"]
+read_dirs = ["user_defined"]
 
 [tools.move-file]
 name = "move-file"
@@ -116,8 +116,8 @@ input_schema = { type = "object", properties = { source = { type = "string", des
 ] }
 function = "move_file"
 [tools.move-file.permissions]
-read_dirs = ["/home/kartik/jilebi/plugins/filesystem/filesandbox"]
-write_dirs = ["/home/kartik/jilebi/plugins/filesystem/filesandbox"]
+read_dirs = ["user_defined"]
+write_dirs = ["user_defined"]
 
 [tools.search-files]
 name = "search-files"
@@ -129,7 +129,7 @@ input_schema = { type = "object", properties = { path = { type = "string", descr
 ] }
 function = "search_files"
 [tools.search-files.permissions]
-read_dirs = ["/home/kartik/jilebi/plugins/filesystem/filesandbox"]
+read_dirs = ["user_defined"]
 
 [tools.get-file-info]
 name = "get-file-info"
@@ -139,4 +139,4 @@ input_schema = { type = "object", properties = { path = { type = "string", descr
 ] }
 function = "get_file_info"
 [tools.get-file-info.permissions]
-read_dirs = ["/home/kartik/jilebi/plugins/filesystem/filesandbox"]
+read_dirs = ["user_defined"]
