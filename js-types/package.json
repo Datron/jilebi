@@ -1,6 +1,6 @@
 {
 	"name": "@jilebi/types",
-	"version": "1.0.1",
+	"version": "1.0.2",
 	"description": "Jilebi Type definitions for writing plugins",
 	"main": "index.d.ts",
 	"types": "index.d.ts",

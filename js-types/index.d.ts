@@ -1,9 +1,9 @@
 
 // type definition for a plugin environment
-declare interface Environment {
+declare type Environment = {
 	// the identifier used internally to manage a plugin
 	id: string;
-}
+} & Record<string, any>;
 
 /** Return value for a key lookup
  *
