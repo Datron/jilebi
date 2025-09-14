@@ -27,7 +27,10 @@ async fn download_and_extract(url: &str, extract_path: &PathBuf) -> Result<(), S
     Ok(())
 }
 
-pub fn add_plugin_to_toml(jilebi_plugin_dir: &PathBuf, plugin_path: &PathBuf) -> Result<(), String> {
+pub fn add_plugin_to_toml(
+    jilebi_plugin_dir: &PathBuf,
+    plugin_path: &PathBuf,
+) -> Result<(), String> {
     let toml_path = jilebi_plugin_dir.join("plugins.toml");
     let toml = fs::read_to_string(&toml_path).map_err(|e| e.to_string())?;
     let mut toml = toml::from_str::<toml::Value>(&toml).map_err(|e| {
@@ -39,7 +42,13 @@ pub fn add_plugin_to_toml(jilebi_plugin_dir: &PathBuf, plugin_path: &PathBuf) ->
     toml.get_mut("manifest")
         .and_then(|v| v.as_array_mut())
         .map(|arr| {
-            arr.push(plugin_path.join("manifest.toml").display().to_string().into());
+            arr.push(
+                plugin_path
+                    .join("manifest.toml")
+                    .display()
+                    .to_string()
+                    .into(),
+            );
         })
         .ok_or("Could not properly parse the plugin registry")?;
     fs::write(
@@ -79,7 +88,7 @@ pub async fn download_and_init_plugin(
     let file_name = format!("{}.zip", id);
     let url = format!("{}/plugins/{}", DOWNLOAD_BUCKET, file_name);
     tracing::debug!("Downloading plugin from URL: {}", url);
-	if !plugin_path.exists() {
+    if !plugin_path.exists() {
         fs::create_dir_all(&plugin_path).map_err(|e| e.to_string())?;
     }
     download_and_extract(&url, &plugin_path.join(&file_name)).await?;
@@ -99,22 +108,18 @@ pub async fn download_and_init_template(
     fs::create_dir_all(new_plugin_path).map_err(|e| e.to_string())?;
     download_and_extract(&url, &new_plugin_path.join(&file_name)).await?;
     if complex_plugin {
-        let rollup = if language == "javascript" {
-            "rollup.config.js"
-        } else {
-            "rollup.config.ts"
-        };
-        let url = format!("{}/templates/{}", DOWNLOAD_BUCKET, rollup);
-        download(&url, &new_plugin_path.join(rollup)).await?;
+        let url = format!("{}/templates/rollup.config.js", DOWNLOAD_BUCKET);
+        download(&url, &new_plugin_path.join("rollup.config.js")).await?;
+        fs::remove_file(new_plugin_path.join("package.json")).map_err(|e| e.to_string())?;
+        fs::rename(
+            new_plugin_path.join("package.rollup.json"),
+            new_plugin_path.join("package.json"),
+        )
+        .map_err(|e| e.to_string())?;
     }
     let package_json =
         fs::read_to_string(new_plugin_path.join("package.json")).map_err(|e| e.to_string())?;
     let package_json = package_json.replace("replace", plugin_name);
-    let package_json = if language == "typescript" && complex_plugin {
-        package_json.replace("command", "rollup -c")
-    } else {
-        package_json.replace("command", "tsc")
-    };
     fs::write(new_plugin_path.join("package.json"), package_json).map_err(|e| e.to_string())?;
     fs::write(new_plugin_path.join("manifest.toml"), manifest_code).map_err(|e| e.to_string())?;
     Ok(())

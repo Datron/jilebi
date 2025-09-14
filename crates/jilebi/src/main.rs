@@ -114,6 +114,8 @@ async fn main() -> Result<(), String> {
 }
 
 // TOP PRIORITY
+// TODO: improve developer experience for plugin development
+// TODO: check resources and add support for args
 // TODO: replace plugins.toml with plugins table in the database
 // TODO: support SSE, HTTP and Authentication
 // TODO: add compile time flags for using postgres (saas) vs sqlite (stdio)
