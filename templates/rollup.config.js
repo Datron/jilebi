@@ -24,6 +24,11 @@ export default defineConfig({
 
 		// Handle JSON imports
 		json(),
+		typescript({
+            tsconfig: "./tsconfig.json",
+            sourceMap: true,
+            inlineSources: true,
+        }),
 	],
 
 	// External dependencies that should not be bundled

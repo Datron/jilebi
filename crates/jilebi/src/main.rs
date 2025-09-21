@@ -73,6 +73,7 @@ async fn main() -> Result<(), String> {
         .map(PathBuf::from)
         .unwrap_or(default_plugin_path);
 
+	utils::init_plugin_toml(&plugin_directory)?;
     let jilebi_cli = JilebiCli::parse();
 
     let db = setup_database(base_jilebi_dir.data_dir())?;
@@ -114,7 +115,6 @@ async fn main() -> Result<(), String> {
 }
 
 // TOP PRIORITY
-// TODO: improve developer experience for plugin development
 // TODO: check resources and add support for args
 // TODO: replace plugins.toml with plugins table in the database
 // TODO: support SSE, HTTP and Authentication
@@ -140,7 +140,6 @@ async fn main() -> Result<(), String> {
 // TODO: Add `jilebi plugin publish` publish a plugin, everything is public for now
 // TODO: Write 10 most popular MCPs as plugins
 //			- Exa search -> important
-//			- github -> https://github.com/github/github-mcp-server
 //			- Fetch -> important
 //			- Git
 //			- Playwright = https://github.com/microsoft/playwright-mcp -> important

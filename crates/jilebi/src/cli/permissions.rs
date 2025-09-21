@@ -1,6 +1,9 @@
-use std::{collections::HashMap, path::PathBuf};
+use std::{
+    collections::{HashMap, HashSet},
+    path::PathBuf,
+};
 
-use dialoguer::Input;
+use dialoguer::{Confirm, Input};
 use jilebi_types::permissions::JilebiPermissions;
 use rusqlite::{Connection, OptionalExtension};
 
@@ -29,7 +32,20 @@ pub fn query_permissions_from_the_user(
             .map(|s| s.trim().to_string())
             .collect()
     } else {
-        permissions.hosts.clone()
+        let mut allowed_hosts = HashSet::new();
+        for host in &permissions.hosts {
+            if Confirm::new()
+                .with_prompt(format!(
+                    "Allow {} to make requests to the host {}?",
+                    host, entity
+                ))
+                .interact()
+                .unwrap()
+            {
+                allowed_hosts.insert(host.clone());
+            }
+        }
+        allowed_hosts.clone()
     };
     let read_dirs = if permissions.read_dirs.contains("user_defined") {
         let user_defined: String = Input::new()
@@ -41,7 +57,20 @@ pub fn query_permissions_from_the_user(
             .map(|s| s.trim().to_string())
             .collect()
     } else {
-        permissions.read_dirs.clone()
+        let mut allowed_read_dirs = HashSet::new();
+        for dir in &permissions.read_dirs {
+            if Confirm::new()
+                .with_prompt(format!(
+                    "Allow {} to read from the directory {}?",
+                    dir, entity
+                ))
+                .interact()
+                .unwrap()
+            {
+                allowed_read_dirs.insert(dir.clone());
+            }
+        }
+        allowed_read_dirs.clone()
     };
     let write_dirs = if permissions.write_dirs.contains("user_defined") {
         let user_defined: String = Input::new()
@@ -53,7 +82,20 @@ pub fn query_permissions_from_the_user(
             .map(|s| s.trim().to_string())
             .collect()
     } else {
-        permissions.write_dirs.clone()
+        let mut allowed_write_dirs = HashSet::new();
+        for dir in &permissions.write_dirs {
+            if Confirm::new()
+                .with_prompt(format!(
+                    "Allow {} to write to the directory {}?",
+                    dir, entity
+                ))
+                .interact()
+                .unwrap()
+            {
+                allowed_write_dirs.insert(dir.clone());
+            }
+        }
+        allowed_write_dirs.clone()
     };
 
     let urls = if permissions.urls.contains("user_defined") {
@@ -66,7 +108,17 @@ pub fn query_permissions_from_the_user(
             .map(|s| s.trim().to_string())
             .collect()
     } else {
-        permissions.urls.clone()
+        let mut allowed_urls = HashSet::new();
+        for url in &permissions.urls {
+            if Confirm::new()
+                .with_prompt(format!("Allow {} to access the URL {}?", url, entity))
+                .interact()
+                .unwrap()
+            {
+                allowed_urls.insert(url.clone());
+            }
+        }
+        allowed_urls.clone()
     };
 
     let read_files = if permissions.read_files.contains("user_defined") {
@@ -79,7 +131,17 @@ pub fn query_permissions_from_the_user(
             .map(|s| s.trim().to_string())
             .collect()
     } else {
-        permissions.read_files.clone()
+        let mut allowed_read_files = HashSet::new();
+        for file in &permissions.read_files {
+            if Confirm::new()
+                .with_prompt(format!("Allow {} to read the file {}?", file, entity))
+                .interact()
+                .unwrap()
+            {
+                allowed_read_files.insert(file.clone());
+            }
+        }
+        allowed_read_files.clone()
     };
 
     let write_files = if permissions.write_files.contains("user_defined") {
@@ -92,7 +154,17 @@ pub fn query_permissions_from_the_user(
             .map(|s| s.trim().to_string())
             .collect()
     } else {
-        permissions.write_files.clone()
+        let mut allowed_write_files = HashSet::new();
+        for file in &permissions.write_files {
+            if Confirm::new()
+                .with_prompt(format!("Allow {} to write to the file {}?", file, entity))
+                .interact()
+                .unwrap()
+            {
+                allowed_write_files.insert(file.clone());
+            }
+        }
+        allowed_write_files.clone()
     };
     Ok(JilebiPermissions {
         hosts,

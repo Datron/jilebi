@@ -116,6 +116,8 @@ pub async fn download_and_init_template(
             new_plugin_path.join("package.json"),
         )
         .map_err(|e| e.to_string())?;
+    } else {
+        fs::remove_file(new_plugin_path.join("package.rollup.json")).map_err(|e| e.to_string())?;
     }
     let package_json =
         fs::read_to_string(new_plugin_path.join("package.json")).map_err(|e| e.to_string())?;

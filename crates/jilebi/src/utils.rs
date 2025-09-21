@@ -10,6 +10,14 @@ pub const PLUGIN_MANIFEST_FORMAT: &str = r#"
 manifest = []
 "#;
 
+pub fn init_plugin_toml(plugin_directory: &PathBuf) -> Result<(), String> {
+	let plugin_toml_path = plugin_directory.join(Path::new("plugins.toml"));
+	if !plugin_toml_path.exists() {
+		fs::write(&plugin_toml_path, PLUGIN_MANIFEST_FORMAT).map_err(|e| e.to_string())?;
+	}
+	Ok(())
+}
+
 pub fn generate_path(base_path: &Path, new_folder: &str, is_dir: bool) -> Result<PathBuf, String> {
     let path = base_path.join(Path::new(new_folder));
     if !path.exists() && is_dir {
@@ -42,9 +50,6 @@ pub fn get_plugin_manifest(plugin_directory: &PathBuf, plugin_name: &str) -> Res
 pub fn load_plugins(plugin_directory: &PathBuf) -> Result<HashMap<String, Manifest>, String> {
     tracing::info!("Plugin directory being used -> {:?}", plugin_directory);
     let plugin_toml_path = plugin_directory.join(Path::new("plugins.toml"));
-    if !plugin_toml_path.exists() {
-        fs::write(&plugin_toml_path, PLUGIN_MANIFEST_FORMAT).map_err(|e| e.to_string())?;
-    }
     let plugin_toml = fs::read_to_string(plugin_toml_path).map_err(|e| {
         format!(
             "Failed while loading plugins from dir -> {:?}, error -> {}",

@@ -176,12 +176,8 @@ pub async fn plugin_command_handler(
                 plugin_path.display()
             ));
 
-            let bar = ProgressBar::new_spinner();
-            bar.enable_steady_tick(Duration::from_millis(100));
-            bar.set_message("Setting up plugin...");
             env::setup_envs(&db, plugin_dir, &id)?;
             permissions::setup_permissions(&db, plugin_dir, &id, None)?;
-            bar.finish_with_message(format!("Successfully set up {id}"));
             Ok(())
         }
         PluginSubCommands::Remove { id } => {
