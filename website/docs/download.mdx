@@ -1,6 +1,6 @@
 ---
 sidebar_position: 1
-title: Download
+title: Download and Setup
 description: Download Jilebi for your platform
 ---
 
@@ -11,50 +11,41 @@ import styles from './download.module.css';
 Get started with Jilebi by downloading the latest version for your operating system.
 
 <div className={styles.downloadGrid}>
-  <div className={styles.downloadCard}>
-    <div className={styles.cardHeader}>
-      <h3>🪟 Windows x64</h3>
+  <div className={styles.downloadColumn}>
+    <div className={styles.columnHeader}>
+      <h3>Windows</h3>
+      <p>For Windows 10/11</p>
     </div>
-    <div className={styles.cardBody}>
-      <p>For Windows 10/11 (64-bit)</p>
-      <a href="/downloads/jilebi-windows-x64.exe" className="button button--primary button--lg">
-        Download for Windows
+    <div className={styles.columnBody}>
+      <a href="/downloads/jilebi-windows-x64.exe" className="button button--outline button--primary button--lg">
+        x86_64
       </a>
     </div>
   </div>
 
-  <div className={styles.downloadCard}>
-    <div className={styles.cardHeader}>
-      <h3>🐧 Linux x64</h3>
+  <div className={styles.downloadColumn}>
+    <div className={styles.columnHeader}>
+      <h3>Linux</h3>
+      <p>For Linux distributions</p>
     </div>
-    <div className={styles.cardBody}>
-      <p>For Linux distributions (64-bit)</p>
-      <a href="/downloads/jilebi-linux-x64.tar.gz" className="button button--primary button--lg">
-        Download for Linux
+    <div className={styles.columnBody}>
+      <a href="/downloads/jilebi-linux-x64.tar.gz" className="button button--outline button--primary button--lg">
+        x86_64
       </a>
     </div>
   </div>
 
-  <div className={styles.downloadCard}>
-    <div className={styles.cardHeader}>
-      <h3>🍎 macOS Apple Silicon</h3>
+  <div className={styles.downloadColumn}>
+    <div className={styles.columnHeader}>
+      <h3>macOS</h3>
+      <p>For Mac computers</p>
     </div>
-    <div className={styles.cardBody}>
-      <p>For Mac with M1, M2, M3 chips</p>
-      <a href="/downloads/jilebi-macos-arm64.dmg" className="button button--primary button--lg">
-        Download for Mac (M-series)
+    <div className={styles.columnBody}>
+      <a href="/downloads/jilebi-macos-arm64.dmg" className="button button--outline button--primary button--lg">
+        Apple Silicon
       </a>
-    </div>
-  </div>
-
-  <div className={styles.downloadCard}>
-    <div className={styles.cardHeader}>
-      <h3>🍎 macOS Intel</h3>
-    </div>
-    <div className={styles.cardBody}>
-      <p>For Mac with Intel processors</p>
-      <a href="/downloads/jilebi-macos-x64.dmg" className="button button--primary button--lg">
-        Download for Mac (Intel)
+      <a href="/downloads/jilebi-macos-x64.dmg" className="button button--outline button--primary button--lg">
+        Intel
       </a>
     </div>
   </div>
@@ -64,39 +55,43 @@ Get started with Jilebi by downloading the latest version for your operating sys
 
 ### Windows
 
-1. Download the Windows installer above
-2. Run the `.exe` file as Administrator
-3. Follow the installation wizard
-4. Once installed, open Command Prompt or PowerShell
-5. Verify installation by running: `jilebi --version`
+1. Download the windows exe
+2. Unzip the file that you downloaded to your desired location
+3. Open powershell
+4. Install a few extremely useful plugins, I recommend memory and sequential-thinking. You can install them with the command
+  ```
+  	.\jilebi.exe plugins add memory
+  	.\jilebi.exe plugins add sequential-thinking
+  ```
+  You can find more plugins to install [here](https://github.com/datron/jilebi-plugins)
+5. run jilebi using the command `.\jilebi.exe stdio` to start the MCP server. You won't see anything yet, we need to hook jilebi up to a host
 
 ### Linux
 
-1. Download the Linux tarball above
-2. Extract the archive: `tar -xzf jilebi-linux-x64.tar.gz`
-3. Move the binary to your PATH: `sudo mv jilebi /usr/local/bin/`
-4. Make it executable: `sudo chmod +x /usr/local/bin/jilebi`
-5. Verify installation by running: `jilebi --version`
+1. Download the linux binary
+2. Unzip the file that you downloaded to your desired location
+3. Open your terminal
+4. grant execution access for jilebi with the command `chmod +x jilebi`
+5. Install a few extremely useful plugins, I recommend memory and sequential-thinking. You can install them with the command
+  ```
+  	./jilebi plugins add memory
+  	./jilebi plugins add sequential-thinking
+  ```
+  You can find more plugins to install [here](https://github.com/datron/jilebi-plugins)
+5. run jilebi using the command `./jilebi stdio`. This starts the MCP server. You won't see anything yet, we need to hook it up to a host
 
 ### macOS
 
-1. Download the appropriate DMG file for your Mac
-2. Open the DMG file
-3. Drag Jilebi to your Applications folder
-4. Open Terminal
-5. Add Jilebi to your PATH by adding this line to your `~/.zshrc` or `~/.bash_profile`:
-   ```bash
-   export PATH="/Applications/Jilebi.app/Contents/MacOS:$PATH"
-   ```
-6. Reload your shell: `source ~/.zshrc` (or `source ~/.bash_profile`)
-7. Verify installation by running: `jilebi --version`
+1. Download the macOS binary that fits your processor
+2. Unzip the file that you downloaded to your desired location
+3. Open your terminal
+4. grant execution access for jilebi with the command `chmod +x jilebi`
+5. MacOS blocks programs from unverified developers. Follow this [guide](https://support.apple.com/en-in/guide/mac-help/mh40616/mac) from apple or run `xattr -d com.apple.quarantine /path/to/jilebi` in your terminal
+6. Install a few extremely useful plugins, I recommend memory and sequential-thinking. You can install them with the command
+  ```
+  	.\jilebi plugins add memory
+  	.\jilebi plugins add sequential-thinking
+  ```
+  You can find more plugins to install [here](https://github.com/datron/jilebi-plugins)
+7. run jilebi using the command `./jilebi stdio`. This starts the MCP server. You won't see anything yet, we need to hook it up to a host
 
-## Getting Started
-
-Once you have Jilebi installed, check out our [Getting Started guide](/docs/intro) to learn how to use it.
-
-## System Requirements
-
-- **Windows**: Windows 10 or later (64-bit)
-- **Linux**: Most modern Linux distributions (64-bit)
-- **macOS**: macOS 11.0 or later (Intel and Apple Silicon)

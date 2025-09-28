@@ -8,129 +8,141 @@ type Plugin = {
 	id: string;
 	name: string;
 	icon: string;
-	description: string;
+	number_of_downloads: string;
 };
 
 const plugins: Plugin[] = [
 	{
 		id: 'filesystem',
 		name: 'Filesystem',
-		icon: '📁',
-		description: 'File operations'
+		icon: require('@site/static/img/folder-open-line.png').default,
+		number_of_downloads: '100+'
 	},
 	{
-		id: 'database',
-		name: 'Database',
-		icon: '🗄️',
-		description: 'Data storage'
+		id: 'cloudflare',
+		name: 'Cloudflare',
+		icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/cloudflare/cloudflare-original.svg',
+		number_of_downloads: '100+'
 	},
 	{
-		id: 'http',
-		name: 'HTTP Client',
-		icon: '🌐',
-		description: 'Web requests'
+		id: 'fetch',
+		name: 'fetch',
+		icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/chrome/chrome-original.svg',
+		number_of_downloads: '100+'
 	},
 	{
-		id: 'ai',
-		name: 'AI Models',
-		icon: '🤖',
-		description: 'LLM integration'
+		id: 'context7',
+		name: 'Context7',
+		icon: 'https://context7.com/_next/static/media/context7vector.39c35f61.svg',
+		number_of_downloads: '100+'
 	},
 	{
 		id: 'time',
 		name: 'Time Utils',
-		icon: '⏰',
-		description: 'Date & time'
+		icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg',
+		number_of_downloads: '100+'
 	},
 	{
-		id: 'crypto',
-		name: 'Cryptography',
-		icon: '🔐',
-		description: 'Security ops'
+		id: 'github',
+		name: 'Github',
+		icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg',
+		number_of_downloads: '100+'
 	},
 	{
-		id: 'notifications',
-		name: 'Notifications',
-		icon: '🔔',
-		description: 'Alert system'
+		id: 'grafana',
+		name: 'grafana',
+		icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/grafana/grafana-original.svg',
+		number_of_downloads: '100+'
 	},
 	{
-		id: 'git',
-		name: 'Git',
-		icon: '📚',
-		description: 'Version control'
+		id: 'memory',
+		name: 'Memory',
+		icon: require('@site/static/img/ram-2-fill.png').default,
+		number_of_downloads: '100+'
 	},
 	{
-		id: 'email',
-		name: 'Email',
-		icon: '📧',
-		description: 'Mail services'
+		id: 'sequential-thinking',
+		name: 'Sequential Thinking',
+		icon: require('@site/static/img/brain-line.png').default,
+		number_of_downloads: '100+'
 	},
 	{
-		id: 'json',
-		name: 'JSON Utils',
-		icon: '📄',
-		description: 'JSON processing'
+		id: 'rust-docs',
+		name: 'Rust Docs',
+		icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/rust/rust-original.svg",
+		number_of_downloads: '100+'
 	},
 	{
-		id: 'pdf',
-		name: 'PDF Tools',
-		icon: '📑',
-		description: 'PDF generation'
+		id: 'met-museum',
+		name: 'Met Museum',
+		icon: require('@site/static/img/the_met.png').default,
+		number_of_downloads: '100+'
 	},
 	{
-		id: 'image',
-		name: 'Image Proc',
-		icon: '🖼️',
-		description: 'Image editing'
+		id: 'anilist',
+		name: 'Anilist',
+		icon: "https://anilist.co/img/icons/icon.svg",
+		number_of_downloads: '100+'
 	},
 	{
-		id: 'weather',
-		name: 'Weather',
-		icon: '🌤️',
-		description: 'Weather data'
+		id: 'blender',
+		name: 'Blender',
+		icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/blender/blender-original.svg',
+		number_of_downloads: 'Coming soon'
 	},
 	{
-		id: 'calendar',
-		name: 'Calendar',
-		icon: '📅',
-		description: 'Schedule mgmt'
+		id: 'Playwright',
+		name: 'Playwright',
+		icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/playwright/playwright-original.svg',
+		number_of_downloads: 'Coming soon'
 	},
 	{
-		id: 'analytics',
-		name: 'Analytics',
-		icon: '📊',
-		description: 'Data insights'
+		id: 'aws-docs',
+		name: 'AWS Docs',
+		icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/amazonwebservices/amazonwebservices-plain-wordmark.svg',
+		number_of_downloads: 'Coming soon'
 	},
 	{
-		id: 'search',
-		name: 'Search',
-		icon: '🔍',
-		description: 'Full-text search'
+		id: 'exa-search',
+		name: 'Exa Search',
+		icon: require('@site/static/img/exa.png').default,
+		number_of_downloads: 'Coming soon'
 	},
 	{
-		id: 'auth',
-		name: 'Auth',
-		icon: '🔑',
-		description: 'Authentication'
+		id: 'elastic-search',
+		name: 'Elastic Search',
+		icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/elasticsearch/elasticsearch-original.svg',
+		number_of_downloads: 'Coming soon'
 	},
 	{
-		id: 'cache',
-		name: 'Cache',
-		icon: '💾',
-		description: 'Data caching'
+		id: 'whatsapp',
+		name: 'WhatsApp',
+		icon: 'https://static.whatsapp.net/rsrc.php/yZ/r/JvsnINJ2CZv.svg',
+		number_of_downloads: 'Coming soon'
 	},
 	{
-		id: 'log',
-		name: 'Logging',
-		icon: '📝',
-		description: 'System logs'
+		id: 'jira',
+		name: 'JIRA',
+		icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/jira/jira-original.svg',
+		number_of_downloads: 'Coming soon'
 	},
 	{
-		id: 'queue',
-		name: 'Queue',
-		icon: '🚀',
-		description: 'Task queuing'
+		id: 'Figma',
+		name: 'Figma',
+		icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/figma/figma-original.svg',
+		number_of_downloads: 'Coming soon'
+	},
+	{
+		id: 'Azure',
+		name: 'Azure',
+		icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/azure/azure-original.svg',
+		number_of_downloads: 'Coming soon'
+	},
+	{
+		id: 'GCP',
+		name: 'GCP',
+		icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/googlecloud/googlecloud-original.svg',
+		number_of_downloads: 'Coming soon'
 	}
 ];
 
@@ -144,10 +156,12 @@ function PluginCard({ plugin, position }: { plugin: Plugin; position: { x: numbe
 			} as React.CSSProperties}
 		>
 			<div className={styles.cardContent}>
-				<div className={styles.pluginIcon}>{plugin.icon}</div>
+				<div className={styles.pluginIcon}>
+					<img src={plugin.icon} alt={plugin.name} className={styles.pluginIconImg} />
+				</div>
 				<div className={styles.pluginInfo}>
 					<h4 className={styles.pluginName}>{plugin.name}</h4>
-					<p className={styles.pluginDescription}>{plugin.description}</p>
+					<p className={styles.pluginDownloads}>{plugin.number_of_downloads}</p>
 				</div>
 			</div>
 		</div>
@@ -213,8 +227,13 @@ export default function PluginConstellation(): ReactNode {
 						</Link>
 						<Link
 							className="button button--outline button--secondary button--lg"
-							to="/docs/intro">
+							to="https://github.com/datron/jilebi-plugins">
 							Find Plugins
+						</Link>
+						<Link
+							className=""
+							to="https://forms.gle/XXJWpi4HDSUJG2d5A">
+							Jilebi SaaS
 						</Link>
 					</div>
 				</div>

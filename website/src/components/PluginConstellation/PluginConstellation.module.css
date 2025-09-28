@@ -154,8 +154,8 @@
 	position: absolute;
 	top: 50%;
 	left: 50%;
-	width: 160px;
-	height: 80px;
+	width: 170px;
+	height: 100px;
 	transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y)));
 	opacity: 0.85;
 	transition: all 0.3s ease;

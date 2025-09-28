@@ -1,0 +1,8 @@
+{
+  "label": "Creating your own plugins",
+  "position": 3,
+  "link": {
+    "type": "generated-index",
+    "description": "Write your own Jilebi plugins in typescript/javascript"
+  }
+}

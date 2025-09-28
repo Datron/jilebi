@@ -1,0 +1,146 @@
+---
+sidebar_position: 2
+title: MCP Host Setup
+description: Setting up a host to use Jilebi as an MCP server
+---
+
+# MCP Host Setup
+
+This guide covers how to configure various applications to use Jilebi as an MCP server. Each application has its own configuration format and setup process.
+
+## Claude Desktop
+
+Claude Desktop uses a JSON configuration file to define MCP servers.
+
+### Configuration Location
+
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Linux**: `~/.config/Claude/claude_desktop_config.json`
+
+### Configuration Format
+
+```json
+{
+  "mcpServers": {
+    "jilebi": {
+      "command": "jilebi",
+      "args": ["stdio"],
+      "env": {}
+    }
+  }
+}
+```
+
+## Claude Code
+
+open .claude.json and add:
+
+
+```json
+{
+  "mcpServers": {
+    "jilebi": {
+      "command": "jilebi",
+      "args": ["stdio"],
+      "env": {}
+    }
+  }
+}
+```
+
+### Environment Variables
+
+Set any required environment variables in the server configuration:
+
+```json
+{
+  "name": "jilebi",
+  "command": "jilebi",
+  "args": ["stdio"],
+  "env": {}
+}
+```
+
+## Cursor
+
+Create or edit `~/.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "server-name": {
+      "command": "jilebi",
+      "args": ["stdio"],
+      "env": {}
+    }
+  }
+}
+```
+
+Check out: https://cursor.com/docs/context/mcp for more info
+
+## Zed
+
+### Configuration Location
+
+Edit `~/.config/zed/settings.json`:
+
+```json
+{
+    "context_servers": {
+      "jilebi": {
+        "command": "jilebi",
+        "args": ["stdio"],
+		"enabled": true,
+		"source": "custom",
+        "env": {}
+      }
+    }
+}
+```
+
+## VS Code
+
+Add to your VS Code `mcp.json`:
+
+```json
+"servers": {
+	"jilebi": {
+		"type": "stdio",
+		"command": "jilebi",
+		"args": [
+			"stdio"
+		]
+	}
+},
+```
+
+## Opencode
+
+
+Edit `~/.config/opencode.json`:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "jilebi": {
+      "type": "local",
+      "command": ["jilebi", "stdio"],
+      "enabled": true,
+      "environment": {}
+    },
+  }
+}
+```
+
+## Codex CLI
+
+Add this in `~/.codex/config.toml`:
+
+```toml
+[mcp_servers.jilebi]
+command = "jilebi"
+args = ["stdio"]
+```
