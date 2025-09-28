@@ -1,0 +1,45 @@
+.downloadGrid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+	gap: 2rem;
+	margin: 2rem 0;
+}
+
+.downloadCard {
+	border: 1px solid var(--ifm-color-emphasis-300);
+	border-radius: 8px;
+	padding: 1.5rem;
+	background: var(--ifm-background-color);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.downloadCard:hover {
+	transform: translateY(-4px);
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.cardHeader {
+	margin-bottom: 1rem;
+}
+
+.cardHeader h3 {
+	margin: 0;
+	color: var(--ifm-color-primary);
+	font-size: 1.25rem;
+}
+
+.cardBody p {
+	color: var(--ifm-color-emphasis-700);
+	margin-bottom: 1.5rem;
+}
+
+.cardBody .button {
+	width: 100%;
+	text-align: center;
+}
+
+[data-theme='dark'] .downloadCard {
+	background: var(--ifm-background-surface-color);
+	border-color: var(--ifm-color-emphasis-200);
+}

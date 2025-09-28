@@ -1,0 +1,66 @@
+.custom-navbar {
+	transition: all 0.3s ease;
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	z-index: 1000;
+}
+
+.navbar-transparent {
+	background-color: rgba(0, 0, 0, 0.1);
+	backdrop-filter: blur(10px);
+	border-bottom: 1px solid rgba(253, 216, 53, 0.2);
+}
+
+.navbar-scrolled {
+	background-color: var(--ifm-navbar-background-color);
+	backdrop-filter: blur(10px);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+	border-bottom: 1px solid var(--ifm-color-emphasis-200);
+}
+
+/* Override default navbar styles */
+.navbar {
+	background-color: transparent !important;
+	box-shadow: none !important;
+}
+
+/* Ensure navbar content is visible on transparent background */
+.navbar-transparent .navbar__brand,
+.navbar-transparent .navbar__item {
+	color: #fdd835 !important;
+}
+
+.navbar-transparent .navbar__item:hover {
+	color: #ffa000 !important;
+}
+
+.navbar-transparent .navbar__link {
+	color: #fdd835 !important;
+}
+
+.navbar-transparent .navbar__link:hover {
+	color: #ffa000 !important;
+}
+
+/* Dark mode adjustments */
+[data-theme='dark'] .navbar-transparent {
+	background-color: rgba(0, 0, 0, 0.2);
+}
+
+[data-theme='dark'] .navbar-scrolled {
+	background-color: var(--ifm-navbar-background-color);
+}
+
+/* Mobile responsive */
+@media (max-width: 996px) {
+	.navbar-transparent .navbar-sidebar {
+		background-color: rgba(0, 0, 0, 0.95);
+		backdrop-filter: blur(20px);
+	}
+
+	.navbar-scrolled .navbar-sidebar {
+		background-color: var(--ifm-navbar-background-color);
+	}
+}
