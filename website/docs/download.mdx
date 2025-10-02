@@ -17,7 +17,7 @@ Get started with Jilebi by downloading the latest version for your operating sys
       <p>For Windows 10/11</p>
     </div>
     <div className={styles.columnBody}>
-      <a href="/downloads/jilebi-windows-x64.exe" className="button button--outline button--primary button--lg">
+      <a href="/api/download/bin/jilebi-x86_64-pc-windows-msvc.zip" className="button button--outline button--primary button--lg">
         x86_64
       </a>
     </div>
@@ -29,7 +29,7 @@ Get started with Jilebi by downloading the latest version for your operating sys
       <p>For Linux distributions</p>
     </div>
     <div className={styles.columnBody}>
-      <a href="/downloads/jilebi-linux-x64.tar.gz" className="button button--outline button--primary button--lg">
+      <a href="/api/download/bin/jilebi-x86_64-unknown-linux-gnu.zip" className="button button--outline button--primary button--lg">
         x86_64
       </a>
     </div>
@@ -41,10 +41,10 @@ Get started with Jilebi by downloading the latest version for your operating sys
       <p>For Mac computers</p>
     </div>
     <div className={styles.columnBody}>
-      <a href="/downloads/jilebi-macos-arm64.dmg" className="button button--outline button--primary button--lg">
+      <a href="/api/download/bin/jilebi-aarch64-apple-darwin.zip" className="button button--outline button--primary button--lg">
         Apple Silicon
       </a>
-      <a href="/downloads/jilebi-macos-x64.dmg" className="button button--outline button--primary button--lg">
+      <a href="/api/download/bin/jilebi-x86_64-apple-darwin.zip" className="button button--outline button--primary button--lg">
         Intel
       </a>
     </div>
@@ -87,11 +87,12 @@ Get started with Jilebi by downloading the latest version for your operating sys
 3. Open your terminal
 4. grant execution access for jilebi with the command `chmod +x jilebi`
 5. MacOS blocks programs from unverified developers. Follow this [guide](https://support.apple.com/en-in/guide/mac-help/mh40616/mac) from apple or run `xattr -d com.apple.quarantine /path/to/jilebi` in your terminal
-6. Install a few extremely useful plugins, I recommend memory and sequential-thinking. You can install them with the command
+6. Make sure you have `xz` installed. Run `brew install xz`
+7. Install a few extremely useful plugins, I recommend memory and sequential-thinking. You can install them with the command
   ```
-  	.\jilebi plugins add memory
-  	.\jilebi plugins add sequential-thinking
+  	./jilebi plugins add memory
+  	./jilebi plugins add sequential-thinking
   ```
   You can find more plugins to install [here](https://github.com/datron/jilebi-plugins)
-7. run jilebi using the command `./jilebi stdio`. This starts the MCP server. You won't see anything yet, we need to hook it up to a host
+8. run jilebi using the command `./jilebi stdio`. This starts the MCP server. You won't see anything yet, we need to hook it up to a host
 

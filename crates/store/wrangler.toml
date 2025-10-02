@@ -1,0 +1,36 @@
+name = "jilebi-store"
+main = "build/worker/shim.mjs"
+compatibility_date = "2023-12-01"
+
+[assets]
+directory = "./website"
+not_found_handling = "single-page-application"
+binding = "ASSETS"
+
+[build]
+command = "cargo install -q worker-build && worker-build --release"
+
+[env.dev]
+build = { command = "cargo install -q worker-build && worker-build --dev" }
+r2_buckets = [
+    { binding = "JILEBI", bucket_name = "jilebi" }
+]
+d1_databases = [
+    { binding = "jilebi", database_name = "jilebi", database_id = "59fd6769-15fc-4901-8ebc-e2553fbe551d" }
+]
+
+[observability.logs]
+enabled = true
+
+[[r2_buckets]]
+binding = 'JILEBI'
+bucket_name = 'jilebi'
+
+[[d1_databases]]
+binding = "jilebi"
+database_name = "jilebi"
+database_id = "59fd6769-15fc-4901-8ebc-e2553fbe551d"
+
+[[routes]]
+pattern = "jilebi.ai"
+custom_domain = true

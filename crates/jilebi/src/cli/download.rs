@@ -1,6 +1,6 @@
 use std::{fs, io::Write, path::PathBuf};
 
-const DOWNLOAD_BUCKET: &str = "https://pub-94ee61872c1341e1baa984ebe1d235ec.r2.dev";
+const DOWNLOAD_URL: &str = "https://jilebi.ai/api/download";
 
 async fn download(url: &str, download_path: &PathBuf) -> Result<(), String> {
     let response = reqwest::get(url)
@@ -86,7 +86,7 @@ pub async fn download_and_init_plugin(
     jilebi_plugin_dir: &PathBuf,
 ) -> Result<(), String> {
     let file_name = format!("{}.zip", id);
-    let url = format!("{}/plugins/{}", DOWNLOAD_BUCKET, file_name);
+    let url = format!("{}/plugins/{}", DOWNLOAD_URL, file_name);
     tracing::debug!("Downloading plugin from URL: {}", url);
     if !plugin_path.exists() {
         fs::create_dir_all(&plugin_path).map_err(|e| e.to_string())?;
@@ -104,11 +104,11 @@ pub async fn download_and_init_template(
     complex_plugin: bool,
 ) -> Result<(), String> {
     let file_name = format!("{}.zip", language);
-    let url = format!("{}/templates/{}", DOWNLOAD_BUCKET, file_name);
+    let url = format!("{}/templates/{}", DOWNLOAD_URL, file_name);
     fs::create_dir_all(new_plugin_path).map_err(|e| e.to_string())?;
     download_and_extract(&url, &new_plugin_path.join(&file_name)).await?;
     if complex_plugin {
-        let url = format!("{}/templates/rollup.config.js", DOWNLOAD_BUCKET);
+        let url = format!("{}/templates/rollup.config.js", DOWNLOAD_URL);
         download(&url, &new_plugin_path.join("rollup.config.js")).await?;
         fs::remove_file(new_plugin_path.join("package.json")).map_err(|e| e.to_string())?;
         fs::rename(

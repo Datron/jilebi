@@ -1,9 +1,13 @@
 {
 	"scripts": {
-		"inspector": "npx @modelcontextprotocol/inspector"
+		"inspector": "npx @modelcontextprotocol/inspector",
+		"frontend": "cd website && npm run build && mv build/ ../crates/store/website",
+		"website-dev": "cd website && npm run start",
+		"store-dev": "cd crates/store && npx wrangler dev --env dev",
+		"deploy-site": "cd crates/store && npx wrangler deploy"
 	},
 	"devDependencies": {
-		"@modelcontextprotocol/inspector": "^0.14.3",
-		"wrangler": "^4.31.0"
+		"@modelcontextprotocol/inspector": "^0.16.8",
+		"wrangler": "^4.40.2"
 	}
 }
