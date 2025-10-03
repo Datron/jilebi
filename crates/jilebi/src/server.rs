@@ -1,6 +1,7 @@
 use std::{borrow::Cow, collections::HashMap, fs, path::PathBuf, sync::Arc};
 
 use dosa::run_code;
+use handlebars::Handlebars;
 use jilebi_types::{
     Plugins,
     plugin::{Manifest, SEPARATOR},
@@ -146,6 +147,7 @@ impl ServerHandler for JilebiMcpServer {
         context: RequestContext<rmcp::RoleServer>,
     ) -> Result<GetPromptResult, rmcp::ErrorData> {
         tracing::debug!("request ID for get_prompt: {}", context.id);
+        let handlerbars = Handlebars::new();
         let (plugin_name, prompt_name) =
             get_plugin_and_section_name(&request.name, McpSection::Prompt)?;
         tracing::debug!("Plugin: {} Prompt: {}", plugin_name, prompt_name);
@@ -156,13 +158,38 @@ impl ServerHandler for JilebiMcpServer {
                 "The plugin name provided is either invalid or has been removed",
                 None,
             ))?;
-        let prompt = plugin
-            .prompts
-            .get(&prompt_name)
-            .ok_or(rmcp::ErrorData::invalid_request(
-                "The prompt name provided is either invalid or has been removed",
-                None,
-            ))?;
+        let mut prompt =
+            plugin
+                .prompts
+                .get(&prompt_name)
+                .cloned()
+                .ok_or(rmcp::ErrorData::invalid_request(
+                    "The prompt name provided is either invalid or has been removed",
+                    None,
+                ))?;
+        let prompt_arguments = request.arguments.unwrap_or_default();
+        for content in prompt.content.iter_mut() {
+            let new_content = match content.content.clone() {
+                rmcp::model::PromptMessageContent::Text { text } => {
+                    let parsed_text = handlerbars
+                        .render_template(&text, &prompt_arguments)
+                        .map_err(|e| {
+                            tracing::error!("error parsing prompt handlerbars: {}", e);
+                            rmcp::ErrorData::internal_error(
+                                "error parsing prompt handlerbars",
+                                None,
+                            )
+                        })?;
+                    rmcp::model::PromptMessageContent::Text { text: parsed_text }
+                }
+                s => s,
+            };
+
+            *content = rmcp::model::PromptMessage {
+                content: new_content,
+                role: content.role.clone(),
+            };
+        }
         Ok(GetPromptResult {
             description: prompt.prompt.description.clone(),
             messages: prompt.content.clone(),

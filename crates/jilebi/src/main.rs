@@ -114,8 +114,10 @@ async fn main() -> Result<(), String> {
     }
 }
 
-// TOP PRIORITY
-// TODO: check resources and add support for args
+// TOP PRIORITY - stdio release
+// TODO: check resources and add support for args (resource templates)
+
+// SAAS
 // TODO: replace plugins.toml with plugins table in the database
 // TODO: support SSE, HTTP and Authentication
 // TODO: add compile time flags for using postgres (saas) vs sqlite (stdio)
@@ -133,7 +135,7 @@ async fn main() -> Result<(), String> {
 // MCP Server
 // TODO: Error handling
 // TODO: support Resource Template
-// TODO: add pagination support
+// TODO: add pagination, autocomplete,  support
 // plugins
 // TODO: Let users choose which resources, prompts and tools can be shown to the llm
 // TODO: Add regex support to permissions

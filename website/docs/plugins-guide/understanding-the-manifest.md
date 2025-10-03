@@ -259,3 +259,7 @@ messages = [
 	{ role = "assistant", content = { type = "text", content = "I'm excited to be your museum educator guide for {{age_group}}{{#if learning_focus}} focusing on {{learning_focus}}{{/if}}! Let me explore the Met's collection to find perfect artworks for our educational journey and present them in an engaging, age-appropriate way." } },
 ]
 ```
+
+:::info
+Prompts use [handlerbar syntax](https://handlebarsjs.com/guide/) to weave arguments into the prompt. You can follow the guide to embed logic in your prompt definitions
+:::
