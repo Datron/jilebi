@@ -4,8 +4,10 @@ use dosa::run_code;
 use handlebars::Handlebars;
 use jilebi_types::{
     Plugins,
-    plugin::{Manifest, SEPARATOR},
+    manifest::{Manifest, SEPARATOR},
 };
+use r2d2::Pool;
+use r2d2_sqlite::SqliteConnectionManager;
 use rmcp::{
     ServerHandler,
     model::{
@@ -19,7 +21,7 @@ use rmcp::{
 };
 use tokio::{runtime::Handle, sync::RwLock};
 
-use crate::cli::permissions;
+use crate::{cli::permissions, utils::get_plugin_path};
 
 #[derive(Debug, Clone, derive_more::Display, PartialEq)]
 enum McpSection {
@@ -68,26 +70,23 @@ fn generate_plugin_environment(
     }
     Ok(json!(env))
 }
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 pub struct JilebiMcpServer {
     pub plugins: Plugins,
-    pub plugin_dir: PathBuf,
+    pub db: Pool<SqliteConnectionManager>,
     pub plugin_log_dir: PathBuf,
-    pub jilebi_base_dir: PathBuf,
 }
 
 impl JilebiMcpServer {
     pub fn new(
         plugins: HashMap<String, Manifest>,
-        plugin_dir: PathBuf,
+        db: Pool<SqliteConnectionManager>,
         plugin_log_dir: PathBuf,
-        jilebi_base_dir: PathBuf,
     ) -> Self {
         JilebiMcpServer {
             plugins: Arc::new(RwLock::new(plugins)),
-            plugin_dir,
+            db,
             plugin_log_dir,
-            jilebi_base_dir,
         }
     }
 }
@@ -201,15 +200,7 @@ impl ServerHandler for JilebiMcpServer {
         request: rmcp::model::CallToolRequestParam,
         _context: RequestContext<rmcp::RoleServer>,
     ) -> Result<rmcp::model::CallToolResult, rmcp::ErrorData> {
-        let db_path = crate::utils::generate_path(&self.jilebi_base_dir, "jilebi.db3", false)
-            .map_err(|e| {
-                tracing::error!("Could not generate the path for the jilebi DB: {}", e);
-                rmcp::ErrorData::internal_error(
-                    "Could not fetch environment variables from the jilebi DB",
-                    None,
-                )
-            })?;
-        let connection = rusqlite::Connection::open(db_path).map_err(|e| {
+        let connection = self.db.get().map_err(|e| {
             tracing::error!("Could not open the jilebi DB: {}", e);
             rmcp::ErrorData::internal_error(
                 "Could not open the jilebi DB",
@@ -220,7 +211,18 @@ impl ServerHandler for JilebiMcpServer {
 
         let (plugin_name, tool_name) =
             get_plugin_and_section_name(&request.name.into_owned(), McpSection::Tool)?;
-        let code_path = self.plugin_dir.join(&plugin_name).join("index.js");
+        let code_path = get_plugin_path(&connection, &plugin_name)
+            .map_err(|err| {
+                tracing::error!(
+                    "Could not fetch path to plugin directory in tool call: {}",
+                    err
+                );
+                rmcp::ErrorData::internal_error(
+                    "Could not fetch path to plugin directory in tool call",
+                    Some(serde_json::Value::String(err.to_string())),
+                )
+            })?
+            .join("index.js");
         let code = fs::read_to_string(code_path).map_err(|e| {
             tracing::error!("Could not find JS file: {}", e);
             rmcp::ErrorData::internal_error(
@@ -291,9 +293,9 @@ impl ServerHandler for JilebiMcpServer {
         _context: RequestContext<rmcp::RoleServer>,
     ) -> Result<rmcp::model::ListToolsResult, rmcp::ErrorData> {
         let mut tools: Vec<Tool> = Vec::new();
-        tracing::info!("Listing tools");
+        tracing::trace!("Listing tools");
         let plugins = self.plugins.read().await;
-        tracing::info!("Plugins loaded: {:?}", *plugins);
+        tracing::trace!("Plugins loaded: {:?}", *plugins);
         for (_, plugin) in plugins.iter() {
             let mut p = plugin
                 .tools
@@ -337,15 +339,7 @@ impl ServerHandler for JilebiMcpServer {
         request: rmcp::model::ReadResourceRequestParam,
         _context: RequestContext<rmcp::RoleServer>,
     ) -> Result<rmcp::model::ReadResourceResult, rmcp::ErrorData> {
-        let db_path = crate::utils::generate_path(&self.jilebi_base_dir, "jilebi.db3", false)
-            .map_err(|e| {
-                tracing::error!("Could not generate the path for the jilebi DB: {}", e);
-                rmcp::ErrorData::internal_error(
-                    "Could not fetch environment variables from the jilebi DB",
-                    None,
-                )
-            })?;
-        let connection = rusqlite::Connection::open(db_path).map_err(|e| {
+        let connection = self.db.get().map_err(|e| {
             tracing::error!("Could not open the jilebi DB: {}", e);
             rmcp::ErrorData::internal_error(
                 "Could not open the jilebi DB",
@@ -356,7 +350,18 @@ impl ServerHandler for JilebiMcpServer {
 
         let (plugin_name, resource_name) =
             get_plugin_and_section_name(&request.uri, McpSection::Resource)?;
-        let code_path = self.plugin_dir.join(&plugin_name).join("index.js");
+        let code_path = get_plugin_path(&connection, &plugin_name)
+            .map_err(|err| {
+                tracing::error!(
+                    "Could not fetch path to plugin directory in tool call: {}",
+                    err
+                );
+                rmcp::ErrorData::internal_error(
+                    "Could not fetch path to plugin directory in tool call",
+                    Some(serde_json::Value::String(err.to_string())),
+                )
+            })?
+            .join("index.js");
 
         let code = fs::read_to_string(&code_path).map_err(|e| {
             tracing::error!("Could not find JS file at {}: {}", &code_path.display(), e);

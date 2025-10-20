@@ -19,24 +19,34 @@ fn setup_database(dir: &Path) -> Result<Connection, String> {
         .execute_batch(
             "BEGIN;
 		CREATE TABLE IF NOT EXISTS plugin_state (
-			id TEXT NOT NULL, 
-			key TEXT NOT NULL, 
-			value TEXT NOT NULL, 
+			id TEXT NOT NULL,
+			key TEXT NOT NULL,
+			value TEXT NOT NULL,
 			PRIMARY KEY (id, key)
 		);
 		CREATE TABLE IF NOT EXISTS plugin_env(
-			id TEXT NOT NULL, 
-			type TEXT NOT NULL CHECK(type IN ('normal', 'secret')), 
+			id TEXT NOT NULL,
+			type TEXT NOT NULL CHECK(type IN ('normal', 'secret')),
 			env_name TEXT NOT NULL,
 			schema TEXT NOT NULL,
-			value TEXT NOT NULL, 
+			value TEXT NOT NULL,
 			PRIMARY KEY (id, env_name)
 		);
 		CREATE TABLE IF NOT EXISTS plugin_permissions(
-			id TEXT NOT NULL, 
-			resource_name TEXT NOT NULL, 
-			value TEXT NOT NULL, 
+			id TEXT NOT NULL,
+			resource_name TEXT NOT NULL,
+			value TEXT NOT NULL,
 			PRIMARY KEY (id, resource_name)
+		);
+		CREATE TABLE IF NOT EXISTS plugins(
+			name TEXT NOT NULL,
+			path TEXT NOT NULL,
+			version TEXT NOT NULL,
+			origin TEXT NOT NULL CHECK(origin IN ('local', 'jilebi')),
+			state TEXT NOT NULL CHECK(state IN ('enabled', 'disabled')),
+			date_installed TEXT NOT NULL,
+			last_updated TEXT NOT NULL,
+			PRIMARY KEY (name)
 		);
 		COMMIT;",
         )
@@ -51,7 +61,7 @@ async fn main() -> Result<(), String> {
         .ok_or(String::from("Could not create ProjectDirs struct"))?;
 
     let log_folder_path = utils::generate_path(base_jilebi_dir.data_dir(), "logs", true)?;
-    let log_file_path = utils::generate_path(Path::new(&log_folder_path), "jilebi.log", false)?;
+    let log_file_path = utils::generate_path(Path::new(&log_folder_path), "jilebi.logs", false)?;
 
     let log_path = dotenvy::var("LOG_PATH")
         .map(PathBuf::from)
@@ -73,29 +83,25 @@ async fn main() -> Result<(), String> {
         .map(PathBuf::from)
         .unwrap_or(default_plugin_path);
 
-	utils::init_plugin_toml(&plugin_directory)?;
     let jilebi_cli = JilebiCli::parse();
 
     let db = setup_database(base_jilebi_dir.data_dir())?;
     match jilebi_cli.subcommand {
         cli::SubCommands::Stdio => {
-            let plugins = utils::load_plugins(&plugin_directory)?;
-
+            let plugins = utils::load_plugins(&db)?;
+            let db_path = utils::generate_path(base_jilebi_dir.data_dir(), "jilebi.db3", false)?;
+            let pool = r2d2_sqlite::SqliteConnectionManager::file(db_path);
+            let db = r2d2::Pool::new(pool).map_err(|e| e.to_string())?;
             let main_span = tracing::span!(tracing::Level::INFO, "Jilebi Server started");
             tracing::info!("Starting Jilebi Server, loading plugins...");
             let _guard = main_span.enter();
 
             tracing::event!(
-                tracing::Level::INFO,
+                tracing::Level::TRACE,
                 ?plugins,
                 "Plugins and manifests loaded"
             );
-            let server = JilebiMcpServer::new(
-                plugins,
-                plugin_directory,
-                log_path,
-                base_jilebi_dir.data_dir().to_path_buf(),
-            );
+            let server = JilebiMcpServer::new(plugins, db, log_path);
 
             let service = server.serve(stdio()).await.map_err(|e| {
                 tracing::error!("Serving error: {:?}", e);
@@ -114,13 +120,19 @@ async fn main() -> Result<(), String> {
     }
 }
 
-// TOP PRIORITY - stdio release
+// TOP PRIORITY
 // TODO: check resources and add support for args (resource templates)
-
-// SAAS
 // TODO: replace plugins.toml with plugins table in the database
+// TODO: CLI additions:
+//          - list plugins local and remote
+//          - enable plugin
+//          - disable plugin
+//          - create application contexts to specialize tools for different contexts
 // TODO: support SSE, HTTP and Authentication
+// TODO: self update jilebi automatically when a new version is released
 // TODO: add compile time flags for using postgres (saas) vs sqlite (stdio)
+// TODO: version jilebi and plugins
+
 // TODO: add a frontend
 // 			- plugin store
 // 			- login
@@ -129,7 +141,7 @@ async fn main() -> Result<(), String> {
 // 			- show plugin logs and configs in the UI
 // 			- payments
 //			- website
-//			- docs (docusaurus or starlight)
+//			- docs (docusaurus or starlight) (done)
 
 // Jilebi MVP
 // MCP Server

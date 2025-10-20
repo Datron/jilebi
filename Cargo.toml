@@ -8,6 +8,7 @@ members = [
 ]
 
 [workspace.dependencies]
+chrono = "0.4.42"
 tokio = { version = "1.44.1", features = ["full"] }
 strum = "0.27.1"
 strum_macros = "0.27.1"

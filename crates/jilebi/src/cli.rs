@@ -15,13 +15,7 @@ use jilebi_types::env::PluginEnv;
 use keyring::Entry;
 use rusqlite::Connection;
 
-use crate::cli::{download::remove_plugin_to_toml, env::setup_envs};
-
-#[cfg(unix)]
-use std::os::unix::fs::symlink;
-
-#[cfg(windows)]
-use std::os::windows::fs::symlink_dir;
+use crate::cli::{download::remove_plugin_in_db, env::setup_envs};
 
 const MANIFEST_CODE: &str = r#"
 name = "<replace>"
@@ -102,11 +96,10 @@ pub async fn plugin_command_handler(
                 .map_err(|e| e.to_string())?;
             let manifest_code = MANIFEST_CODE.replace("<replace>", &plugin_name);
             let new_plugin_path = Input::<String>::new()
-                .with_prompt("path for the plugin")
+                .with_prompt("path for the plugin, do not include the name")
                 .default(
                     user_dirs
                         .home_dir()
-                        .join(&plugin_name)
                         .display()
                         .to_string(),
                 )
@@ -133,7 +126,7 @@ pub async fn plugin_command_handler(
             download::download_and_init_template(
                 &plugin_name,
                 &manifest_code,
-                &PathBuf::from(&new_plugin_path),
+                &PathBuf::from(&new_plugin_path).join(&plugin_name),
                 &language,
                 complex_plugin,
             )
@@ -143,14 +136,8 @@ pub async fn plugin_command_handler(
                 bar.abandon_with_message(format!("Failed to create plugin: {}", e));
                 e
             })?;
-            let local_plugin_path = plugin_dir.join(&plugin_name);
-            #[cfg(unix)]
-            symlink(&new_plugin_path, &local_plugin_path).map_err(|e| e.to_string())?;
 
-            #[cfg(windows)]
-            symlink_dir(&new_plugin_path, &local_plugin_path).map_err(|e| e.to_string())?;
-
-            download::add_plugin_to_toml(plugin_dir, &local_plugin_path)?;
+            download::add_plugin_to_db(&db, &plugin_name, &new_plugin_path)?;
             bar.finish_with_message(format!(
                 "Successfully created {} at {}",
                 plugin_name, new_plugin_path
@@ -164,7 +151,7 @@ pub async fn plugin_command_handler(
             let bar = ProgressBar::new_spinner();
             bar.enable_steady_tick(Duration::from_millis(100));
             bar.set_message("Downloading plugin...");
-            download::download_and_init_plugin(&id, &plugin_path, plugin_dir)
+            download::download_and_init_plugin(&id, &plugin_path, &db)
                 .await
                 .map_err(|e| {
                     tracing::error!("Could not download plugin due to {}", e);
@@ -192,7 +179,7 @@ pub async fn plugin_command_handler(
             if plugin_path.exists() {
                 fs::remove_dir_all(plugin_path).map_err(|e| e.to_string())?;
             }
-            remove_plugin_to_toml(plugin_dir, &id)
+            remove_plugin_in_db(&db, &id)
         }
         PluginSubCommands::Log { id } => {
             read_log_file(&log_file.parent().unwrap().join(format!("{}.logs", id)));

@@ -1,5 +1,9 @@
 use std::{fs, io::Write, path::PathBuf};
 
+use chrono::Utc;
+use jilebi_types::PluginOrigin;
+use rusqlite::{Connection, params};
+
 const DOWNLOAD_URL: &str = "https://jilebi.ai/api/download";
 
 async fn download(url: &str, download_path: &PathBuf) -> Result<(), String> {
@@ -27,72 +31,66 @@ async fn download_and_extract(url: &str, extract_path: &PathBuf) -> Result<(), S
     Ok(())
 }
 
-pub fn add_plugin_to_toml(
-    jilebi_plugin_dir: &PathBuf,
-    plugin_path: &PathBuf,
+pub fn add_plugin_to_db(
+    db: &Connection,
+    plugin_name: &str,
+    plugin_path: &str,
 ) -> Result<(), String> {
-    let toml_path = jilebi_plugin_dir.join("plugins.toml");
-    let toml = fs::read_to_string(&toml_path).map_err(|e| e.to_string())?;
-    let mut toml = toml::from_str::<toml::Value>(&toml).map_err(|e| {
-        format!(
-            "Could not parse the plugins toml directory manifest {}",
-            e.to_string()
-        )
-    })?;
-    toml.get_mut("manifest")
-        .and_then(|v| v.as_array_mut())
-        .map(|arr| {
-            arr.push(
-                plugin_path
-                    .join("manifest.toml")
-                    .display()
-                    .to_string()
-                    .into(),
-            );
-        })
-        .ok_or("Could not properly parse the plugin registry")?;
-    fs::write(
-        &toml_path,
-        toml::to_string_pretty(&toml).map_err(|e| e.to_string())?,
-    )
-    .map_err(|e| e.to_string())
+    let mut statement = db
+        .prepare("INSERT OR REPLACE INTO plugins VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7)")
+        .map_err(|err| {
+            tracing::error!("Could not insert new plugin into DB because of: {:?}", err);
+            "could not register the plugin with jilebi. Check logs to see why".to_string()
+        })?;
+    let datetime = Utc::now().to_rfc2822();
+    statement
+        .execute(params![
+            plugin_name.to_string(),
+            plugin_path.to_string(),
+            "1.0.0",
+            PluginOrigin::Jilebi.to_string(),
+            jilebi_types::PluginState::Enabled.to_string(),
+            datetime.clone(),
+            datetime,
+        ])
+        .map_err(|err| {
+            tracing::error!("Could not insert plugins into DB: {:?}", err);
+            format!("Could not insert plugins into DB, please check logs")
+        })?;
+    Ok(())
 }
 
-pub fn remove_plugin_to_toml(jilebi_plugin_dir: &PathBuf, plugin_name: &str) -> Result<(), String> {
-    let toml_path = jilebi_plugin_dir.join("plugins.toml");
-    let toml = fs::read_to_string(&toml_path).map_err(|e| e.to_string())?;
-    let mut toml = toml::from_str::<toml::Value>(&toml).map_err(|e| {
-        format!(
-            "Could not parse the plugins toml directory manifest {}",
-            e.to_string()
-        )
+pub fn remove_plugin_in_db(db: &Connection, plugin_name: &str) -> Result<(), String> {
+    let mut statement = db
+        .prepare("DELETE FROM plugins WHERE name = ?1")
+        .map_err(|err| {
+            tracing::error!("Could not remove plugin from DB because of: {:?}", err);
+            "could not remove the plugin from jilebi. Check logs to see why".to_string()
+        })?;
+    statement.execute([plugin_name]).map_err(|err| {
+        tracing::error!("Could not remove plugin from DB: {:?}", err);
+        format!("Could not remove plugin from DB, please check logs")
     })?;
-    toml.get_mut("manifest")
-        .and_then(|v| v.as_array_mut())
-        .map(|arr| {
-            arr.retain(|item| item.as_str().map_or(true, |s| !s.contains(plugin_name)));
-        })
-        .ok_or("Could not properly parse the plugin registry")?;
-    fs::write(
-        &toml_path,
-        toml::to_string_pretty(&toml).map_err(|e| e.to_string())?,
-    )
-    .map_err(|e| e.to_string())
+    Ok(())
 }
 
 pub async fn download_and_init_plugin(
     id: &str,
     plugin_path: &PathBuf,
-    jilebi_plugin_dir: &PathBuf,
+    db: &Connection,
 ) -> Result<(), String> {
     let file_name = format!("{}.zip", id);
+    let plugin_path_str = plugin_path
+        .parent()
+        .map(|s| s.display().to_string())
+        .ok_or("Invalid plugin path")?;
     let url = format!("{}/plugins/{}", DOWNLOAD_URL, file_name);
     tracing::debug!("Downloading plugin from URL: {}", url);
     if !plugin_path.exists() {
         fs::create_dir_all(&plugin_path).map_err(|e| e.to_string())?;
     }
     download_and_extract(&url, &plugin_path.join(&file_name)).await?;
-    add_plugin_to_toml(jilebi_plugin_dir, plugin_path)?;
+    add_plugin_to_db(db, id, &plugin_path_str)?;
     Ok(())
 }
 

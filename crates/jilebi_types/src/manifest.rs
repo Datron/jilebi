@@ -196,7 +196,7 @@ impl Prompts {
             let prompt = Prompt {
                 name: format!("{plugin_name}{SEPARATOR}{prompt_name}"),
                 description: optional_extractor(op_table, &"description".to_string()),
-                arguments: arguments,
+                arguments,
             };
             let content: Vec<PromptMessage> = op_table
                 .get("messages")
