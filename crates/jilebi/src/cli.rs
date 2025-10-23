@@ -7,6 +7,7 @@ use std::{
 pub(crate) mod download;
 pub(crate) mod env;
 pub(crate) mod permissions;
+pub(crate) mod plugin_meta;
 use clap::{Parser, Subcommand};
 use dialoguer::{Confirm, Input, Select};
 use directories::UserDirs;
@@ -47,11 +48,33 @@ pub enum SubCommands {
 #[derive(Debug, Clone, Subcommand)]
 pub enum PluginSubCommands {
     /// Create a new TS or JS plugin with some useful defaults
-    Create,
+    Create {
+        /// name of the plugin
+        #[arg(short, long)]
+        name: Option<String>,
+        /// path or directory to create the plugin in
+        #[arg(short, long)]
+        path: Option<String>,
+        /// programming language to use for the plugin - Javascript or TypeScript (use these values)
+        #[arg(short, long)]
+        language: Option<String>,
+        /// whether to include Rollup for complex plugin builds
+        #[arg(short, long)]
+        complex_plugin: Option<bool>,
+    },
     /// Add/Install a plugin to use with Jilebi
     Add { id: String },
     /// setup a plugin in development after you've changed the permissions, envs or other manifest details
     Setup { id: String },
+    /// List plugins
+    List {
+        #[arg(short, long)]
+        remote: Option<bool>,
+    },
+    /// Enable a plugin and its state, it will start showing up in jilebi
+    Enable { id: String },
+    /// Disable a plugin, it will stop showing up in jilebi but its state will be preserved
+    Disable { id: String },
     /// Remove a plugin from jilebi and delete its state
     Remove { id: String },
     /// Manage environment variables for a specific plugin
@@ -88,38 +111,53 @@ pub async fn plugin_command_handler(
     db: Connection,
 ) -> Result<(), String> {
     match subcommand {
-        PluginSubCommands::Create => {
+        PluginSubCommands::Create {
+            name,
+            path,
+            complex_plugin,
+            language,
+        } => {
             let user_dirs = UserDirs::new().ok_or("Could not get user directories")?;
-            let plugin_name = Input::<String>::new()
-                .with_prompt("plugin name")
-                .interact_text()
-                .map_err(|e| e.to_string())?;
+            let plugin_name = match name {
+                Some(n) => n,
+                None => Input::<String>::new()
+                    .with_prompt("name of the new plugin")
+                    .interact_text()
+                    .map_err(|e| e.to_string())?,
+            };
             let manifest_code = MANIFEST_CODE.replace("<replace>", &plugin_name);
-            let new_plugin_path = Input::<String>::new()
-                .with_prompt("path for the plugin, do not include the name")
-                .default(
-                    user_dirs
-                        .home_dir()
-                        .display()
-                        .to_string(),
-                )
-                .interact_text()
-                .map_err(|e| e.to_string())?;
+            let new_plugin_path = match path {
+                Some(p) => p,
+                None => Input::<String>::new()
+                    .with_prompt("path for the plugin, do not include the name")
+                    .default(user_dirs.home_dir().display().to_string())
+                    .interact_text()
+                    .map_err(|e| e.to_string())?,
+            };
             let languages = ["JavaScript", "TypeScript"];
-            let language = Select::new()
-                .with_prompt("Select programming language")
-                .items(&languages)
-                .interact()
-                .map_err(|e| e.to_string())?;
+            let language = match language {
+                Some(l) => languages
+                    .iter()
+                    .position(|&lang| lang.to_lowercase() == l.to_lowercase())
+                    .ok_or("Invalid language selected")?,
+                None => Select::new()
+                    .with_prompt("Select programming language")
+                    .items(&languages)
+                    .interact()
+                    .map_err(|e| e.to_string())?,
+            };
             let language = languages[language].to_lowercase();
-            let complex_plugin = Select::new()
-                .with_prompt(
-                    "Include Rollup for builds? Use this if you are writing a complex plugin",
-                )
-                .items(&["Yes", "No"])
-                .interact()
-                .map_err(|e| e.to_string())?
-                == 0;
+            let complex_plugin = match complex_plugin {
+                Some(c) => c,
+                None => Select::new()
+                    .with_prompt(
+                        "Include Rollup for builds? Use this if you are writing a complex plugin",
+                    )
+                    .items(&["Yes", "No"])
+                    .interact()
+                    .map_err(|e| e.to_string())?
+                    == 0,
+            };
             let bar = ProgressBar::new_spinner();
             bar.enable_steady_tick(Duration::from_millis(100));
             bar.set_message("Setting things up...");
@@ -169,8 +207,8 @@ pub async fn plugin_command_handler(
         }
         PluginSubCommands::Remove { id } => {
             let confirmation = Confirm::new()
-				        .with_prompt(format!("Are you sure you want to remove the plugin {id}? This will not delete any state it has set"))
-				        .interact().map_err(|e| e.to_string())?;
+				            .with_prompt(format!("Are you sure you want to remove the plugin {id}? This will not delete any state it has set"))
+				            .interact().map_err(|e| e.to_string())?;
             if !confirmation {
                 return Ok(());
             }
@@ -253,6 +291,32 @@ pub async fn plugin_command_handler(
         PluginSubCommands::Setup { id } => {
             env::setup_envs(&db, plugin_dir, &id)?;
             permissions::setup_permissions(&db, plugin_dir, &id, None)?;
+            Ok(())
+        }
+        PluginSubCommands::List { remote: _ } => {
+            let plugins = plugin_meta::list_local_plugins(&db)?;
+            println!("{:<30} {:<10}", "Plugin Name", "State");
+            println!("{:-<40}", "");
+            for (name, state) in plugins {
+                let state_str = state.to_string();
+                println!("{:<30} {:<10}", name, state_str);
+            }
+            Ok(())
+        }
+        PluginSubCommands::Enable { id } => {
+            let bar = ProgressBar::new_spinner();
+            bar.enable_steady_tick(Duration::from_millis(100));
+            bar.set_message("Enabling plugin...");
+            plugin_meta::update_plugin_state(&db, &id, jilebi_types::PluginState::Enabled)?;
+            bar.finish_with_message("Plugin Enabled");
+            Ok(())
+        }
+        PluginSubCommands::Disable { id } => {
+            let bar = ProgressBar::new_spinner();
+            bar.enable_steady_tick(Duration::from_millis(100));
+            bar.set_message("Disabling plugin...");
+            plugin_meta::update_plugin_state(&db, &id, jilebi_types::PluginState::Disabled)?;
+            bar.finish_with_message("Plugin Disabled");
             Ok(())
         }
     }
