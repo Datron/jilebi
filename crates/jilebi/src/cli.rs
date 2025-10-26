@@ -293,9 +293,20 @@ pub async fn plugin_command_handler(
             permissions::setup_permissions(&db, plugin_dir, &id, None)?;
             Ok(())
         }
-        PluginSubCommands::List { remote: _ } => {
-            let plugins = plugin_meta::list_local_plugins(&db)?;
-            println!("{:<30} {:<10}", "Plugin Name", "State");
+        PluginSubCommands::List { remote } => {
+            let remote = remote.unwrap_or(false);
+            let plugins = if remote {
+                let bar = ProgressBar::new_spinner();
+                bar.enable_steady_tick(Duration::from_millis(100));
+                bar.set_message("Getting a list of plugins available...");
+                let data = plugin_meta::list_remote_plugins().await?;
+                bar.finish();
+                println!("{:<30} {:<10}", "Plugin Name", "Downloads");
+                data
+            } else {
+                println!("{:<30} {:<10}", "Plugin Name", "State");
+                plugin_meta::list_local_plugins(&db)?
+            };
             println!("{:-<40}", "");
             for (name, state) in plugins {
                 let state_str = state.to_string();

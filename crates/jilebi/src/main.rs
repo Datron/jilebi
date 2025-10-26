@@ -122,11 +122,8 @@ async fn main() -> Result<(), String> {
 
 // TOP PRIORITY
 // TODO: check resources and add support for args (resource templates)
-// TODO: replace plugins.toml with plugins table in the database
 // TODO: CLI additions:
-//          - list plugins local and remote
-//          - enable plugin
-//          - disable plugin
+//          - list plugins remote
 //          - create application contexts to specialize tools for different contexts
 // TODO: support SSE, HTTP and Authentication
 // TODO: self update jilebi automatically when a new version is released

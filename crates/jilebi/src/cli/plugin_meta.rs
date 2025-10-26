@@ -33,7 +33,7 @@ pub fn update_plugin_state(
     Ok(())
 }
 
-pub fn list_local_plugins(db: &Connection) -> Result<Vec<(String, PluginState)>, String> {
+pub fn list_local_plugins(db: &Connection) -> Result<Vec<(String, String)>, String> {
     let mut statement = db
         .prepare("SELECT name, state FROM plugins")
         .map_err(|err| {
@@ -47,12 +47,7 @@ pub fn list_local_plugins(db: &Connection) -> Result<Vec<(String, PluginState)>,
     let plugin_iter = statement
         .query_map([], |row| {
             let name: String = row.get(0)?;
-            let state_str: String = row.get(1)?;
-            let state = match state_str.as_str() {
-                "enabled" => PluginState::Enabled,
-                "disabled" => PluginState::Disabled,
-                _ => PluginState::Disabled, // Default case
-            };
+            let state: String = row.get(1)?;
             Ok((name, state))
         })
         .map_err(|err| {
@@ -65,5 +60,32 @@ pub fn list_local_plugins(db: &Connection) -> Result<Vec<(String, PluginState)>,
         plugins.push(plugin.map_err(|e| e.to_string())?);
     }
 
+    Ok(plugins)
+}
+
+pub async fn list_remote_plugins() -> Result<Vec<(String, String)>, String> {
+    let client = reqwest::Client::new();
+    let plugins = client
+        .get("https://jilebi.ai/api/plugins")
+        .send()
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed to fetch remote plugins: {}", e);
+            "Failed to fetch remote plugins".to_string()
+        })?
+        .json::<Vec<serde_json::Value>>()
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed to parse remote plugins JSON: {}", e);
+            "Failed to parse remote plugins JSON".to_string()
+        })?;
+    let plugins = plugins
+        .into_iter()
+        .filter_map(|plugin| {
+            let name = plugin.get("name")?.as_str()?.to_string();
+            let download_count = plugin.get("download_count")?.as_i64()?.to_string();
+            Some((name, download_count))
+        })
+        .collect::<Vec<(String, String)>>();
     Ok(plugins)
 }
