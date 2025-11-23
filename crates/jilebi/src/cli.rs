@@ -69,7 +69,7 @@ pub enum PluginSubCommands {
     /// List plugins
     List {
         #[arg(short, long)]
-        remote: Option<bool>,
+        remote: bool,
     },
     /// Enable a plugin and its state, it will start showing up in jilebi
     Enable { id: String },
@@ -294,7 +294,6 @@ pub async fn plugin_command_handler(
             Ok(())
         }
         PluginSubCommands::List { remote } => {
-            let remote = remote.unwrap_or(false);
             let plugins = if remote {
                 let bar = ProgressBar::new_spinner();
                 bar.enable_steady_tick(Duration::from_millis(100));

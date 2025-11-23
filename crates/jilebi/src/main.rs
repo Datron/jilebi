@@ -123,7 +123,6 @@ async fn main() -> Result<(), String> {
 // TOP PRIORITY
 // TODO: check resources and add support for args (resource templates)
 // TODO: CLI additions:
-//          - list plugins remote
 //          - create application contexts to specialize tools for different contexts
 // TODO: support SSE, HTTP and Authentication
 // TODO: self update jilebi automatically when a new version is released
