@@ -121,13 +121,9 @@ async fn main() -> Result<(), String> {
 }
 
 // TOP PRIORITY
-// TODO: support -y / --yes to skip permission prompts
-// TODO: support installing multiple plugins
-// TODO: move to latest rmcp version
 // TODO: add application contexts to specialize tools for different contexts
 // TODO: version jilebi and plugins
 // TODO: self update jilebi automatically when a new version is released
-// TODO: check resources and add support for args (resource templates)
 // TODO: support SSE, HTTP and Authentication
 // TODO: update docs
 // TODO: add a frontend
@@ -138,6 +134,10 @@ async fn main() -> Result<(), String> {
 // 			- show plugin logs and configs in the UI
 // 			- payments
 
+
+
+
+// TODO: check resources and add support for args (resource templates)
 // Jilebi MVP
 // MCP Server
 // TODO: Error handling

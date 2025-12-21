@@ -8,6 +8,7 @@ use rmcp::model::{
 };
 use serde::{Deserialize, Serialize};
 use toml::Table;
+use tracing::debug;
 
 use crate::permissions::JilebiPermissions;
 
@@ -124,6 +125,10 @@ impl Tools {
                     "Invalid format for tool definition {key}, check the toml"
                 ));
             };
+            debug!(
+                "Parsing tool definition for tool {key}:\n {:#?}",
+                op_table.get("input_schema")
+            );
             let input_schema = serde_json::json!(
                 op_table
                     .get("input_schema")
@@ -131,25 +136,23 @@ impl Tools {
             )
             .as_object()
             .cloned()
+            .map(|obj| Arc::new(obj))
             .ok_or(format!(
                 "Invalid JSON format for the field input_schema in tool {key}"
             ))?;
 
-            let output_schema = serde_json::json!(
-                op_table
-                    .get("output_schema")
-                    .ok_or(format!("Missing field input_schema in tool {key}"))?
-            )
-            .as_object()
-            .cloned()
-            .map(|obj| Arc::new(obj));
+            let output_schema = op_table
+                .get("output_schema")
+                .cloned()
+                .and_then(|schema| serde_json::json!(schema).as_object().cloned())
+                .map(|obj| Arc::new(obj));
             let tool_name = mandatory_extractor(op_table, key, &"name".to_string())?;
             validate_section_key_name(key)?;
             let tool = Tool {
                 name: Cow::from(format!("{plugin_name}{SEPARATOR}{tool_name}")),
                 description: optional_extractor(op_table, &"description".to_string())
                     .map(Cow::from),
-                input_schema: Arc::new(input_schema),
+                input_schema,
                 annotations: None,
                 output_schema,
                 title: Some(tool_name),

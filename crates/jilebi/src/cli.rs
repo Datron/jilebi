@@ -63,9 +63,17 @@ pub enum PluginSubCommands {
         complex_plugin: Option<bool>,
     },
     /// Add/Install a plugin to use with Jilebi
-    Add { id: String },
+    Add {
+        ids: Vec<String>,
+        #[arg(short, long)]
+        accept_permissions: bool,
+    },
     /// setup a plugin in development after you've changed the permissions, envs or other manifest details
-    Setup { id: String },
+    Setup {
+        id: String,
+        #[arg(short, long)]
+        accept_permissions: bool,
+    },
     /// List plugins
     List {
         #[arg(short, long)]
@@ -80,7 +88,11 @@ pub enum PluginSubCommands {
     /// Manage environment variables for a specific plugin
     Env { id: String },
     /// Manage permissions for a specific plugin
-    Permissions { id: String },
+    Permissions {
+        id: String,
+        #[arg(short, long)]
+        accept_permissions: bool,
+    },
     /// Show logs for a specific plugin
     Log { id: String },
 }
@@ -183,26 +195,31 @@ pub async fn plugin_command_handler(
 
             Ok(())
         }
-        PluginSubCommands::Add { id } => {
-            let plugin_path = plugin_dir.join(&id);
-            tracing::info!("Adding plugin at path: {}", plugin_path.display());
-            let bar = ProgressBar::new_spinner();
-            bar.enable_steady_tick(Duration::from_millis(100));
-            bar.set_message("Downloading plugin...");
-            download::download_and_init_plugin(&id, &plugin_path, &db)
-                .await
-                .map_err(|e| {
-                    tracing::error!("Could not download plugin due to {}", e);
-                    bar.abandon_with_message(format!("Failed to download plugin: {}", e));
-                    e
-                })?;
-            bar.finish_with_message(format!(
-                "Successfully added {id} at {}. You can restart jilebi for it to show up.",
-                plugin_path.display()
-            ));
+        PluginSubCommands::Add {
+            ids,
+            accept_permissions,
+        } => {
+            for id in ids.iter() {
+                let plugin_path = plugin_dir.join(&id);
+                tracing::info!("Adding plugin at path: {}", plugin_path.display());
+                let bar = ProgressBar::new_spinner();
+                bar.enable_steady_tick(Duration::from_millis(100));
+                bar.set_message("Downloading plugin...");
+                download::download_and_init_plugin(&id, &plugin_path, &db)
+                    .await
+                    .map_err(|e| {
+                        tracing::error!("Could not download plugin due to {}", e);
+                        bar.abandon_with_message(format!("Failed to download plugin: {}", e));
+                        e
+                    })?;
+                bar.finish_with_message(format!(
+                    "Successfully added {id} at {}. You can restart jilebi for it to show up.",
+                    plugin_path.display()
+                ));
 
-            env::setup_envs(&db, plugin_dir, &id)?;
-            permissions::setup_permissions(&db, plugin_dir, &id, None)?;
+                env::setup_envs(&db, plugin_dir, &id)?;
+                permissions::setup_permissions(&db, plugin_dir, &id, None, accept_permissions)?;
+            }
             Ok(())
         }
         PluginSubCommands::Remove { id } => {
@@ -255,7 +272,10 @@ pub async fn plugin_command_handler(
             }
             Ok(())
         }
-        PluginSubCommands::Permissions { id } => {
+        PluginSubCommands::Permissions {
+            id,
+            accept_permissions,
+        } => {
             let permission_requirements = permissions::fetch_permissions_for_plugin(&db, &id)?;
 
             let mut potential_entities = permission_requirements.keys().collect::<Vec<&String>>();
@@ -276,6 +296,7 @@ pub async fn plugin_command_handler(
                     plugin_dir,
                     &id,
                     Some(permission_requirements),
+                    accept_permissions,
                 )?;
             } else {
                 let permissions = permission_requirements.get(selected_entity).ok_or(format!(
@@ -288,9 +309,12 @@ pub async fn plugin_command_handler(
             };
             Ok(())
         }
-        PluginSubCommands::Setup { id } => {
+        PluginSubCommands::Setup {
+            id,
+            accept_permissions,
+        } => {
             env::setup_envs(&db, plugin_dir, &id)?;
-            permissions::setup_permissions(&db, plugin_dir, &id, None)?;
+            permissions::setup_permissions(&db, plugin_dir, &id, None, accept_permissions)?;
             Ok(())
         }
         PluginSubCommands::List { remote } => {

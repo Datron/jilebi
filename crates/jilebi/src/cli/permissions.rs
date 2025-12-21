@@ -4,6 +4,7 @@ use std::{
 };
 
 use dialoguer::{Confirm, Input};
+use directories::UserDirs;
 use jilebi_types::permissions::JilebiPermissions;
 use rusqlite::{Connection, OptionalExtension};
 
@@ -13,6 +14,42 @@ fn sql_to_plugin_permissions(row: &rusqlite::Row) -> Result<JilebiPermissions, r
         rusqlite::Error::FromSqlConversionFailure(0, rusqlite::types::Type::Text, Box::new(e))
     })?;
     Ok(permissions)
+}
+
+pub fn set_default_permissions(
+    permissions: &JilebiPermissions,
+) -> Result<JilebiPermissions, String> {
+    let hosts = if permissions.hosts.contains("user_defined") {
+        HashSet::from([String::from("*")])
+    } else {
+        permissions.hosts.clone()
+    };
+    let user_directory = UserDirs::new()
+        .and_then(|dirs| dirs.home_dir().to_str().map(|s| s.to_string()))
+        .unwrap_or_default();
+    let read_dirs = if permissions.read_dirs.contains("user_defined") {
+        HashSet::from([String::from(&user_directory)])
+    } else {
+        permissions.read_dirs.clone()
+    };
+    let write_dirs = if permissions.write_dirs.contains("user_defined") {
+        HashSet::from([String::from(&user_directory)])
+    } else {
+        permissions.write_dirs.clone()
+    };
+    let urls = if permissions.urls.contains("user_defined") {
+        HashSet::from([String::from("*")])
+    } else {
+        permissions.urls.clone()
+    };
+    Ok(JilebiPermissions {
+        hosts,
+        read_dirs,
+        write_dirs,
+        urls,
+        read_files: HashSet::new(),
+        write_files: HashSet::new(),
+    })
 }
 
 pub fn query_permissions_from_the_user(
@@ -202,6 +239,7 @@ pub fn setup_permissions(
     plugin_dir: &PathBuf,
     plugin_name: &str,
     permissions: Option<HashMap<String, JilebiPermissions>>,
+    auto_accept_permissions: bool,
 ) -> Result<(), String> {
     let permission_requirements = if permissions.is_some() {
         permissions.unwrap()
@@ -209,7 +247,11 @@ pub fn setup_permissions(
         get_permissions_from_manifest(plugin_dir, &plugin_name)?
     };
     for (entity, existing_permissions) in permission_requirements.iter() {
-        let new_permissions = query_permissions_from_the_user(entity, existing_permissions)?;
+        let new_permissions = if auto_accept_permissions {
+            set_default_permissions(existing_permissions)?
+        } else {
+            query_permissions_from_the_user(entity, existing_permissions)?
+        };
         set_permissions(&db, &plugin_name, entity, &new_permissions)?;
     }
     Ok(())

@@ -34,9 +34,9 @@ impl WebPermissions for JilebiPermissions {
         let hostname_match = self
             .hosts
             .iter()
-            .any(|host_name| url.starts_with(host_name));
+            .any(|host_name| host_name == "*" || url.starts_with(host_name));
 
-        let url_match = self.urls.contains(&url);
+        let url_match = self.urls.iter().any(|item| item == "*") || self.urls.contains(&url);
         tracing::info!(
             "Checking URL permissions: url = {}, hostname_match={}, url_match={}",
             url,
@@ -153,7 +153,7 @@ impl WebPermissions for JilebiPermissions {
         _port: Option<u16>,
         api_name: &str,
     ) -> Result<(), rustyscript::PermissionCheckError> {
-        if self.hosts.contains(host) {
+        if self.hosts.iter().any(|host| host == "*") || self.hosts.contains(host) {
             Ok(())
         } else {
             Err(PermissionCheckError::PermissionDenied(
