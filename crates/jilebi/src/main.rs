@@ -121,14 +121,15 @@ async fn main() -> Result<(), String> {
 }
 
 // TOP PRIORITY
-// TODO: check resources and add support for args (resource templates)
-// TODO: CLI additions:
-//          - create application contexts to specialize tools for different contexts
-// TODO: support SSE, HTTP and Authentication
-// TODO: self update jilebi automatically when a new version is released
-// TODO: add compile time flags for using postgres (saas) vs sqlite (stdio)
+// TODO: support -y / --yes to skip permission prompts
+// TODO: support installing multiple plugins
+// TODO: move to latest rmcp version
+// TODO: add application contexts to specialize tools for different contexts
 // TODO: version jilebi and plugins
-
+// TODO: self update jilebi automatically when a new version is released
+// TODO: check resources and add support for args (resource templates)
+// TODO: support SSE, HTTP and Authentication
+// TODO: update docs
 // TODO: add a frontend
 // 			- plugin store
 // 			- login
@@ -136,16 +137,11 @@ async fn main() -> Result<(), String> {
 // 			- API keys
 // 			- show plugin logs and configs in the UI
 // 			- payments
-//			- website
-//			- docs (docusaurus or starlight) (done)
 
 // Jilebi MVP
 // MCP Server
 // TODO: Error handling
-// TODO: support Resource Template
 // TODO: add pagination, autocomplete,  support
-// plugins
-// TODO: Let users choose which resources, prompts and tools can be shown to the llm
 // TODO: Add regex support to permissions
 // TODO: Add `jilebi plugin publish` publish a plugin, everything is public for now
 // TODO: Write 10 most popular MCPs as plugins

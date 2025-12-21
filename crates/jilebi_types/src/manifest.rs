@@ -83,6 +83,9 @@ impl Resources {
                     mime_type: optional_extractor(op_table, &"mime_type".to_string()),
                     size: optional_extractor(op_table, &"".to_string())
                         .and_then(|s| s.parse::<u32>().ok()),
+                    title: None,
+                    icons: None,
+                    meta: None,
                 },
                 None,
             );
@@ -121,7 +124,7 @@ impl Tools {
                     "Invalid format for tool definition {key}, check the toml"
                 ));
             };
-            let schema = serde_json::json!(
+            let input_schema = serde_json::json!(
                 op_table
                     .get("input_schema")
                     .ok_or(format!("Missing field input_schema in tool {key}"))?
@@ -131,14 +134,27 @@ impl Tools {
             .ok_or(format!(
                 "Invalid JSON format for the field input_schema in tool {key}"
             ))?;
+
+            let output_schema = serde_json::json!(
+                op_table
+                    .get("output_schema")
+                    .ok_or(format!("Missing field input_schema in tool {key}"))?
+            )
+            .as_object()
+            .cloned()
+            .map(|obj| Arc::new(obj));
             let tool_name = mandatory_extractor(op_table, key, &"name".to_string())?;
             validate_section_key_name(key)?;
             let tool = Tool {
                 name: Cow::from(format!("{plugin_name}{SEPARATOR}{tool_name}")),
                 description: optional_extractor(op_table, &"description".to_string())
                     .map(Cow::from),
-                input_schema: Arc::new(schema),
+                input_schema: Arc::new(input_schema),
                 annotations: None,
+                output_schema,
+                title: Some(tool_name),
+                icons: None,
+                meta: None,
             };
             let jilebi_tool = JilebiTool {
                 tool,
@@ -187,6 +203,7 @@ impl Prompts {
                                 description: optional_extractor(&table, &"description".to_string()),
                                 required: optional_extractor(&table, &"required".to_string())
                                     .and_then(|s| s.parse().ok()),
+                                title: None,
                             }
                         })
                         .collect()
@@ -197,6 +214,9 @@ impl Prompts {
                 name: format!("{plugin_name}{SEPARATOR}{prompt_name}"),
                 description: optional_extractor(op_table, &"description".to_string()),
                 arguments,
+                title: None,
+                icons: None,
+                meta: None,
             };
             let content: Vec<PromptMessage> = op_table
                 .get("messages")

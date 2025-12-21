@@ -20,11 +20,11 @@ toml = "0.8.20"
 tracing = "0.1.41"
 tracing-appender = "0.2.3"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
-rmcp = { version = "0.3.0", features = [
+rmcp = { version = "0.12.0", features = [
 	"server",
 	"transport-io",
-	"transport-sse-server",
 	"transport-streamable-http-server",
+	"auth"
 ] }
 rustyscript = { version = "0.12.2", default-features = false, features = [
 	"fs",

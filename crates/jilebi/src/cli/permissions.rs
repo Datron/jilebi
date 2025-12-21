@@ -37,7 +37,7 @@ pub fn query_permissions_from_the_user(
             if Confirm::new()
                 .with_prompt(format!(
                     "Allow {} to make requests to the host {}?",
-                    host, entity
+                    entity, host
                 ))
                 .interact()
                 .unwrap()

@@ -114,6 +114,9 @@ impl ServerHandler for JilebiMcpServer {
             server_info: Implementation {
                 name: "Jilebi".into(),
                 version: "alpha-2".into(),
+                title: Some("Jilebi MCP Runtime".into()),
+                icons: None,
+                website_url: Some("https://jilebi.ai".into()),
             },
             instructions: None,
         }
@@ -137,6 +140,7 @@ impl ServerHandler for JilebiMcpServer {
         Ok(ListPromptsResult {
             next_cursor: None,
             prompts,
+            meta: None,
         })
     }
 
@@ -310,6 +314,7 @@ impl ServerHandler for JilebiMcpServer {
         Ok(ListToolsResult {
             next_cursor: None,
             tools,
+            meta: None,
         })
     }
 
@@ -331,6 +336,7 @@ impl ServerHandler for JilebiMcpServer {
         Ok(ListResourcesResult {
             next_cursor: None,
             resources,
+            meta: None,
         })
     }
 
