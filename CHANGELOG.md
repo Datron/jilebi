@@ -1,0 +1,69 @@
+# Changelog
+All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
+
+- - -
+## [0.1.0](https://github.com/datron/jilebi/compare/1a16a2ce24c52f4fb70d6c0d48469459b174bc1b..0.1.0) - 2025-12-27
+### Package updates
+- [dosa](crates/plugin-runtime) bumped to [dosa-0.1.0](https://github.com/datron/jilebi/compare/bb408ad578f73207546df83ce3a4816f662a625f..dosa-0.1.0)
+- [store](crates/store) bumped to [store-0.1.0](https://github.com/datron/jilebi/compare/bb408ad578f73207546df83ce3a4816f662a625f..store-0.1.0)
+- [jilebi_types](crates/jilebi_types) bumped to [jilebi_types-0.1.0](https://github.com/datron/jilebi/compare/bb408ad578f73207546df83ce3a4816f662a625f..jilebi_types-0.1.0)
+- [jilebi](crates/jilebi) bumped to [jilebi-0.1.0](https://github.com/datron/jilebi/compare/bb408ad578f73207546df83ce3a4816f662a625f..jilebi-0.1.0)
+### Global changes
+#### Bug Fixes
+- working list tools and list prompts - ([8a96f55](https://github.com/datron/jilebi/commit/8a96f552b217798c6df6b5bd57f5cd518b61a957)) - datron
+- make jilebi work with claude desktop - ([19e3c3a](https://github.com/datron/jilebi/commit/19e3c3aebd0043c04603c844f834f1294d01fade)) - datron
+- use types module in plugins - ([67be1c5](https://github.com/datron/jilebi/commit/67be1c58fc2378ea2baeae7dc2482ebcf5abbd69)) - datron
+- type hints npm package - ([42ed6f8](https://github.com/datron/jilebi/commit/42ed6f85434b96ab78e8b197532e6791d95c9536)) - datron
+- use the right path for sqlite DB - ([802d4e0](https://github.com/datron/jilebi/commit/802d4e06a628d4aa34afc88f027554bbe1a99835)) - datron
+- update environment type - ([548f6f1](https://github.com/datron/jilebi/commit/548f6f13062372c35d849e9e7a4cd4cc6d6cad4f)) - datron
+- better create complex plugins for users - ([3bc0cb5](https://github.com/datron/jilebi/commit/3bc0cb5cff1f54b04b1ae197c19d21a27f38c076)) - datron
+- ask for permissions for every request from the plugin - ([23e09f0](https://github.com/datron/jilebi/commit/23e09f050c63b24deabde20f50b2a1774da10367)) - datron
+#### Features
+- run simple JS code - ([bb408ad](https://github.com/datron/jilebi/commit/bb408ad578f73207546df83ce3a4816f662a625f)) - datron
+- parse mcp extension manifest - ([008bd89](https://github.com/datron/jilebi/commit/008bd89b5b009fcc6693f4203ff853d3ccba942b)) - datron
+- read test functions from manifest and run them - ([6c532f2](https://github.com/datron/jilebi/commit/6c532f2428fcde966bd5e2d04146d80bed89ea74)) - datron
+- working MCP server for prompts - ([bd6fb06](https://github.com/datron/jilebi/commit/bd6fb06ea95c2e0016c801dba3c617972f604f69)) - datron
+- align types with rmcp - ([96b0aef](https://github.com/datron/jilebi/commit/96b0aef28f9b623b654cdedb0259d9691c95922a)) - datron
+- plugin manifest parser working with rmcp types - ([36d67ef](https://github.com/datron/jilebi/commit/36d67eff24b048414369a4e05ecad89a67e3e065)) - datron
+- prompts working with the new types - ([57f0994](https://github.com/datron/jilebi/commit/57f09949e65195ee74561b543a3845195e1f92b3)) - datron
+- working tool call with dynamic arguments - ([7f488e7](https://github.com/datron/jilebi/commit/7f488e7d748239c196503f443ed044c08318dfac)) - datron
+- working resource call with simplified manifest - ([fe17979](https://github.com/datron/jilebi/commit/fe17979069359767552f589be04b24b66fafa8ca)) - datron
+- support async functions in JS - ([babbe16](https://github.com/datron/jilebi/commit/babbe164939f8d158b3fb77bdb19c2139e2601b3)) - datron
+- dynamically load plugins from a directory - ([dd1a3c1](https://github.com/datron/jilebi/commit/dd1a3c1236f5612dd4d14bd385c5507835b81b28)) - datron
+- logs from plugins in a log file for that plugin - ([8ccb284](https://github.com/datron/jilebi/commit/8ccb2840d3e4cf54f3cee9ebb1b9f0d08b56c8a9)) - datron
+- add plugin network stack with permissions support - ([f9e29f0](https://github.com/datron/jilebi/commit/f9e29f0ef54520f15f8161ccbc26cc414929a15d)) - datron
+- restructured permissions system around jilebi use cases - ([922c31b](https://github.com/datron/jilebi/commit/922c31b3898b478040e2df11ac28e833067b5358)) - datron
+- working time plugin - ([72e6b28](https://github.com/datron/jilebi/commit/72e6b282f73037d86be2c5a846781957206cfb14)) - datron
+- add memory and sequential-thinking plugins - ([f284efb](https://github.com/datron/jilebi/commit/f284efb1fbf6498638fd9372495510964be1ccf9)) - datron
+- added filesystem mcp plugin - ([89445d9](https://github.com/datron/jilebi/commit/89445d9770c26eac0dd87544f3443830119bbb9f)) - datron
+- working file system plugin - ([3ab4be1](https://github.com/datron/jilebi/commit/3ab4be18c0653721308c342e32e64b80c70131c7)) - datron
+- support plugin state with sqlite - ([c3fcb5b](https://github.com/datron/jilebi/commit/c3fcb5b83e90e264b33ad2ca0840ecc5b6b59e8f)) - datron
+- use common OS directories for operations and add validation of names - ([b7f1360](https://github.com/datron/jilebi/commit/b7f1360f22ab458957fcaa1b76ef04546dd8d07e)) - datron
+- add context7 plugin - ([27c735f](https://github.com/datron/jilebi/commit/27c735f7da628a7c7e30175e7f7acf3f12735ad1)) - datron
+- add a types package to help write plugins - ([3611626](https://github.com/datron/jilebi/commit/361162677fa6abcb1c72bc2e9130a39133034f56)) - datron
+- start CLI work for jilebi - ([c241b8a](https://github.com/datron/jilebi/commit/c241b8ac81ea8564e9d6567c0ef3179bdc7da3a6)) - datron
+- Add a CLI to manage jilebi - ([82971e1](https://github.com/datron/jilebi/commit/82971e1e0ab63fdafb0f0ac387bfade193142257)) - datron
+- update rust and dependencies - ([e3b856c](https://github.com/datron/jilebi/commit/e3b856ce1e21d4434d1b8808dea74784ecfe35ee)) - datron
+- download and init plugins - ([e692fd6](https://github.com/datron/jilebi/commit/e692fd64b0723bc1983bdf29e5535de1b3244392)) - datron
+- CLI milestone - ([ff03646](https://github.com/datron/jilebi/commit/ff03646cf96672e1dfc3e1eae19782a6cd088d36)) - datron
+- add release pipeline - ([9f89726](https://github.com/datron/jilebi/commit/9f89726a2218f1b6731a17f01bf86cc5f6951f41)) - datron
+- add a plugin that can help with manifest and plugin generation - ([e9fc686](https://github.com/datron/jilebi/commit/e9fc68670bafcac7ac7a9413509774dc3f976848)) - datron
+- add support to store secrets and envs that plugins can declare and use - ([601c1b3](https://github.com/datron/jilebi/commit/601c1b3af2f557ddc749f17b891282c2509e77a5)) - datron
+- add support for user defined permissions - ([e694b08](https://github.com/datron/jilebi/commit/e694b080546c878eebb19703fe25ac268e8196ac)) - datron
+- bump server version - ([efddf27](https://github.com/datron/jilebi/commit/efddf2773f2cda6665256f1c94ad38045a36f1cb)) - datron
+- added a website - ([93eadee](https://github.com/datron/jilebi/commit/93eadee3b3e9e4f60fee7095d6cd101351d7fc0b)) - datron
+- add website support - ([17c8201](https://github.com/datron/jilebi/commit/17c82015c0f117a2ccab5509352b6e23828db19c)) - datron
+- plugin store counts downloads, working web presence - ([360064c](https://github.com/datron/jilebi/commit/360064c49fd96ab9bf1c281055eb80b7665232af)) - datron
+- add handlerbar support in prompts - ([2600689](https://github.com/datron/jilebi/commit/260068912234aa0e71a14ea5c1536b8d74e3beb8)) - datron
+- add logging information for plugin development - ([fe29fbc](https://github.com/datron/jilebi/commit/fe29fbc7fdd1d06f28c3a7c185801f033ba804b3)) - datron
+- move plugins into the database, rather than using plugins.toml - ([31dd0eb](https://github.com/datron/jilebi/commit/31dd0eb8f77a5a6550f23390f5aa0a31ae1601ed)) - datron
+- add new commands for jilebi CLI - ([d2fa304](https://github.com/datron/jilebi/commit/d2fa3042a96211338687a91b9c5ad3901ae184d8)) - datron
+- list remote plugins available in the CLI - ([9dd7ec7](https://github.com/datron/jilebi/commit/9dd7ec7dd81116f0e8870dcdc2c64d7036d4c000)) - datron
+#### Miscellaneous Chores
+- make plugins directory a workspace - ([d494183](https://github.com/datron/jilebi/commit/d494183ba5c8f65e847f10d009bd8c2c956814a5)) - datron
+- update rmcp to v0.12.0 - ([27fe2c8](https://github.com/datron/jilebi/commit/27fe2c8dd3352275ce1b1e3e331a271605349e98)) - datron
+- add versioning to packages - ([1a16a2c](https://github.com/datron/jilebi/commit/1a16a2ce24c52f4fb70d6c0d48469459b174bc1b)) - datron
+
+- - -
+
+Changelog generated by [cocogitto](https://github.com/cocogitto/cocogitto).
