@@ -10,6 +10,19 @@ All notable changes to this project will be documented in this file. See [conven
 - plugin store counts downloads, working web presence - (360064c) - datron
 - update rust and dependencies - (e3b856c) - datron
 #### Miscellaneous Chores
+- **(version)** 0.1.0 [skip ci] - (2067492) - Semver bot
+- add versioning to packages - (1a16a2c) - datron
+
+- - -
+
+## store-0.1.0 - 2025-12-27
+#### Features
+- list remote plugins available in the CLI - (9dd7ec7) - datron
+- add new commands for jilebi CLI - (d2fa304) - datron
+- move plugins into the database, rather than using plugins.toml - (31dd0eb) - datron
+- plugin store counts downloads, working web presence - (360064c) - datron
+- update rust and dependencies - (e3b856c) - datron
+#### Miscellaneous Chores
 - add versioning to packages - (1a16a2c) - datron
 
 - - -
