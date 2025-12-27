@@ -24,7 +24,7 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: 1.88.0
+          toolchain: 1.90.0
           targets: ${{ matrix.platform.target }}
           components: rustfmt, clippy
           
@@ -46,13 +46,22 @@ jobs:
           git config user.email "bot@jilebi.ai"
           git config user.name "Semver bot"
           cog bump --auto --skip-ci-override "[skip ci]"
-          version=`git tag -l --sort=-creatordate | head -n 1`
-          cargo set-version --workspace $version
+    
+      - name: Set latest tag
+        id: git_tag
+        shell: bash
+        run: |
+            version=`git tag -l | head -n 1`
+            echo "version=$version"
+            cargo set-version --workspace $version
+            echo "version=$version" >> $GITHUB_OUTPUT
+      
+      - name: Commit
+        run: |
           git add .
           git commit --amend --no-edit
           git push origin master
           git push origin --tags
-          echo "version=$version" >> $GITHUB_OUTPUT
   
   generate-rust-binary:
     if: github.ref == 'refs/heads/master'
@@ -88,7 +97,7 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: 1.88.0
+          toolchain: 1.90.0
           targets: ${{ matrix.platform.target }}
           components: rustfmt, clippy
 

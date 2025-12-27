@@ -1,6 +1,7 @@
 from_latest_tag = true
 ignore_merge_commits = true
 generate_mono_repository_global_tag = true
+generate_mono_repository_package_tags = false
 branch_whitelist = []
 
 pre_bump_hooks = []
