@@ -51,7 +51,7 @@ jobs:
         id: git_tag
         shell: bash
         run: |
-            version=`git tag -l | head -n 1`
+            version=`git tag -l --sort=-creatordate | head -n 1`
             echo "version=$version"
             cargo set-version --workspace $version
             echo "version=$version" >> $GITHUB_OUTPUT
