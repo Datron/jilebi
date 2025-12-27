@@ -20,6 +20,30 @@ All notable changes to this project will be documented in this file. See [conven
 - read test functions from manifest and run them - (6c532f2) - datron
 - run simple JS code - (bb408ad) - datron
 #### Miscellaneous Chores
+- **(version)** 0.1.1 [skip ci] - (180b80a) - Semver bot
+- **(version)** 0.1.0 [skip ci] - (2067492) - Semver bot
+- add versioning to packages - (1a16a2c) - datron
+
+- - -
+
+## dosa-0.1.0 - 2025-12-27
+#### Bug Fixes
+- use the right path for sqlite DB - (802d4e0) - datron
+#### Features
+- add support to store secrets and envs that plugins can declare and use - (601c1b3) - datron
+- download and init plugins - (e692fd6) - datron
+- update rust and dependencies - (e3b856c) - datron
+- start CLI work for jilebi - (c241b8a) - datron
+- support plugin state with sqlite - (c3fcb5b) - datron
+- added filesystem mcp plugin - (89445d9) - datron
+- restructured permissions system around jilebi use cases - (922c31b) - datron
+- add plugin network stack with permissions support - (f9e29f0) - datron
+- logs from plugins in a log file for that plugin - (8ccb284) - datron
+- support async functions in JS - (babbe16) - datron
+- working tool call with dynamic arguments - (7f488e7) - datron
+- read test functions from manifest and run them - (6c532f2) - datron
+- run simple JS code - (bb408ad) - datron
+#### Miscellaneous Chores
 - **(version)** 0.1.0 [skip ci] - (2067492) - Semver bot
 - add versioning to packages - (1a16a2c) - datron
 

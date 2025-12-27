@@ -1906,7 +1906,7 @@ dependencies = [
 
 [[package]]
 name = "dosa"
-version = "0.1.0"
+version = "0.1.2"
 dependencies = [
  "deno_core",
  "directories",
@@ -3094,7 +3094,7 @@ checksum = "4a5f13b858c8d314ee3e8f639011f7ccefe71f97f96e50151fb991f267928e2c"
 
 [[package]]
 name = "jilebi"
-version = "0.1.0"
+version = "0.1.2"
 dependencies = [
  "chrono",
  "clap",
@@ -3124,7 +3124,7 @@ dependencies = [
 
 [[package]]
 name = "jilebi-store"
-version = "0.1.0"
+version = "0.1.2"
 dependencies = [
  "axum 0.8.4",
  "axum-macros",
@@ -3144,7 +3144,7 @@ dependencies = [
 
 [[package]]
 name = "jilebi_types"
-version = "0.1.0"
+version = "0.1.2"
 dependencies = [
  "chrono",
  "derive_more",
