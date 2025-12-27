@@ -16,7 +16,10 @@ use jilebi_types::env::PluginEnv;
 use keyring::Entry;
 use rusqlite::Connection;
 
-use crate::cli::{download::remove_plugin_in_db, env::setup_envs};
+use crate::{
+    cli::{download::remove_plugin_in_db, env::setup_envs},
+    context,
+};
 
 const MANIFEST_CODE: &str = r#"
 name = "<replace>"
@@ -35,7 +38,15 @@ contact = ""
 #[derive(Debug, Clone, Subcommand)]
 pub enum SubCommands {
     /// Run jilebi as a process
-    Stdio,
+    Stdio {
+        #[arg(short, long)]
+        name: Option<String>,
+    },
+    /// Commands for managing application contexts
+    Context {
+        #[command(subcommand)]
+        subcommand: ApplicationContextCommands,
+    },
     /// Commands for managing plugins
     Plugins {
         #[command(subcommand)]
@@ -95,6 +106,20 @@ pub enum PluginSubCommands {
     },
     /// Show logs for a specific plugin
     Log { id: String },
+}
+
+#[derive(Debug, Clone, Subcommand)]
+pub enum ApplicationContextCommands {
+    /// Create a new application context
+    Create { name: String, plugins: Vec<String> },
+    /// Add a plugin to existing application context
+    Add { name: String, plugin: String },
+    /// Remove a plugin from existing application context
+    Remove { name: String, plugin: String },
+    /// Delete an existing application context
+    Delete { name: String },
+    /// List all application contexts
+    List,
 }
 
 /// Jilebi MCP server and command line interface for plugin management
@@ -351,6 +376,44 @@ pub async fn plugin_command_handler(
             bar.set_message("Disabling plugin...");
             plugin_meta::update_plugin_state(&db, &id, jilebi_types::PluginState::Disabled)?;
             bar.finish_with_message("Plugin Disabled");
+            Ok(())
+        }
+    }
+}
+
+pub async fn application_context_command_handler(
+    subcommand: ApplicationContextCommands,
+    db: &Connection,
+) -> Result<(), String> {
+    match subcommand {
+        ApplicationContextCommands::Create { name, plugins } => {
+            context::create_application_context(db, &name, &plugins)?;
+            println!("Created context {}", name);
+            Ok(())
+        }
+        ApplicationContextCommands::Add { name, plugin } => {
+            context::add_plugin_to_application_context(db, &name, plugin.clone())?;
+            println!("Plugin {} added to context {}", name, plugin);
+            Ok(())
+        }
+        ApplicationContextCommands::Remove { name, plugin } => {
+            context::remove_plugin_from_application_context(db, &name, plugin.clone())?;
+            println!("Plugin {} removed from context {}", name, plugin);
+            Ok(())
+        }
+        ApplicationContextCommands::Delete { name } => {
+            context::delete_application_context(db, &name)?;
+            println!("Deleted context {}", name);
+            Ok(())
+        }
+        ApplicationContextCommands::List => {
+            let contexts = context::list_application_contexts(db)?;
+            println!("{:<30} {:<50}", "Context Name", "Plugins");
+            println!("{:-<80}", "");
+            for context in contexts {
+                let plugins_str = context.plugins.join(", ");
+                println!("{:<30} {:<50}", context.name, plugins_str);
+            }
             Ok(())
         }
     }

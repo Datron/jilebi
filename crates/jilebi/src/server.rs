@@ -105,7 +105,7 @@ impl ServerHandler for JilebiMcpServer {
 
     fn get_info(&self) -> ServerInfo {
         ServerInfo {
-            protocol_version: ProtocolVersion::V_2025_03_26,
+            protocol_version: ProtocolVersion::V_2025_06_18,
             capabilities: ServerCapabilities::builder()
                 .enable_prompts()
                 .enable_tools()
@@ -432,4 +432,5 @@ impl ServerHandler for JilebiMcpServer {
 
         Ok(result)
     }
+
 }

@@ -1,6 +1,7 @@
 #![deny(unused_crate_dependencies)]
 use std::path::{Path, PathBuf};
 mod cli;
+mod context;
 mod server;
 mod utils;
 use clap::Parser;
@@ -10,7 +11,9 @@ use rusqlite::Connection;
 use server::JilebiMcpServer;
 use tracing_subscriber::{EnvFilter, fmt, layer::SubscriberExt, util::SubscriberInitExt};
 
-use crate::cli::{JilebiCli, plugin_command_handler, read_log_file};
+use crate::cli::{
+    JilebiCli, application_context_command_handler, plugin_command_handler, read_log_file,
+};
 
 fn setup_database(dir: &Path) -> Result<Connection, String> {
     let db_path = utils::generate_path(dir, "jilebi.db3", false)?;
@@ -47,6 +50,10 @@ fn setup_database(dir: &Path) -> Result<Connection, String> {
 			date_installed TEXT NOT NULL,
 			last_updated TEXT NOT NULL,
 			PRIMARY KEY (name)
+		);
+		CREATE TABLE IF NOT EXISTS application_contexts(
+		    name TEXT NOT NULL PRIMARY KEY,
+			plugins TEXT NOT NULL
 		);
 		COMMIT;",
         )
@@ -87,20 +94,15 @@ async fn main() -> Result<(), String> {
 
     let db = setup_database(base_jilebi_dir.data_dir())?;
     match jilebi_cli.subcommand {
-        cli::SubCommands::Stdio => {
-            let plugins = utils::load_plugins(&db)?;
+        cli::SubCommands::Stdio { name } => {
+            tracing::info!("Starting Jilebi Server...");
+            let plugins = utils::load_plugins(&db, name)?;
             let db_path = utils::generate_path(base_jilebi_dir.data_dir(), "jilebi.db3", false)?;
             let pool = r2d2_sqlite::SqliteConnectionManager::file(db_path);
             let db = r2d2::Pool::new(pool).map_err(|e| e.to_string())?;
             let main_span = tracing::span!(tracing::Level::INFO, "Jilebi Server started");
-            tracing::info!("Starting Jilebi Server, loading plugins...");
             let _guard = main_span.enter();
-
-            tracing::event!(
-                tracing::Level::TRACE,
-                ?plugins,
-                "Plugins and manifests loaded"
-            );
+            tracing::trace!(?plugins, "Plugins and manifests loaded");
             let server = JilebiMcpServer::new(plugins, db, log_path);
 
             let service = server.serve(stdio()).await.map_err(|e| {
@@ -113,6 +115,9 @@ async fn main() -> Result<(), String> {
         cli::SubCommands::Plugins { subcommand } => {
             plugin_command_handler(subcommand, &log_file, &plugin_directory, db).await
         }
+        cli::SubCommands::Context { subcommand } => {
+            application_context_command_handler(subcommand, &db).await
+        }
         cli::SubCommands::Log => {
             read_log_file(&log_file);
             Ok(())
@@ -121,9 +126,10 @@ async fn main() -> Result<(), String> {
 }
 
 // TOP PRIORITY
-// TODO: add application contexts to specialize tools for different contexts
 // TODO: version jilebi and plugins
 // TODO: self update jilebi automatically when a new version is released
+// TODO: Let all CLI functionality be done via REST APIs
+// TODO: Fetch -> important with rust crate html2md support
 // TODO: support SSE, HTTP and Authentication
 // TODO: update docs
 // TODO: add a frontend
@@ -134,9 +140,7 @@ async fn main() -> Result<(), String> {
 // 			- show plugin logs and configs in the UI
 // 			- payments
 
-
-
-
+// TODO: update plugins without restarting the server
 // TODO: check resources and add support for args (resource templates)
 // Jilebi MVP
 // MCP Server
@@ -146,7 +150,6 @@ async fn main() -> Result<(), String> {
 // TODO: Add `jilebi plugin publish` publish a plugin, everything is public for now
 // TODO: Write 10 most popular MCPs as plugins
 //			- Exa search -> important
-//			- Fetch -> important
 //			- Git
 //			- Playwright = https://github.com/microsoft/playwright-mcp -> important
 //			- https://github.com/awslabs/mcp/tree/main/src/aws-documentation-mcp-server

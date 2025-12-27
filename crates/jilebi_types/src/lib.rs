@@ -34,3 +34,9 @@ pub struct PluginMetaData {
     pub date_installed: DateTime<Utc>,
     pub last_updated: DateTime<Utc>,
 }
+
+#[derive(Debug, Clone)]
+pub struct ApplicationContext {
+    pub name: String,
+    pub plugins: Vec<String>,
+}

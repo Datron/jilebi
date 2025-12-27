@@ -43,11 +43,38 @@ pub fn get_plugin_manifest(
     Ok(manifest)
 }
 
-pub fn load_plugins(db: &Connection) -> Result<HashMap<String, Manifest>, String> {
+pub fn load_plugins(
+    db: &Connection,
+    application_context: Option<String>,
+) -> Result<HashMap<String, Manifest>, String> {
     tracing::trace!("Loading plugins from DB");
-    let mut plugins_query = db
-        .prepare("SELECT name, path FROM plugins WHERE state = 'enabled'")
-        .map_err(|e| e.to_string())?;
+    let plugins_query_sql = if let Some(context_name) = application_context {
+        let mut query = db
+            .prepare("SELECT plugins FROM application_contexts WHERE name = ?1")
+            .map_err(|e| e.to_string())?;
+        let context_plugins = query
+            .query_one([context_name], |row| {
+                let plugins: String = row.get(0)?;
+                Ok(plugins)
+            })
+            .map_err(|err| {
+                tracing::error!(
+                    "An error occurred while querying for application context: {}",
+                    err
+                );
+                format!(
+                    "An error occurred while querying for application context: {}",
+                    err
+                )
+            })?;
+        format!(
+            "SELECT name, path FROM plugins WHERE name IN ({}) AND state = 'enabled'",
+            context_plugins
+        )
+    } else {
+        String::from("SELECT name, path FROM plugins WHERE state = 'enabled'")
+    };
+    let mut plugins_query = db.prepare(&plugins_query_sql).map_err(|e| e.to_string())?;
     let rows = plugins_query
         .query_map([], |row| {
             let name: String = row.get(0)?;
