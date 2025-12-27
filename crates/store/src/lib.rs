@@ -1,3 +1,4 @@
+#![deny(unused_crate_dependencies)]
 use std::{collections::HashMap, sync::Arc};
 
 use axum::{

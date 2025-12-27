@@ -14,3 +14,4 @@ tracing = { workspace = true }
 tracing-appender = { workspace = true }
 tracing-subscriber = { workspace = true }
 rusqlite = { workspace = true }
+html2md = "0.2.15"

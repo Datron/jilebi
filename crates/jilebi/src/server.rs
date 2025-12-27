@@ -56,6 +56,7 @@ fn get_plugin_and_section_name(
 fn generate_plugin_environment(
     connection: &rusqlite::Connection,
     plugin_name: &str,
+    jilebi_version: &str,
 ) -> Result<serde_json::Value, rmcp::ErrorData> {
     let envs = crate::cli::env::fetch_envs_from_db(&connection, &plugin_name).map_err(|e| {
         rmcp::ErrorData::internal_error(
@@ -65,6 +66,7 @@ fn generate_plugin_environment(
     })?;
     let mut env = serde_json::Map::new();
     env.insert("id".to_string(), json!(plugin_name));
+    env.insert("jilebi_version".to_string(), json!(jilebi_version));
     for plugin_env in envs.iter() {
         env.insert(plugin_env.env_name.clone(), json!(plugin_env.value));
     }
@@ -72,6 +74,7 @@ fn generate_plugin_environment(
 }
 #[derive(Clone, Debug)]
 pub struct JilebiMcpServer {
+    pub version: &'static str,
     pub plugins: Plugins,
     pub db: Pool<SqliteConnectionManager>,
     pub plugin_log_dir: PathBuf,
@@ -82,8 +85,10 @@ impl JilebiMcpServer {
         plugins: HashMap<String, Manifest>,
         db: Pool<SqliteConnectionManager>,
         plugin_log_dir: PathBuf,
+        version: &'static str,
     ) -> Self {
         JilebiMcpServer {
+            version,
             plugins: Arc::new(RwLock::new(plugins)),
             db,
             plugin_log_dir,
@@ -113,7 +118,7 @@ impl ServerHandler for JilebiMcpServer {
                 .build(),
             server_info: Implementation {
                 name: "Jilebi".into(),
-                version: "alpha-2".into(),
+                version: self.version.to_string(),
                 title: Some("Jilebi MCP Runtime".into()),
                 icons: None,
                 website_url: Some("https://jilebi.ai".into()),
@@ -252,7 +257,7 @@ impl ServerHandler for JilebiMcpServer {
                 ))?;
 
         let handle = Handle::current();
-        let env = generate_plugin_environment(&connection, &plugin_name)?;
+        let env = generate_plugin_environment(&connection, &plugin_name, &self.version)?;
         let permissions =
             permissions::fetch_permissions_for_entity(&connection, &plugin_name, &tool_name)
                 .map_err(|e| {
@@ -389,7 +394,7 @@ impl ServerHandler for JilebiMcpServer {
                 None,
             ),
         )?;
-        let env = generate_plugin_environment(&connection, &plugin_name)?;
+        let env = generate_plugin_environment(&connection, &plugin_name, &self.version)?;
         let permissions =
             permissions::fetch_permissions_for_entity(&connection, &plugin_name, &resource_name)
                 .map_err(|e| {
@@ -432,5 +437,4 @@ impl ServerHandler for JilebiMcpServer {
 
         Ok(result)
     }
-
 }

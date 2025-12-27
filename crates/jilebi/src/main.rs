@@ -91,6 +91,7 @@ async fn main() -> Result<(), String> {
         .unwrap_or(default_plugin_path);
 
     let jilebi_cli = JilebiCli::parse();
+    let current_version = env!("CARGO_PKG_VERSION");
 
     let db = setup_database(base_jilebi_dir.data_dir())?;
     match jilebi_cli.subcommand {
@@ -103,7 +104,7 @@ async fn main() -> Result<(), String> {
             let main_span = tracing::span!(tracing::Level::INFO, "Jilebi Server started");
             let _guard = main_span.enter();
             tracing::trace!(?plugins, "Plugins and manifests loaded");
-            let server = JilebiMcpServer::new(plugins, db, log_path);
+            let server = JilebiMcpServer::new(plugins, db, log_path, current_version);
 
             let service = server.serve(stdio()).await.map_err(|e| {
                 tracing::error!("Serving error: {:?}", e);
@@ -122,14 +123,18 @@ async fn main() -> Result<(), String> {
             read_log_file(&log_file);
             Ok(())
         }
+        cli::SubCommands::Version => {
+            println!("Jilebi version: {}", current_version);
+            Ok(())
+        }
     }
 }
 
 // TOP PRIORITY
-// TODO: version jilebi and plugins
+// TODO: Fetch -> important with rust crate html2md support
+// TODO: version plugins
 // TODO: self update jilebi automatically when a new version is released
 // TODO: Let all CLI functionality be done via REST APIs
-// TODO: Fetch -> important with rust crate html2md support
 // TODO: support SSE, HTTP and Authentication
 // TODO: update docs
 // TODO: add a frontend

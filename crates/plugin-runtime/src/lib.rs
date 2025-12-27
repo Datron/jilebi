@@ -31,11 +31,12 @@ where
 
     let logging = plugin_functions::logging::logging::init();
     let state_management = plugin_functions::state::state::init();
+    let html2markdown = plugin_functions::html2markdown::html2markdown::init();
     let permissions = permissions.clone().map(Arc::new);
     let module = Module::new("script.js", code);
     let mut runtime_options = RuntimeOptions {
         timeout: Duration::from_millis(50),
-        extensions: vec![logging, state_management],
+        extensions: vec![logging, state_management, html2markdown],
         ..Default::default()
     };
     if let Some(permissions) = permissions {

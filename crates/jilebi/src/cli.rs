@@ -54,6 +54,8 @@ pub enum SubCommands {
     },
     /// Read jilebi server logs
     Log,
+    /// Get the current version of jilebi
+    Version,
 }
 
 #[derive(Debug, Clone, Subcommand)]

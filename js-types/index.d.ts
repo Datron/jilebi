@@ -3,12 +3,29 @@
 declare type Environment = {
 	// the identifier used internally to manage a plugin
 	id: string;
+	jilebi_version: string;
 } & Record<string, any>;
 
 /** Return value for a key lookup
  *
  */
 type Value = object;
+
+/** Parses HTML and returns the markdown equivalent
+ *
+ * ```ts
+ * let markdown = html2markdown("<h1>Hello World</h1><p>This is a sample HTML content.</p>");
+ * 
+ * ```
+ *
+ * Returns empty string if the HTML cannot be parsed
+ *
+ * Requires no permissions.
+ *
+ * @tags parsing
+ * @category HTML Parsing
+ */
+declare function html2markdown(html: string): string;
 
 /** stores an object against the key in state. The state is persisted to Disk
  * and will be available after a restart of jilebi

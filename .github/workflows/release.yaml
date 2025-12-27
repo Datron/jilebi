@@ -126,4 +126,4 @@ jobs:
           r2-secret-access-key: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           r2-bucket: jilebi
           source-dir: bin
-          destination-dir: bin/${{needs.release-version.outputs.version}}
+          destination-dir: bin/${{needs.generate-version.outputs.version}}/
