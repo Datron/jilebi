@@ -7,7 +7,6 @@ use std::{
 pub(crate) mod download;
 pub(crate) mod env;
 pub(crate) mod permissions;
-pub(crate) mod plugin_meta;
 use clap::{Parser, Subcommand};
 use dialoguer::{Confirm, Input, Select};
 use directories::UserDirs;
@@ -16,10 +15,7 @@ use jilebi_types::env::PluginEnv;
 use keyring::Entry;
 use rusqlite::Connection;
 
-use crate::{
-    cli::{download::remove_plugin_in_db, env::setup_envs},
-    context,
-};
+use crate::{cli::env::setup_envs, db};
 
 const MANIFEST_CODE: &str = r#"
 name = "<replace>"
@@ -143,6 +139,33 @@ pub fn read_log_file(path: &PathBuf) {
     }
 }
 
+pub async fn list_remote_plugins() -> Result<Vec<(String, String)>, String> {
+    let client = reqwest::Client::new();
+    let plugins = client
+        .get("https://jilebi.ai/api/plugins")
+        .send()
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed to fetch remote plugins: {}", e);
+            "Failed to fetch remote plugins".to_string()
+        })?
+        .json::<Vec<serde_json::Value>>()
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed to parse remote plugins JSON: {}", e);
+            "Failed to parse remote plugins JSON".to_string()
+        })?;
+    let plugins = plugins
+        .into_iter()
+        .filter_map(|plugin| {
+            let name = plugin.get("name")?.as_str()?.to_string();
+            let download_count = plugin.get("download_count")?.as_i64()?.to_string();
+            Some((name, download_count))
+        })
+        .collect::<Vec<(String, String)>>();
+    Ok(plugins)
+}
+
 pub async fn plugin_command_handler(
     subcommand: PluginSubCommands,
     log_file: &PathBuf,
@@ -214,7 +237,7 @@ pub async fn plugin_command_handler(
                 e
             })?;
 
-            download::add_plugin_to_db(&db, &plugin_name, &new_plugin_path)?;
+            db::plugins::add_plugin_to_db(&db, &plugin_name, &new_plugin_path)?;
             bar.finish_with_message(format!(
                 "Successfully created {} at {}",
                 plugin_name, new_plugin_path
@@ -261,14 +284,14 @@ pub async fn plugin_command_handler(
             if plugin_path.exists() {
                 fs::remove_dir_all(plugin_path).map_err(|e| e.to_string())?;
             }
-            remove_plugin_in_db(&db, &id)
+            db::plugins::remove_plugin_in_db(&db, &id)
         }
         PluginSubCommands::Log { id } => {
             read_log_file(&log_file.parent().unwrap().join(format!("{}.logs", id)));
             Ok(())
         }
         PluginSubCommands::Env { id } => {
-            let envs = env::fetch_envs_from_db(&db, &id)?;
+            let envs = db::plugin_env::fetch_envs_from_db(&db, &id)?;
             let mut env_names = envs
                 .iter()
                 .map(|env| &env.env_name)
@@ -285,7 +308,7 @@ pub async fn plugin_command_handler(
             if env_names[env_selection] == &all {
                 setup_envs(&db, plugin_dir, &id)?;
             } else {
-                let plugin_env = env::fetch_env(&db, &env_names[env_selection], &id)?;
+                let plugin_env = db::plugin_env::fetch_env(&db, &env_names[env_selection], &id)?;
                 let new_value = env::query_env_from_the_user(&plugin_env)?;
                 let entry =
                     Entry::new("jilebi", &plugin_env.env_name).map_err(|e| e.to_string())?;
@@ -295,7 +318,7 @@ pub async fn plugin_command_handler(
                     plugin_env.env_type.clone(),
                     plugin_env.schema.clone(),
                 );
-                env::set_env(&entry, &db, &id, new_env)?;
+                db::plugin_env::set_env(&entry, &db, &id, new_env)?;
             }
             Ok(())
         }
@@ -303,7 +326,8 @@ pub async fn plugin_command_handler(
             id,
             accept_permissions,
         } => {
-            let permission_requirements = permissions::fetch_permissions_for_plugin(&db, &id)?;
+            let permission_requirements =
+                db::plugin_permissions::fetch_permissions_for_plugin(&db, &id)?;
 
             let mut potential_entities = permission_requirements.keys().collect::<Vec<&String>>();
 
@@ -332,7 +356,12 @@ pub async fn plugin_command_handler(
                 ))?;
                 let new_permissions =
                     permissions::query_permissions_from_the_user(selected_entity, permissions)?;
-                permissions::set_permissions(&db, &id, selected_entity, &new_permissions)?;
+                db::plugin_permissions::set_permissions(
+                    &db,
+                    &id,
+                    selected_entity,
+                    &new_permissions,
+                )?;
             };
             Ok(())
         }
@@ -349,13 +378,13 @@ pub async fn plugin_command_handler(
                 let bar = ProgressBar::new_spinner();
                 bar.enable_steady_tick(Duration::from_millis(100));
                 bar.set_message("Getting a list of plugins available...");
-                let data = plugin_meta::list_remote_plugins().await?;
+                let data = list_remote_plugins().await?;
                 bar.finish();
                 println!("{:<30} {:<10}", "Plugin Name", "Downloads");
                 data
             } else {
                 println!("{:<30} {:<10}", "Plugin Name", "State");
-                plugin_meta::list_local_plugins(&db)?
+                db::plugins::list_local_plugins(&db)?
             };
             println!("{:-<40}", "");
             for (name, state) in plugins {
@@ -368,7 +397,7 @@ pub async fn plugin_command_handler(
             let bar = ProgressBar::new_spinner();
             bar.enable_steady_tick(Duration::from_millis(100));
             bar.set_message("Enabling plugin...");
-            plugin_meta::update_plugin_state(&db, &id, jilebi_types::PluginState::Enabled)?;
+            db::plugins::update_plugin_state(&db, &id, jilebi_types::PluginState::Enabled)?;
             bar.finish_with_message("Plugin Enabled");
             Ok(())
         }
@@ -376,7 +405,7 @@ pub async fn plugin_command_handler(
             let bar = ProgressBar::new_spinner();
             bar.enable_steady_tick(Duration::from_millis(100));
             bar.set_message("Disabling plugin...");
-            plugin_meta::update_plugin_state(&db, &id, jilebi_types::PluginState::Disabled)?;
+            db::plugins::update_plugin_state(&db, &id, jilebi_types::PluginState::Disabled)?;
             bar.finish_with_message("Plugin Disabled");
             Ok(())
         }
@@ -389,27 +418,31 @@ pub async fn application_context_command_handler(
 ) -> Result<(), String> {
     match subcommand {
         ApplicationContextCommands::Create { name, plugins } => {
-            context::create_application_context(db, &name, &plugins)?;
+            db::application_contexts::create_application_context(db, &name, &plugins)?;
             println!("Created context {}", name);
             Ok(())
         }
         ApplicationContextCommands::Add { name, plugin } => {
-            context::add_plugin_to_application_context(db, &name, plugin.clone())?;
-            println!("Plugin {} added to context {}", name, plugin);
+            db::application_contexts::add_plugin_to_application_context(db, &name, plugin.clone())?;
+            println!("Plugin {} added to context {}", plugin, name);
             Ok(())
         }
         ApplicationContextCommands::Remove { name, plugin } => {
-            context::remove_plugin_from_application_context(db, &name, plugin.clone())?;
-            println!("Plugin {} removed from context {}", name, plugin);
+            db::application_contexts::remove_plugin_from_application_context(
+                db,
+                &name,
+                plugin.clone(),
+            )?;
+            println!("Plugin {} removed from context {}", plugin, name);
             Ok(())
         }
         ApplicationContextCommands::Delete { name } => {
-            context::delete_application_context(db, &name)?;
+            db::application_contexts::delete_application_context(db, &name)?;
             println!("Deleted context {}", name);
             Ok(())
         }
         ApplicationContextCommands::List => {
-            let contexts = context::list_application_contexts(db)?;
+            let contexts = db::application_contexts::list_application_contexts(db)?;
             println!("{:<30} {:<50}", "Context Name", "Plugins");
             println!("{:-<80}", "");
             for context in contexts {

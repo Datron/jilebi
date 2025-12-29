@@ -6,31 +6,7 @@ use keyring::Entry;
 use rusqlite::Connection;
 use serde_json::json;
 
-fn sql_to_plugin_env(row: &rusqlite::Row) -> Result<PluginEnv, rusqlite::Error> {
-    let env_name: String = row.get(0)?;
-    let env_type: String = row.get(2)?;
-    let schema: String = row.get(3)?;
-    let env_type = EnvType::try_from(env_type).map_err(|e| {
-        rusqlite::Error::FromSqlConversionFailure(
-            0,
-            rusqlite::types::Type::Text,
-            Box::new(std::io::Error::new(std::io::ErrorKind::Other, e)),
-        )
-    })?;
-    let value: String = if env_type == EnvType::Normal {
-        row.get(1)?
-    } else {
-        let entry = Entry::new("jilebi", &env_name).map_err(|e| {
-            rusqlite::Error::FromSqlConversionFailure(
-                0,
-                rusqlite::types::Type::Text,
-                Box::new(std::io::Error::new(std::io::ErrorKind::Other, e)),
-            )
-        })?;
-        entry.get_password().unwrap_or_default()
-    };
-    Ok(PluginEnv::new(env_name, value, env_type, schema))
-}
+use crate::db;
 
 fn toml_to_plugin_env(
     env_name: &str,
@@ -157,82 +133,7 @@ pub fn setup_envs(
             env.env_type.clone(),
             env.schema.clone(),
         );
-        set_env(&entry, db, plugin_name, new_env)?;
+        db::plugin_env::set_env(&entry, db, plugin_name, new_env)?;
     }
-    Ok(())
-}
-
-pub fn fetch_envs_from_db(db: &Connection, id: &str) -> Result<PluginEnvs, String> {
-    let mut statement = db
-        .prepare("SELECT env_name, value, type, schema FROM plugin_env WHERE id = ?")
-        .map_err(|e| {
-            tracing::error!(
-                "Failed to prepare statement while fetching existing envs: {}",
-                e
-            );
-            format!("Failed to query jilebis internal state: {}", e)
-        })?;
-    let rows = statement
-        .query_and_then([id], sql_to_plugin_env)
-        .map_err(|e| {
-            tracing::error!("Failed to fetch existing envs: {}", e);
-            format!("Failed to fetch existing envs: {}", e)
-        })?;
-    let mut envs = HashSet::new();
-    for row in rows {
-        envs.insert(row.map_err(|e| e.to_string())?);
-    }
-    Ok(envs)
-}
-
-pub fn fetch_env(db: &Connection, env_name: &str, id: &str) -> Result<PluginEnv, String> {
-    let mut statement = db
-        .prepare(
-            "SELECT env_name, value, type, schema FROM plugin_env WHERE env_name = ? AND id = ?",
-        )
-        .map_err(|e| {
-            tracing::error!(
-                "Failed to prepare statement while fetching existing envs: {}",
-                e
-            );
-            format!(
-                "Failed to prepare statement while fetching existing envs: {}",
-                e
-            )
-        })?;
-    let row = statement
-        .query_one([env_name, id], sql_to_plugin_env)
-        .map_err(|e| e.to_string())?;
-    Ok(row)
-}
-
-pub fn set_env(keystore: &Entry, db: &Connection, id: &str, env: PluginEnv) -> Result<(), String> {
-    let mut statement = db
-        .prepare("INSERT OR REPLACE INTO plugin_env (id, type, env_name, value, schema) VALUES (?1, ?2, ?3, ?4, ?5)")
-        .map_err(|e| {
-            tracing::error!("Failed to prepare statement while setting env: {}", e);
-            format!("Failed to prepare statement while setting env: {}", e)
-        })?;
-    let env_value = if env.env_type == EnvType::Secret {
-        keystore.set_password(&env.value).map_err(|e| {
-            tracing::error!("Failed to set secret env value: {}", e);
-            format!("Failed to set secret env value: {}", e)
-        })?;
-        "set-in-credential-manager"
-    } else {
-        &env.value
-    };
-    statement
-        .execute([
-            id,
-            &env.env_type.to_string().to_lowercase(),
-            &env.env_name,
-            &env_value,
-            &env.schema,
-        ])
-        .map_err(|e| {
-            tracing::error!("Failed to execute statement while setting env: {}", e);
-            format!("Failed to execute statement while setting env: {}", e)
-        })?;
     Ok(())
 }

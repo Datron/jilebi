@@ -1,8 +1,8 @@
 use std::{fs, io::Write, path::PathBuf};
 
-use chrono::Utc;
-use jilebi_types::PluginOrigin;
-use rusqlite::{Connection, params};
+use rusqlite::Connection;
+
+use crate::db;
 
 const DOWNLOAD_URL: &str = "https://jilebi.ai/api/download";
 
@@ -31,49 +31,6 @@ async fn download_and_extract(url: &str, extract_path: &PathBuf) -> Result<(), S
     Ok(())
 }
 
-pub fn add_plugin_to_db(
-    db: &Connection,
-    plugin_name: &str,
-    plugin_path: &str,
-) -> Result<(), String> {
-    let mut statement = db
-        .prepare("INSERT OR REPLACE INTO plugins VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7)")
-        .map_err(|err| {
-            tracing::error!("Could not insert new plugin into DB because of: {:?}", err);
-            "could not register the plugin with jilebi. Check logs to see why".to_string()
-        })?;
-    let datetime = Utc::now().to_rfc2822();
-    statement
-        .execute(params![
-            plugin_name.to_string(),
-            plugin_path.to_string(),
-            "1.0.0",
-            PluginOrigin::Jilebi.to_string(),
-            jilebi_types::PluginState::Enabled.to_string(),
-            datetime.clone(),
-            datetime,
-        ])
-        .map_err(|err| {
-            tracing::error!("Could not insert plugins into DB: {:?}", err);
-            format!("Could not insert plugins into DB, please check logs")
-        })?;
-    Ok(())
-}
-
-pub fn remove_plugin_in_db(db: &Connection, plugin_name: &str) -> Result<(), String> {
-    let mut statement = db
-        .prepare("DELETE FROM plugins WHERE name = ?1")
-        .map_err(|err| {
-            tracing::error!("Could not remove plugin from DB because of: {:?}", err);
-            "could not remove the plugin from jilebi. Check logs to see why".to_string()
-        })?;
-    statement.execute([plugin_name]).map_err(|err| {
-        tracing::error!("Could not remove plugin from DB: {:?}", err);
-        format!("Could not remove plugin from DB, please check logs")
-    })?;
-    Ok(())
-}
-
 pub async fn download_and_init_plugin(
     id: &str,
     plugin_path: &PathBuf,
@@ -90,7 +47,7 @@ pub async fn download_and_init_plugin(
         fs::create_dir_all(&plugin_path).map_err(|e| e.to_string())?;
     }
     download_and_extract(&url, &plugin_path.join(&file_name)).await?;
-    add_plugin_to_db(db, id, &plugin_path_str)?;
+    db::plugins::add_plugin_to_db(db, id, &plugin_path_str)?;
     Ok(())
 }
 

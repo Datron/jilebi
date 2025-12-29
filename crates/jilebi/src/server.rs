@@ -21,7 +21,7 @@ use rmcp::{
 };
 use tokio::{runtime::Handle, sync::RwLock};
 
-use crate::{cli::permissions, utils::get_plugin_path};
+use crate::{db, utils::get_plugin_path};
 
 #[derive(Debug, Clone, derive_more::Display, PartialEq)]
 enum McpSection {
@@ -58,7 +58,7 @@ fn generate_plugin_environment(
     plugin_name: &str,
     jilebi_version: &str,
 ) -> Result<serde_json::Value, rmcp::ErrorData> {
-    let envs = crate::cli::env::fetch_envs_from_db(&connection, &plugin_name).map_err(|e| {
+    let envs = db::plugin_env::fetch_envs_from_db(&connection, &plugin_name).map_err(|e| {
         rmcp::ErrorData::internal_error(
             "Could not fetch environment variables from the jilebi DB",
             Some(serde_json::Value::String(e)),
@@ -258,15 +258,18 @@ impl ServerHandler for JilebiMcpServer {
 
         let handle = Handle::current();
         let env = generate_plugin_environment(&connection, &plugin_name, &self.version)?;
-        let permissions =
-            permissions::fetch_permissions_for_entity(&connection, &plugin_name, &tool_name)
-                .map_err(|e| {
-                    tracing::error!("Could not fetch permissions for tool {}: {}", tool_name, e);
-                    rmcp::ErrorData::internal_error(
-                        "Could not fetch permissions for tool",
-                        Some(serde_json::Value::String(e.to_string())),
-                    )
-                })?;
+        let permissions = db::plugin_permissions::fetch_permissions_for_entity(
+            &connection,
+            &plugin_name,
+            &tool_name,
+        )
+        .map_err(|e| {
+            tracing::error!("Could not fetch permissions for tool {}: {}", tool_name, e);
+            rmcp::ErrorData::internal_error(
+                "Could not fetch permissions for tool",
+                Some(serde_json::Value::String(e.to_string())),
+            )
+        })?;
         let log_path = self.plugin_log_dir.clone();
         let result = handle
             .spawn_blocking(move || {
@@ -395,19 +398,22 @@ impl ServerHandler for JilebiMcpServer {
             ),
         )?;
         let env = generate_plugin_environment(&connection, &plugin_name, &self.version)?;
-        let permissions =
-            permissions::fetch_permissions_for_entity(&connection, &plugin_name, &resource_name)
-                .map_err(|e| {
-                    tracing::error!(
-                        "Could not fetch permissions for resource {}: {}",
-                        resource_name,
-                        e
-                    );
-                    rmcp::ErrorData::internal_error(
-                        "Could not fetch permissions for resource",
-                        Some(serde_json::Value::String(e.to_string())),
-                    )
-                })?;
+        let permissions = db::plugin_permissions::fetch_permissions_for_entity(
+            &connection,
+            &plugin_name,
+            &resource_name,
+        )
+        .map_err(|e| {
+            tracing::error!(
+                "Could not fetch permissions for resource {}: {}",
+                resource_name,
+                e
+            );
+            rmcp::ErrorData::internal_error(
+                "Could not fetch permissions for resource",
+                Some(serde_json::Value::String(e.to_string())),
+            )
+        })?;
         let handle = Handle::current();
         let log_path = self.plugin_log_dir.clone();
         let result = handle

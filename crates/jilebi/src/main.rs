@@ -1,9 +1,9 @@
 #![deny(unused_crate_dependencies)]
 use std::path::{Path, PathBuf};
 mod cli;
-mod context;
 mod server;
 mod utils;
+mod db;
 use clap::Parser;
 use directories::ProjectDirs;
 use rmcp::{ServiceExt, transport::stdio};

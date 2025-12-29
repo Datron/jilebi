@@ -6,15 +6,9 @@ use std::{
 use dialoguer::{Confirm, Input};
 use directories::UserDirs;
 use jilebi_types::permissions::JilebiPermissions;
-use rusqlite::{Connection, OptionalExtension};
+use rusqlite::Connection;
 
-fn sql_to_plugin_permissions(row: &rusqlite::Row) -> Result<JilebiPermissions, rusqlite::Error> {
-    let value: String = row.get(0)?;
-    let permissions = serde_json::from_str::<JilebiPermissions>(&value).map_err(|e| {
-        rusqlite::Error::FromSqlConversionFailure(0, rusqlite::types::Type::Text, Box::new(e))
-    })?;
-    Ok(permissions)
-}
+use crate::db;
 
 pub fn set_default_permissions(
     permissions: &JilebiPermissions,
@@ -252,62 +246,7 @@ pub fn setup_permissions(
         } else {
             query_permissions_from_the_user(entity, existing_permissions)?
         };
-        set_permissions(&db, &plugin_name, entity, &new_permissions)?;
+        db::plugin_permissions::set_permissions(&db, &plugin_name, entity, &new_permissions)?;
     }
-    Ok(())
-}
-
-pub fn fetch_permissions_for_plugin(
-    connection: &Connection,
-    plugin_id: &str,
-) -> Result<HashMap<String, JilebiPermissions>, String> {
-    let mut stmt = connection
-        .prepare("SELECT resource_name, value FROM plugin_permissions WHERE id = ?1")
-        .map_err(|e| e.to_string())?;
-    let params = vec![plugin_id];
-    let rows = stmt
-        .query_map(rusqlite::params_from_iter(params), |row| {
-            let resource_name: String = row.get(0)?;
-            let permissions = sql_to_plugin_permissions(row)?;
-            Ok((resource_name, permissions))
-        })
-        .map_err(|e| e.to_string())?;
-    let mut permissions: HashMap<String, JilebiPermissions> = HashMap::new();
-    for row in rows {
-        let (resource_name, perms) = row.map_err(|e| e.to_string())?;
-        permissions.insert(resource_name, perms);
-    }
-    Ok(permissions)
-}
-
-pub fn fetch_permissions_for_entity(
-    connection: &Connection,
-    plugin_id: &str,
-    entity: &str,
-) -> Result<Option<JilebiPermissions>, String> {
-    let query = "SELECT value FROM plugin_permissions WHERE resource_name = ?1 AND id = ?2";
-    let mut stmt = connection.prepare(query).map_err(|e| e.to_string())?;
-    let permissions = stmt
-        .query_one(
-            rusqlite::params![entity, plugin_id],
-            sql_to_plugin_permissions,
-        )
-        .optional()
-        .map_err(|e| e.to_string())?;
-    Ok(permissions)
-}
-
-pub fn set_permissions(
-    db: &Connection,
-    id: &str,
-    entity: &str,
-    new_permissions: &JilebiPermissions,
-) -> Result<(), String> {
-    let query =
-        "INSERT OR REPLACE INTO plugin_permissions (id, resource_name, value) VALUES (?1, ?2, ?3)";
-    let mut stmt = db.prepare(query).map_err(|e| e.to_string())?;
-    let value = serde_json::to_string(new_permissions).map_err(|e| e.to_string())?;
-    stmt.execute(rusqlite::params![id, entity, value])
-        .map_err(|e| e.to_string())?;
     Ok(())
 }
