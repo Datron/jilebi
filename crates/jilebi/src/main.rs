@@ -131,8 +131,7 @@ async fn main() -> Result<(), String> {
 }
 
 // TOP PRIORITY
-// TODO: Fetch -> important with rust crate html2md support
-// TODO: version plugins
+// TODO: update plugin downloading to use versions
 // TODO: self update jilebi automatically when a new version is released
 // TODO: Let all CLI functionality be done via REST APIs
 // TODO: support SSE, HTTP and Authentication
