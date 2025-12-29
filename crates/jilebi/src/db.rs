@@ -15,6 +15,7 @@ pub(crate) mod plugins {
         db: &Connection,
         plugin_name: &str,
         plugin_path: &str,
+        plugin_version: &str,
     ) -> Result<(), String> {
         let mut statement = db
             .prepare("INSERT OR REPLACE INTO plugins VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7)")
@@ -27,7 +28,7 @@ pub(crate) mod plugins {
             .execute(params![
                 plugin_name.to_string(),
                 plugin_path.to_string(),
-                "1.0.0",
+                plugin_version.to_string(),
                 PluginOrigin::Jilebi.to_string(),
                 jilebi_types::PluginState::Enabled.to_string(),
                 datetime.clone(),

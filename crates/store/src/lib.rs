@@ -1,4 +1,3 @@
-#![deny(unused_crate_dependencies)]
 use std::{collections::HashMap, sync::Arc};
 
 use axum::{
@@ -190,6 +189,7 @@ async fn list_plugins(
             obj.key()
                 .split('/')
                 .nth(1)
+                .filter(|s| s.ends_with(".zip"))
                 .and_then(|s| s.split('.').nth(0).map(|i| i.to_string()))
         })
         .collect::<Vec<String>>();

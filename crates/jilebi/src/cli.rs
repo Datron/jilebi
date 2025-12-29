@@ -237,7 +237,7 @@ pub async fn plugin_command_handler(
                 e
             })?;
 
-            db::plugins::add_plugin_to_db(&db, &plugin_name, &new_plugin_path)?;
+            db::plugins::add_plugin_to_db(&db, &plugin_name, &new_plugin_path, "1.0.0")?;
             bar.finish_with_message(format!(
                 "Successfully created {} at {}",
                 plugin_name, new_plugin_path

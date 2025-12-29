@@ -47,7 +47,15 @@ pub async fn download_and_init_plugin(
         fs::create_dir_all(&plugin_path).map_err(|e| e.to_string())?;
     }
     download_and_extract(&url, &plugin_path.join(&file_name)).await?;
-    db::plugins::add_plugin_to_db(db, id, &plugin_path_str)?;
+    let manifest: toml::Value = toml::from_str(
+        &fs::read_to_string(plugin_path.join("manifest.toml")).map_err(|e| e.to_string())?,
+    )
+    .map_err(|e| e.to_string())?;
+    let version = manifest.get("version")
+        .and_then(|v| v.as_str())
+        .ok_or("Version not found in manifest")?;
+    tracing::debug!("Downloaded plugin version: {}", version);
+    db::plugins::add_plugin_to_db(db, id, &plugin_path_str, version)?;
     Ok(())
 }
 
