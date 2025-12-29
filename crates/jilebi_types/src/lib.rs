@@ -10,14 +10,14 @@ pub mod permissions;
 /// a map between a URI and a plugin manifest
 pub type Plugins = Arc<RwLock<HashMap<String, manifest::Manifest>>>;
 
-#[derive(Debug, Clone, strum_macros::Display)]
+#[derive(Debug, Clone, strum_macros::Display, strum_macros::EnumString)]
 #[strum(serialize_all = "lowercase")]
 pub enum PluginOrigin {
     Local,
     Jilebi,
 }
 
-#[derive(Debug, Clone, strum_macros::Display)]
+#[derive(Debug, Clone, strum_macros::Display, strum_macros::EnumString)]
 #[strum(serialize_all = "lowercase")]
 pub enum PluginState {
     Enabled,

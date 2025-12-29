@@ -291,6 +291,7 @@ pub async fn plugin_command_handler(
             Ok(())
         }
         PluginSubCommands::Env { id } => {
+            let plugin = db::plugins::get_plugin(&db, &id)?;
             let envs = db::plugin_env::fetch_envs_from_db(&db, &id)?;
             let mut env_names = envs
                 .iter()
@@ -306,7 +307,7 @@ pub async fn plugin_command_handler(
                 .map_err(|e| e.to_string())?;
 
             if env_names[env_selection] == &all {
-                setup_envs(&db, plugin_dir, &id)?;
+                setup_envs(&db, &plugin.path, &id)?;
             } else {
                 let plugin_env = db::plugin_env::fetch_env(&db, &env_names[env_selection], &id)?;
                 let new_value = env::query_env_from_the_user(&plugin_env)?;
@@ -326,6 +327,7 @@ pub async fn plugin_command_handler(
             id,
             accept_permissions,
         } => {
+            let plugin = db::plugins::get_plugin(&db, &id)?;
             let permission_requirements =
                 db::plugin_permissions::fetch_permissions_for_plugin(&db, &id)?;
 
@@ -344,7 +346,7 @@ pub async fn plugin_command_handler(
             if selected_entity == &all_option {
                 permissions::setup_permissions(
                     &db,
-                    plugin_dir,
+                    &plugin.path,
                     &id,
                     Some(permission_requirements),
                     accept_permissions,
@@ -369,8 +371,9 @@ pub async fn plugin_command_handler(
             id,
             accept_permissions,
         } => {
-            env::setup_envs(&db, plugin_dir, &id)?;
-            permissions::setup_permissions(&db, plugin_dir, &id, None, accept_permissions)?;
+            let plugin = db::plugins::get_plugin(&db, &id)?;
+            env::setup_envs(&db, &plugin.path, &id)?;
+            permissions::setup_permissions(&db, &plugin.path, &id, None, accept_permissions)?;
             Ok(())
         }
         PluginSubCommands::List { remote } => {
