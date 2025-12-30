@@ -8,6 +8,6 @@
 	},
 	"devDependencies": {
 		"@modelcontextprotocol/inspector": "^0.16.8",
-		"wrangler": "^4.40.2"
+		"wrangler": "^4.54.0"
 	}
 }

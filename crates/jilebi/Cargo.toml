@@ -28,3 +28,4 @@ jsonschema = { workspace = true }
 serde_json = { workspace = true }
 r2d2_sqlite = "0.31.0"
 r2d2 = "0.8.10"
+# self_update = { version = "0.42.0", features = ["archive-zip"] }
