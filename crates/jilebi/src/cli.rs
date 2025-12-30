@@ -49,7 +49,10 @@ pub enum SubCommands {
         subcommand: PluginSubCommands,
     },
     /// Read jilebi server logs
-    Log,
+    Log {
+        #[arg(short, long)]
+        clear: bool,
+    },
     /// Get the current version of jilebi
     Version,
 }
@@ -103,7 +106,11 @@ pub enum PluginSubCommands {
         accept_permissions: bool,
     },
     /// Show logs for a specific plugin
-    Log { id: String },
+    Log {
+        id: String,
+        #[arg(short, long)]
+        clear: bool,
+    },
 }
 
 #[derive(Debug, Clone, Subcommand)]
@@ -137,6 +144,10 @@ pub fn read_log_file(path: &PathBuf) {
             Err(err) => panic!("Error reading log line: {}", err),
         }
     }
+}
+
+pub fn clear_log_file(path: &PathBuf) -> Result<(), String> {
+    fs::write(path, "").map_err(|e| format!("Failed to clear log file: {}", e))
 }
 
 pub async fn list_remote_plugins() -> Result<Vec<(String, String)>, String> {
@@ -286,8 +297,13 @@ pub async fn plugin_command_handler(
             }
             db::plugins::remove_plugin_in_db(&db, &id)
         }
-        PluginSubCommands::Log { id } => {
-            read_log_file(&log_file.parent().unwrap().join(format!("{}.logs", id)));
+        PluginSubCommands::Log { id, clear } => {
+            let file = log_file.parent().unwrap().join(format!("{}.logs", id));
+            if clear {
+                clear_log_file(&file)?;
+            } else {
+                read_log_file(&file);
+            }
             Ok(())
         }
         PluginSubCommands::Env { id } => {

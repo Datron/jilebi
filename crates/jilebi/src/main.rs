@@ -1,9 +1,9 @@
 #![deny(unused_crate_dependencies)]
 use std::path::{Path, PathBuf};
 mod cli;
+mod db;
 mod server;
 mod utils;
-mod db;
 use clap::Parser;
 use directories::ProjectDirs;
 use rmcp::{ServiceExt, transport::stdio};
@@ -12,7 +12,8 @@ use server::JilebiMcpServer;
 use tracing_subscriber::{EnvFilter, fmt, layer::SubscriberExt, util::SubscriberInitExt};
 
 use crate::cli::{
-    JilebiCli, application_context_command_handler, plugin_command_handler, read_log_file,
+    JilebiCli, application_context_command_handler, clear_log_file, plugin_command_handler,
+    read_log_file,
 };
 
 fn setup_database(dir: &Path) -> Result<Connection, String> {
@@ -119,9 +120,13 @@ async fn main() -> Result<(), String> {
         cli::SubCommands::Context { subcommand } => {
             application_context_command_handler(subcommand, &db).await
         }
-        cli::SubCommands::Log => {
-            read_log_file(&log_file);
-            Ok(())
+        cli::SubCommands::Log { clear } => {
+            if clear {
+                clear_log_file(&log_file)
+            } else {
+                read_log_file(&log_file);
+                Ok(())
+            }
         }
         cli::SubCommands::Version => {
             println!("Jilebi version: {}", current_version);
