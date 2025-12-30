@@ -79,6 +79,8 @@ pub enum PluginSubCommands {
         ids: Vec<String>,
         #[arg(short, long)]
         accept_permissions: bool,
+        #[arg(short, long)]
+        version: Option<String>,
     },
     /// setup a plugin in development after you've changed the permissions, envs or other manifest details
     Setup {
@@ -150,7 +152,7 @@ pub fn clear_log_file(path: &PathBuf) -> Result<(), String> {
     fs::write(path, "").map_err(|e| format!("Failed to clear log file: {}", e))
 }
 
-pub async fn list_remote_plugins() -> Result<Vec<(String, String)>, String> {
+pub async fn list_remote_plugins() -> Result<Vec<(String, String, String)>, String> {
     let client = reqwest::Client::new();
     let plugins = client
         .get("https://jilebi.ai/api/plugins")
@@ -170,10 +172,11 @@ pub async fn list_remote_plugins() -> Result<Vec<(String, String)>, String> {
         .into_iter()
         .filter_map(|plugin| {
             let name = plugin.get("name")?.as_str()?.to_string();
+            let version = plugin.get("version")?.as_str()?.to_string();
             let download_count = plugin.get("download_count")?.as_i64()?.to_string();
-            Some((name, download_count))
+            Some((name, version, download_count))
         })
-        .collect::<Vec<(String, String)>>();
+        .collect::<Vec<(String, String, String)>>();
     Ok(plugins)
 }
 
@@ -259,6 +262,7 @@ pub async fn plugin_command_handler(
         PluginSubCommands::Add {
             ids,
             accept_permissions,
+            version: _,
         } => {
             for id in ids.iter() {
                 let plugin_path = plugin_dir.join(&id);
@@ -399,16 +403,26 @@ pub async fn plugin_command_handler(
                 bar.set_message("Getting a list of plugins available...");
                 let data = list_remote_plugins().await?;
                 bar.finish();
-                println!("{:<30} {:<10}", "Plugin Name", "Downloads");
+                println!(
+                    "{:<30} {:<10} {:<10}",
+                    "Plugin Name", "Version", "Downloads"
+                );
                 data
             } else {
-                println!("{:<30} {:<10}", "Plugin Name", "State");
-                db::plugins::list_local_plugins(&db)?
+                println!("{:<30} {:<10} {:<10}", "Plugin Name", "Version", "State");
+                let plugins = db::plugins::list_local_plugins(&db)?;
+                plugins
+                    .into_iter()
+                    .map(|p| {
+                        let state_str = p.state.to_string();
+                        (p.name, p.version, state_str)
+                    })
+                    .collect::<Vec<(String, String, String)>>()
             };
-            println!("{:-<40}", "");
-            for (name, state) in plugins {
+            println!("{:-<60}", "");
+            for (name, version, state) in plugins {
                 let state_str = state.to_string();
-                println!("{:<30} {:<10}", name, state_str);
+                println!("{:<30} {:<10} {:<10}", name, version, state_str);
             }
             Ok(())
         }

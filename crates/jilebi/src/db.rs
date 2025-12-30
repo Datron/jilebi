@@ -11,6 +11,48 @@ pub(crate) mod plugins {
 
     use super::*;
 
+    fn row_to_plugin_metadata(row: &rusqlite::Row) -> Result<PluginMetaData, rusqlite::Error> {
+        let name: String = row.get(0)?;
+        let path: String = row.get(1)?;
+        let path = PathBuf::from(path);
+        let version: String = row.get(2)?;
+        let origin: String = row.get(3)?;
+        let origin = PluginOrigin::from_str(&origin).map_err(|e| {
+            rusqlite::Error::FromSqlConversionFailure(0, rusqlite::types::Type::Text, Box::new(e))
+        })?;
+        let state: String = row.get(4)?;
+        let state = PluginState::from_str(&state).map_err(|e| {
+            rusqlite::Error::FromSqlConversionFailure(0, rusqlite::types::Type::Text, Box::new(e))
+        })?;
+        let date_installed: String = row.get(5)?;
+        let last_updated: String = row.get(6)?;
+        Ok(PluginMetaData {
+            name,
+            path,
+            version,
+            origin,
+            state,
+            date_installed: chrono::DateTime::parse_from_rfc2822(&date_installed)
+                .map_err(|e| {
+                    rusqlite::Error::FromSqlConversionFailure(
+                        0,
+                        rusqlite::types::Type::Text,
+                        Box::new(e),
+                    )
+                })?
+                .with_timezone(&Utc),
+            last_updated: chrono::DateTime::parse_from_rfc2822(&last_updated)
+                .map_err(|e| {
+                    rusqlite::Error::FromSqlConversionFailure(
+                        0,
+                        rusqlite::types::Type::Text,
+                        Box::new(e),
+                    )
+                })?
+                .with_timezone(&Utc),
+        })
+    }
+
     pub fn add_plugin_to_db(
         db: &Connection,
         plugin_name: &str,
@@ -97,55 +139,7 @@ pub(crate) mod plugins {
             })?;
 
         let plugin = statement
-            .query_row([plugin_name], |row| {
-                let name: String = row.get(0)?;
-                let path: String = row.get(1)?;
-                let path = PathBuf::from(path);
-                let version: String = row.get(2)?;
-                let origin: String = row.get(3)?;
-                let origin = PluginOrigin::from_str(&origin).map_err(|e| {
-                    rusqlite::Error::FromSqlConversionFailure(
-                        0,
-                        rusqlite::types::Type::Text,
-                        Box::new(e),
-                    )
-                })?;
-                let state: String = row.get(4)?;
-                let state = PluginState::from_str(&state).map_err(|e| {
-                    rusqlite::Error::FromSqlConversionFailure(
-                        0,
-                        rusqlite::types::Type::Text,
-                        Box::new(e),
-                    )
-                })?;
-                let date_installed: String = row.get(5)?;
-                let last_updated: String = row.get(6)?;
-                Ok(PluginMetaData {
-                    name,
-                    path,
-                    version,
-                    origin,
-                    state,
-                    date_installed: chrono::DateTime::parse_from_rfc2822(&date_installed)
-                        .map_err(|e| {
-                            rusqlite::Error::FromSqlConversionFailure(
-                                0,
-                                rusqlite::types::Type::Text,
-                                Box::new(e),
-                            )
-                        })?
-                        .with_timezone(&Utc),
-                    last_updated: chrono::DateTime::parse_from_rfc2822(&last_updated)
-                        .map_err(|e| {
-                            rusqlite::Error::FromSqlConversionFailure(
-                                0,
-                                rusqlite::types::Type::Text,
-                                Box::new(e),
-                            )
-                        })?
-                        .with_timezone(&Utc),
-                })
-            })
+            .query_row([plugin_name], row_to_plugin_metadata)
             .map_err(|err| {
                 tracing::error!("Could not query plugin from DB: {:?}", err);
                 "Could not query plugin from DB, please check logs".to_string()
@@ -154,9 +148,9 @@ pub(crate) mod plugins {
         Ok(plugin)
     }
 
-    pub fn list_local_plugins(db: &Connection) -> Result<Vec<(String, String)>, String> {
+    pub fn list_local_plugins(db: &Connection) -> Result<Vec<PluginMetaData>, String> {
         let mut statement = db
-            .prepare("SELECT name, state FROM plugins")
+            .prepare("SELECT * FROM plugins")
             .map_err(|err| {
                 tracing::error!(
                     "Could not prepare statement to list plugins because of: {:?}",
@@ -166,11 +160,7 @@ pub(crate) mod plugins {
             })?;
 
         let plugin_iter = statement
-            .query_map([], |row| {
-                let name: String = row.get(0)?;
-                let state: String = row.get(1)?;
-                Ok((name, state))
-            })
+            .query_map([], row_to_plugin_metadata)
             .map_err(|err| {
                 tracing::error!("Could not query plugins from DB: {:?}", err);
                 "Could not query plugins from DB, please check logs".to_string()
