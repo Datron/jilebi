@@ -5,16 +5,19 @@ pub mod types;
 use std::sync::Arc;
 
 use axum::{
-    extract::{Path, State},
+    extract::{Path, Query, State},
     http::{StatusCode, header},
-    response::{Html, IntoResponse},
+    response::IntoResponse,
 };
 use axum_macros::debug_handler;
-use worker::*;
 
 use crate::{
     AppState,
-    api::types::{BUCKET_NAME, DownloadStat, FileType},
+    api::{
+        plugins::get_latest_plugin_version,
+        releases::get_latest_release_version,
+        types::{AppError, BUCKET_NAME, DownloadStat, FileType, VersionQuery},
+    },
 };
 
 pub async fn health() -> &'static str {
@@ -25,34 +28,45 @@ pub async fn health() -> &'static str {
 #[worker::send]
 pub async fn download_file(
     Path((file_type, name)): Path<(FileType, String)>,
+    Query(VersionQuery { version }): Query<VersionQuery>,
     State(state): State<Arc<AppState>>,
-) -> std::result::Result<impl IntoResponse, Html<String>> {
-    let internal_server_error = |message: &str, e: Error| -> Html<String> {
-        tracing::error!("{}: {}", message, e);
-        Html("Internal Server Error".to_string())
-    };
+) -> std::result::Result<impl IntoResponse, AppError> {
     let filename = match file_type {
-        FileType::Plugins => format!("plugins/{}", name),
-        FileType::Bin => format!("bin/{}", name),
+        FileType::Plugins => {
+            let plugin_name = name.split('.').next().unwrap_or(&name);
+            let v = match version {
+                Some(v) => v,
+                None => get_latest_plugin_version(plugin_name, state.clone()).await?,
+            };
+            format!("plugins/{}/{}/plugin.zip", plugin_name, v)
+        }
+        FileType::Bin => {
+            let v = match version {
+                Some(v) => v,
+                None => get_latest_release_version(state.clone()).await?,
+            };
+            format!("bin/{}/{}", v, name)
+        }
         FileType::Templates => format!("templates/{}", name),
     };
+    tracing::info!("Filename being downloaded: {}", filename);
     let bucket = state
         .env
         .bucket(BUCKET_NAME)
-        .map_err(|e| internal_server_error("Failed to get bucket: ", e))?;
+        .map_err(|e| AppError::R2Error("Failed to get bucket".to_string(), e))?;
 
     let db = state
         .env
         .d1("jilebi")
-        .map_err(|e| internal_server_error("Failed to get database: ", e))?;
+        .map_err(|e| AppError::D1Error("Failed to get database".to_string(), e))?;
 
     let download_stat = db
         .prepare("SELECT * FROM download_stats WHERE name = ?1 AND type = ?2")
         .bind(&[(&name).into(), file_type.to_string().into()])
-        .map_err(|e| internal_server_error("Failed to bind select params: ", e))?
+        .map_err(|e| AppError::D1Error("Failed to bind select params".to_string(), e))?
         .run()
         .await
-        .map_err(|e| internal_server_error("Failed to execute select query: ", e))?
+        .map_err(|e| AppError::D1Error("Failed to execute select query".to_string(), e))?
         .results::<DownloadStat>()
         .unwrap_or_default();
 
@@ -62,7 +76,7 @@ pub async fn download_file(
         .get(&filename)
         .execute()
         .await
-        .map_err(|e| internal_server_error("Failed to get file from bucket: ", e))?;
+        .map_err(|e| AppError::R2Error("Failed to get file from bucket".to_string(), e))?;
     match file {
         Some(file) => {
             count += 1;
@@ -73,16 +87,13 @@ pub async fn download_file(
                     file_type.to_string().into(),
                     count.to_string().into(),
                 ])
-                .map_err(|e| internal_server_error("Failed to bind insert params: ", e))?
+                .map_err(|e| AppError::D1Error("Failed to bind insert params".to_string(), e))?
                 .run()
                 .await
-                .map_err(|e| internal_server_error("Failed to execute insert query: ", e))?;
-            let bytes = file
-                .body()
-                .unwrap()
-                .bytes()
-                .await
-                .map_err(|e| internal_server_error("Failed to get file from bucket: ", e))?;
+                .map_err(|e| AppError::D1Error("Failed to execute insert query".to_string(), e))?;
+            let bytes = file.body().unwrap().bytes().await.map_err(|e| {
+                AppError::InternalError(format!("Failed to get file from bucket: {}", e))
+            })?;
             let content_type = file
                 .http_metadata()
                 .content_type

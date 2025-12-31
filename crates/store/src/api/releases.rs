@@ -13,7 +13,7 @@ use crate::{
     api::types::{AppError, BUCKET_NAME},
 };
 
-fn get_latest_release_version(all_release_objects: &Objects) -> Result<String, AppError> {
+fn parse_to_find_latest_version(all_release_objects: &Objects) -> Result<String, AppError> {
     all_release_objects
         .objects()
         .iter()
@@ -32,11 +32,7 @@ fn get_latest_release_version(all_release_objects: &Objects) -> Result<String, A
         ))
 }
 
-#[debug_handler]
-#[worker::send]
-pub async fn get_latest_release(
-    State(state): State<Arc<AppState>>,
-) -> std::result::Result<impl IntoResponse, AppError> {
+pub async fn get_latest_release_version(state: Arc<AppState>) -> Result<String, AppError> {
     let bucket = state
         .env
         .bucket(BUCKET_NAME)
@@ -49,8 +45,15 @@ pub async fn get_latest_release(
         .await
         .map_err(|e| AppError::R2Error("Failed to list releases".to_string(), e))?;
 
-    let version = get_latest_release_version(&all_objects)?;
+    parse_to_find_latest_version(&all_objects)
+}
 
+#[debug_handler]
+#[worker::send]
+pub async fn get_latest_release(
+    State(state): State<Arc<AppState>>,
+) -> std::result::Result<impl IntoResponse, AppError> {
+    let version = get_latest_release_version(state).await?;
     Response::builder()
         .status(StatusCode::OK)
         .header(header::CONTENT_TYPE, "text/plain")

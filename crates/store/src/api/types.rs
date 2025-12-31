@@ -20,7 +20,7 @@ pub struct DownloadStat {
 }
 
 #[derive(Deserialize)]
-pub struct PluginQuery {
+pub struct VersionQuery {
     #[serde(default)]
     pub version: Option<String>,
 }
