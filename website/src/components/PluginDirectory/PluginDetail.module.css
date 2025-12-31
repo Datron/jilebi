@@ -1,0 +1,762 @@
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 1.5rem;
+}
+
+.backLink {
+    display: inline-flex;
+    align-items: center;
+    color: #ffa000;
+    text-decoration: none;
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+    transition: color 0.2s ease;
+}
+
+.backLink:hover {
+    color: #fdd835;
+    text-decoration: none;
+}
+
+.header {
+    background: linear-gradient(145deg, #2a3a2a, #1a2a1a);
+    border: 1px solid rgba(251, 192, 45, 0.4);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.headerContent {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.pluginIcon {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(145deg, #fdd835, #fbc02d);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(253, 216, 53, 0.3);
+}
+
+.pluginIconText {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #1a2a1a;
+}
+
+.headerInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.pluginName {
+    color: #fdd835;
+    font-size: 1.4rem;
+    font-weight: bold;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.metaRow {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.version {
+    color: #ffa000;
+    font-size: 0.8rem;
+    background: rgba(251, 192, 45, 0.15);
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+}
+
+.creator {
+    color: #ffa000;
+    font-size: 0.8rem;
+    opacity: 0.8;
+}
+
+.downloads {
+    color: #90caf9;
+    font-size: 0.8rem;
+    opacity: 0.8;
+}
+
+.contactLink {
+    color: #ffa000;
+    text-decoration: none;
+    font-size: 0.85rem;
+    padding: 0.4rem 0.75rem;
+    background: rgba(251, 192, 45, 0.1);
+    border: 1px solid rgba(251, 192, 45, 0.3);
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.contactLink:hover {
+    background: rgba(251, 192, 45, 0.2);
+    border-color: rgba(251, 192, 45, 0.5);
+    text-decoration: none;
+}
+
+/* Section Styles */
+.section {
+    margin-bottom: 1.5rem;
+}
+
+.sectionHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(251, 192, 45, 0.2);
+}
+
+.sectionTitle {
+    color: #fdd835;
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.sectionIcon {
+    font-size: 1rem;
+}
+
+.sectionCount {
+    background: rgba(251, 192, 45, 0.15);
+    color: #fdd835;
+    padding: 0.15rem 0.5rem;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.itemGrid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+/* Item Card Styles */
+.itemCard {
+    background: linear-gradient(145deg, #252f25, #1a241a);
+    border: 1px solid rgba(251, 192, 45, 0.2);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    transition: all 0.2s ease;
+}
+
+.itemCard:hover {
+    border-color: rgba(253, 216, 53, 0.4);
+}
+
+.itemHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+}
+
+.itemTitleRow {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.itemIcon {
+    font-size: 0.9rem;
+}
+
+.itemName {
+    color: #fdd835;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.badge {
+    background: rgba(100, 200, 100, 0.2);
+    color: #90ee90;
+    padding: 0.1rem 0.35rem;
+    border-radius: 3px;
+    font-size: 0.65rem;
+    font-weight: 600;
+}
+
+.badgeWarning {
+    background: rgba(255, 100, 100, 0.2);
+    color: #ff8a80;
+}
+
+.expandIcon {
+    color: #ffa000;
+    font-size: 1rem;
+    font-weight: bold;
+    width: 20px;
+    text-align: center;
+    opacity: 0.7;
+}
+
+.itemDescription {
+    color: #ffa000;
+    font-size: 0.8rem;
+    margin: 0.4rem 0 0 0;
+    opacity: 0.85;
+    line-height: 1.4;
+}
+
+.itemDetails {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(251, 192, 45, 0.15);
+}
+
+.detailRow {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.35rem;
+    flex-wrap: wrap;
+}
+
+.detailLabel {
+    color: #ffa000;
+    font-size: 0.75rem;
+    opacity: 0.7;
+    min-width: 50px;
+}
+
+.detailValue {
+    color: #fdd835;
+    font-size: 0.8rem;
+}
+
+.codeValue {
+    background: rgba(0, 0, 0, 0.3);
+    color: #fdd835;
+    padding: 0.15rem 0.4rem;
+    border-radius: 3px;
+    font-family: "Monaco", "Menlo", monospace;
+    font-size: 0.75rem;
+}
+
+/* Inline Permissions */
+.permissionsInline {
+    display: flex;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+}
+
+.permBadge {
+    background: rgba(100, 150, 200, 0.15);
+    color: #90caf9;
+    padding: 0.1rem 0.35rem;
+    border-radius: 3px;
+    font-size: 0.65rem;
+    cursor: help;
+}
+
+.permBadgeSecret {
+    background: rgba(255, 150, 100, 0.15);
+    color: #ffab91;
+}
+
+/* Permission Details */
+.permissionsDetails {
+    margin-top: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.permGroup {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.permLabel {
+    color: #ffa000;
+    font-size: 0.7rem;
+    opacity: 0.7;
+    min-width: 50px;
+    flex-shrink: 0;
+}
+
+.permValues {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+}
+
+.permValue {
+    background: rgba(0, 0, 0, 0.25);
+    color: #90caf9;
+    padding: 0.1rem 0.35rem;
+    border-radius: 3px;
+    font-family: "Monaco", "Menlo", monospace;
+    font-size: 0.7rem;
+}
+
+.permValueSecret {
+    color: #ffab91;
+    background: rgba(255, 150, 100, 0.1);
+}
+
+/* Global Permissions Section */
+.globalPermissions {
+    background: linear-gradient(145deg, #2a2f2a, #1a1f1a);
+    border: 1px solid rgba(251, 192, 45, 0.25);
+    border-radius: 8px;
+    padding: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.globalPermGroup {
+    flex: 1;
+    min-width: 200px;
+}
+
+.globalPermTitle {
+    color: #ffa000;
+    font-size: 0.8rem;
+    font-weight: 500;
+    margin: 0 0 0.5rem 0;
+}
+
+.globalPermList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.globalPermItem {
+    background: rgba(0, 0, 0, 0.3);
+    color: #90caf9;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-family: "Monaco", "Menlo", monospace;
+    font-size: 0.75rem;
+}
+
+.globalPermItemSecret {
+    color: #ffab91;
+    background: rgba(255, 150, 100, 0.15);
+}
+
+/* Schema Section */
+.schemaSection,
+.permissionsSection,
+.messagesSection {
+    margin-top: 0.5rem;
+}
+
+.schemaTitle {
+    color: #ffa000;
+    font-size: 0.7rem;
+    font-weight: 600;
+    margin: 0 0 0.4rem 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    opacity: 0.8;
+}
+
+.parameterList {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.parameterItem {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 4px;
+    padding: 0.4rem 0.6rem;
+}
+
+.parameterHeader {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.parameterName {
+    color: #fdd835;
+    font-family: "Monaco", "Menlo", monospace;
+    font-size: 0.8rem;
+}
+
+.parameterType {
+    color: #90caf9;
+    font-size: 0.7rem;
+    background: rgba(100, 150, 200, 0.15);
+    padding: 0.05rem 0.3rem;
+    border-radius: 3px;
+}
+
+.requiredBadge {
+    color: #ff8a80;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.parameterDescription {
+    color: #ffa000;
+    font-size: 0.75rem;
+    margin: 0.25rem 0 0 0;
+    opacity: 0.85;
+    line-height: 1.3;
+}
+
+.hostList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.hostItem {
+    background: rgba(0, 0, 0, 0.3);
+    color: #90caf9;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-family: "Monaco", "Menlo", monospace;
+    font-size: 0.75rem;
+}
+
+/* Message Styles */
+.messageItem {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    margin-bottom: 0.35rem;
+}
+
+.messageRole {
+    display: inline-block;
+    color: #90caf9;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    background: rgba(100, 150, 200, 0.15);
+    padding: 0.1rem 0.35rem;
+    border-radius: 3px;
+}
+
+.messageContent {
+    color: #ffa000;
+    font-size: 0.75rem;
+    margin: 0;
+    white-space: pre-wrap;
+    line-height: 1.4;
+    font-family: inherit;
+    opacity: 0.9;
+}
+
+/* Loading State */
+.loadingContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+    gap: 1rem;
+}
+
+.spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid rgba(251, 192, 45, 0.2);
+    border-top-color: #fdd835;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.loadingText {
+    color: #ffa000;
+    font-size: 0.85rem;
+    margin: 0;
+}
+
+/* Error State */
+.errorContainer {
+    text-align: center;
+    padding: 2rem 1.5rem;
+    background: linear-gradient(145deg, #3a2a2a, #2a1a1a);
+    border: 1px solid rgba(255, 100, 100, 0.3);
+    border-radius: 10px;
+    max-width: 400px;
+    margin: 2rem auto;
+}
+
+.errorIcon {
+    font-size: 2rem;
+    margin-bottom: 0.75rem;
+}
+
+.errorTitle {
+    color: #ff8a80;
+    font-size: 1.1rem;
+    margin: 0 0 0.35rem 0;
+}
+
+.errorMessage {
+    color: #ffa000;
+    font-size: 0.85rem;
+    opacity: 0.8;
+    margin-bottom: 1rem;
+}
+
+.backButton {
+    display: inline-block;
+    background: linear-gradient(145deg, #fdd835, #fbc02d);
+    color: #1a2a1a;
+    border: none;
+    padding: 0.5rem 1.25rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.backButton:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(253, 216, 53, 0.3);
+    text-decoration: none;
+    color: #1a2a1a;
+}
+
+/* Empty State */
+.emptyState {
+    text-align: center;
+    padding: 2rem 1.5rem;
+    background: linear-gradient(145deg, #2a3a2a, #1a2a1a);
+    border: 1px solid rgba(251, 192, 45, 0.2);
+    border-radius: 8px;
+}
+
+.emptyText {
+    color: #ffa000;
+    font-size: 0.9rem;
+    margin: 0;
+    opacity: 0.7;
+}
+
+/* Responsive Styles */
+@media (max-width: 600px) {
+    .container {
+        padding: 1rem;
+    }
+
+    .header {
+        padding: 0.75rem 1rem;
+    }
+
+    .pluginIcon {
+        width: 40px;
+        height: 40px;
+    }
+
+    .pluginIconText {
+        font-size: 1.25rem;
+    }
+
+    .pluginName {
+        font-size: 1.2rem;
+    }
+
+    .globalPermissions {
+        padding: 0.75rem;
+    }
+
+    .globalPermGroup {
+        min-width: 100%;
+    }
+}
+
+/* Configuration Required Section */
+.configSection {
+    background: linear-gradient(145deg, #2d2a1a, #1f1c12);
+    border: 1px solid rgba(255, 193, 7, 0.4);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.configHeader {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.configIcon {
+    font-size: 1.1rem;
+}
+
+.configTitle {
+    color: #ffc107;
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.configContent {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.configGroup {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+}
+
+.configGroupHeader {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 0.35rem;
+}
+
+.configGroupTitle {
+    color: #ffa000;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.configGroupDesc {
+    color: #ffa000;
+    font-size: 0.75rem;
+    opacity: 0.7;
+    margin: 0 0 0.5rem 0;
+}
+
+.configList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.configItem {
+    background: rgba(100, 150, 200, 0.15);
+    border: 1px solid rgba(100, 150, 200, 0.3);
+    border-radius: 4px;
+    padding: 0.3rem 0.6rem;
+}
+
+.configItemSecret {
+    background: rgba(255, 150, 100, 0.15);
+    border: 1px solid rgba(255, 150, 100, 0.3);
+    border-radius: 4px;
+    padding: 0.3rem 0.6rem;
+}
+
+.configItemName {
+    color: #90caf9;
+    font-family: "Monaco", "Menlo", monospace;
+    font-size: 0.8rem;
+}
+
+.configItemSecret .configItemName {
+    color: #ffab91;
+}
+
+/* Network Hosts List */
+.hostsList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+/* Detailed Config Items for Env/Secrets */
+.configListDetailed {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.configItemDetailed {
+    background: rgba(100, 150, 200, 0.1);
+    border: 1px solid rgba(100, 150, 200, 0.25);
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+}
+
+.configItemDetailedSecret {
+    background: rgba(255, 150, 100, 0.1);
+    border: 1px solid rgba(255, 150, 100, 0.25);
+}
+
+.configItemHeader {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.configItemNameSecret {
+    color: #ffab91;
+}
+
+.configItemType {
+    color: #90caf9;
+    font-size: 0.7rem;
+    background: rgba(100, 150, 200, 0.2);
+    padding: 0.1rem 0.35rem;
+    border-radius: 3px;
+}
+
+.configItemDefault {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.35rem;
+}
+
+.configItemDefaultLabel {
+    color: #ffa000;
+    font-size: 0.7rem;
+    opacity: 0.7;
+}
+
+.configItemDefaultValue {
+    background: rgba(0, 0, 0, 0.25);
+    color: #90ee90;
+    padding: 0.1rem 0.4rem;
+    border-radius: 3px;
+    font-family: "Monaco", "Menlo", monospace;
+    font-size: 0.75rem;
+}

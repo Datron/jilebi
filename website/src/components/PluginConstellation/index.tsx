@@ -33,7 +33,7 @@ const plugins: Plugin[] = [
 	{
 		id: 'context7',
 		name: 'Context7',
-		icon: 'https://context7.com/_next/static/media/context7vector.39c35f61.svg',
+		icon: 'https://context7.com/context7-icon-green.png',
 		number_of_downloads: '100+'
 	},
 	{
@@ -227,13 +227,8 @@ export default function PluginConstellation(): ReactNode {
 						</Link>
 						<Link
 							className="button button--outline button--secondary button--lg"
-							to="https://github.com/datron/jilebi-plugins">
+							to="/plugins">
 							Find Plugins
-						</Link>
-						<Link
-							className=""
-							to="https://forms.gle/XXJWpi4HDSUJG2d5A">
-							Jilebi SaaS
 						</Link>
 					</div>
 				</div>

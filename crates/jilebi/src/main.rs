@@ -194,7 +194,6 @@ version: {}
 }
 
 // TOP PRIORITY
-// TODO: self update jilebi automatically when a new version is released
 // TODO: Let all CLI functionality be done via REST APIs
 // TODO: support SSE, HTTP and Authentication
 // TODO: update docs

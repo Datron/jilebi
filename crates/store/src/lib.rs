@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use axum::{Router, routing::get};
+use tower_http::cors::{Any, CorsLayer};
 use tower_service::Service;
 use tracing_subscriber::{
     fmt::{format::Pretty, time::UtcTime},
@@ -50,11 +51,17 @@ async fn main(
 
 fn router(env: Env) -> Router {
     let app_state = Arc::new(AppState { env });
+    let cors_layer = CorsLayer::new()
+        .allow_methods(Any)
+        .allow_origin(Any)
+        .allow_headers(Any)
+        .max_age(std::time::Duration::from_secs(86400));
     Router::new()
         .route("/api/health", get(health))
         .route("/api/download/{file_type}/{name}", get(api::download_file))
         .route("/api/plugins", get(list_plugins))
         .route("/api/plugins/{name}", get(get_plugin))
         .route("/api/releases/latest", get(get_latest_release))
+        .layer(cors_layer)
         .with_state(app_state)
 }
