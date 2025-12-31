@@ -36,7 +36,7 @@ pub async fn download_and_init_plugin(
     plugin_path: &PathBuf,
     db: &Connection,
 ) -> Result<(), String> {
-    let file_name = format!("{}.zip", id);
+    let file_name = format!("{}", id);
     let plugin_path_str = plugin_path
         .parent()
         .map(|s| s.display().to_string())

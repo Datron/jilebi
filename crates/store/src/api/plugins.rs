@@ -14,10 +14,10 @@ use worker::*;
 
 use crate::{
     AppState,
-    api::types::{AppError, BUCKET_NAME, DownloadStat, FileType, PluginQuery},
+    api::types::{AppError, BUCKET_NAME, DownloadStat, FileType, VersionQuery},
 };
 
-fn get_latest_plugin_version(
+pub fn parse_latest_plugin_version(
     plugin_name: &str,
     all_plugin_objects: &Objects,
 ) -> Result<String, AppError> {
@@ -37,6 +37,25 @@ fn get_latest_plugin_version(
         .ok_or(AppError::InternalError(
             "Failed to parse plugin version".to_string(),
         ))
+}
+
+pub async fn get_latest_plugin_version(
+    plugin_name: &str,
+    state: Arc<AppState>,
+) -> Result<String, AppError> {
+    let bucket = state
+        .env
+        .bucket(BUCKET_NAME)
+        .map_err(|e| AppError::R2Error("Failed to get bucket".to_string(), e))?;
+
+    let all_objects = bucket
+        .list()
+        .prefix("plugins")
+        .execute()
+        .await
+        .map_err(|e| AppError::R2Error("Failed to list plugins".to_string(), e))?;
+
+    parse_latest_plugin_version(plugin_name, &all_objects)
 }
 
 #[debug_handler]
@@ -86,7 +105,7 @@ pub async fn list_plugins(
         .collect::<HashMap<String, i64>>();
     let mut plugin_data = Vec::new();
     for plugin in plugins {
-        let version = get_latest_plugin_version(&plugin, &all_objects)?;
+        let version = parse_latest_plugin_version(&plugin, &all_objects)?;
         let download_count = download_stat
             .get(&format!("{}.zip", &plugin))
             .cloned()
@@ -118,7 +137,7 @@ pub async fn list_plugins(
 pub async fn get_plugin(
     State(state): State<Arc<AppState>>,
     Path(name): Path<String>,
-    Query(PluginQuery { version }): Query<PluginQuery>,
+    Query(VersionQuery { version }): Query<VersionQuery>,
 ) -> std::result::Result<impl IntoResponse, AppError> {
     let bucket = state
         .env
@@ -155,7 +174,7 @@ pub async fn get_plugin(
 
     let version = match version {
         Some(v) => v,
-        None => get_latest_plugin_version(&name, &all_objects)?,
+        None => parse_latest_plugin_version(&name, &all_objects)?,
     };
 
     let manifest_object = bucket
