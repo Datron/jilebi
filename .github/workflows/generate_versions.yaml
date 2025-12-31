@@ -1,0 +1,54 @@
+name: Create jilebi version
+
+on: workflow_dispatch
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  
+  generate-version:
+    permissions:
+      contents: write
+      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.90.0
+          targets: ${{ matrix.platform.target }}
+          components: rustfmt, clippy
+          
+      - name: install cargo-edit to perform set-version
+        uses: baptiste0928/cargo-install@v2.2.0
+        with:
+          crate: cargo-edit
+          version: "0.13.6"
+      
+      - name: install cocogitto
+        uses: baptiste0928/cargo-install@v2.2.0
+        with:
+          crate: cocogitto
+          version: "6.2.0"
+
+      - name: Set version
+        id: set_version
+        run: |
+          git config user.email "bot@jilebi.ai"
+          git config user.name "Semver bot"
+          cog bump --auto --skip-ci-override "[skip ci]"
+      
+      - name: Commit
+        run: |
+          git add .
+          git commit --amend --no-edit
+          git push origin master
+          git push origin --tags
+  

@@ -196,7 +196,6 @@ version: {}
 // TOP PRIORITY
 // TODO: Let all CLI functionality be done via REST APIs
 // TODO: support SSE, HTTP and Authentication
-// TODO: update docs
 // TODO: add a frontend
 // 			- plugin store
 // 			- login

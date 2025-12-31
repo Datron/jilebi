@@ -8,64 +8,8 @@ concurrency:
 
 jobs:
   
-  generate-version:
-    permissions:
-      contents: write
-      id-token: write
-    runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.git_tag.outputs.version }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: 1.90.0
-          targets: ${{ matrix.platform.target }}
-          components: rustfmt, clippy
-          
-      - name: install cargo-edit to perform set-version
-        uses: baptiste0928/cargo-install@v2.2.0
-        with:
-          crate: cargo-edit
-          version: "0.13.6"
-      
-      - name: install cocogitto
-        uses: baptiste0928/cargo-install@v2.2.0
-        with:
-          crate: cocogitto
-          version: "6.2.0"
-
-      - name: Set version
-        id: set_version
-        run: |
-          git config user.email "bot@jilebi.ai"
-          git config user.name "Semver bot"
-          cog bump --auto --skip-ci-override "[skip ci]"
-    
-      - name: Set latest tag
-        id: git_tag
-        shell: bash
-        run: |
-            version=`git tag -l --sort=-creatordate | head -n 1`
-            echo "version=$version"
-            cargo set-version --workspace $version
-            echo "version=$version" >> $GITHUB_OUTPUT
-      
-      - name: Commit
-        run: |
-          git add .
-          git commit --amend --no-edit
-          git push origin master
-          git push origin --tags
-  
   generate-rust-binary:
     if: github.ref == 'refs/heads/master'
-    needs: generate-version
     strategy:
       max-parallel: 5
       matrix:
@@ -118,7 +62,16 @@ jobs:
           New-Item -ItemType Directory -Path "bin"
           Move-Item -Path "target\${{ matrix.platform.target }}\release\${{ matrix.platform.jilebi_bin_name }}" -Destination "${{ matrix.platform.jilebi_bin_name }}"
           Compress-Archive -Path "${{ matrix.platform.jilebi_bin_name }}"  -DestinationPath "bin\${{ matrix.platform.jilebi_zip_name }}"
-
+      
+      - name: Get latest tag
+        id: git_tag
+        shell: bash
+        run: |
+            version=`git tag -l --sort=-creatordate | head -n 1`
+            echo "version=$version"
+            cargo set-version --workspace $version
+            echo "version=$version" >> $GITHUB_OUTPUT
+      
       - uses: ryand56/r2-upload-action@latest
         with:
           r2-account-id: ${{ secrets.R2_ACCOUNT_ID }}
@@ -126,4 +79,4 @@ jobs:
           r2-secret-access-key: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           r2-bucket: jilebi
           source-dir: bin
-          destination-dir: bin/${{needs.generate-version.outputs.version}}/
+          destination-dir: bin/${{ steps.git_tag.outputs.version }}/
