@@ -2,6 +2,18 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [0.3.0](https://github.com/datron/jilebi/compare/0358eb6f0e596471456fff39183a33a9dcd2fda9..0.3.0) - 2025-12-31
+### Package updates
+- [jilebi](crates/jilebi) bumped to [jilebi-0.1.0](https://github.com/datron/jilebi/compare/bb408ad578f73207546df83ce3a4816f662a625f..jilebi-0.1.0)
+- [jilebi_types](crates/jilebi_types) bumped to [jilebi_types-0.1.0](https://github.com/datron/jilebi/compare/bb408ad578f73207546df83ce3a4816f662a625f..jilebi_types-0.1.0)
+- [store](crates/store) bumped to [store-0.1.0](https://github.com/datron/jilebi/compare/bb408ad578f73207546df83ce3a4816f662a625f..store-0.1.0)
+- [dosa](crates/plugin-runtime) bumped to [dosa-0.1.0](https://github.com/datron/jilebi/compare/bb408ad578f73207546df83ce3a4816f662a625f..dosa-0.1.0)
+### Global changes
+#### Features
+- download the plugins and bins based on versioning - ([0358eb6](https://github.com/datron/jilebi/commit/0358eb6f0e596471456fff39183a33a9dcd2fda9)) - datron
+
+- - -
+
 ## [0.1.2](https://github.com/datron/jilebi/compare/fb2b690dfe3972c0f9a4efaf68bd720625097b98..0.1.2) - 2025-12-27
 ### Package updates
 - [store](crates/store) bumped to [store-0.1.0](https://github.com/datron/jilebi/compare/bb408ad578f73207546df83ce3a4816f662a625f..store-0.1.0)
