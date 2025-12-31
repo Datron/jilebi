@@ -25,12 +25,6 @@ jobs:
           toolchain: 1.90.0
           targets: ${{ matrix.platform.target }}
           components: rustfmt, clippy
-          
-      - name: install cargo-edit to perform set-version
-        uses: baptiste0928/cargo-install@v2.2.0
-        with:
-          crate: cargo-edit
-          version: "0.13.6"
       
       - name: install cocogitto
         uses: baptiste0928/cargo-install@v2.2.0
