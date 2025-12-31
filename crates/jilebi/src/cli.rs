@@ -55,6 +55,8 @@ pub enum SubCommands {
     },
     /// Get the current version of jilebi
     Version,
+    /// Update jilebi
+    Update,
 }
 
 #[derive(Debug, Clone, Subcommand)]
@@ -112,6 +114,12 @@ pub enum PluginSubCommands {
         id: String,
         #[arg(short, long)]
         clear: bool,
+    },
+    /// Update a particular plugin to a new version
+    Update {
+        id: String,
+        #[arg(short, long)]
+        version: Option<String>,
     },
 }
 
@@ -440,6 +448,25 @@ pub async fn plugin_command_handler(
             bar.set_message("Disabling plugin...");
             db::plugins::update_plugin_state(&db, &id, jilebi_types::PluginState::Disabled)?;
             bar.finish_with_message("Plugin Disabled");
+            Ok(())
+        }
+        PluginSubCommands::Update { id, version: _ } => {
+            let plugin_path = plugin_dir.join(&id);
+            tracing::info!("Removing plugin at path: {}", plugin_path.display());
+            if plugin_path.exists() {
+                fs::remove_dir_all(&plugin_path).map_err(|e| e.to_string())?;
+            }
+            let bar = ProgressBar::new_spinner();
+            bar.enable_steady_tick(Duration::from_millis(100));
+            bar.set_message("Downloading plugin...");
+            download::download_and_init_plugin(&id, &plugin_path, &db)
+                .await
+                .map_err(|e| {
+                    tracing::error!("Could not download plugin due to {}", e);
+                    bar.abandon_with_message(format!("Failed to download plugin: {}", e));
+                    e
+                })?;
+            bar.finish_with_message(format!("Successfully updated {id}"));
             Ok(())
         }
     }

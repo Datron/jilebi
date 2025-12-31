@@ -1,19 +1,26 @@
 #![deny(unused_crate_dependencies)]
-use std::path::{Path, PathBuf};
+use std::{
+    path::{Path, PathBuf},
+    time::Duration,
+};
 mod cli;
 mod db;
 mod server;
 mod utils;
 use clap::Parser;
 use directories::ProjectDirs;
+use indicatif::ProgressBar;
 use rmcp::{ServiceExt, transport::stdio};
 use rusqlite::Connection;
 use server::JilebiMcpServer;
 use tracing_subscriber::{EnvFilter, fmt, layer::SubscriberExt, util::SubscriberInitExt};
 
-use crate::cli::{
-    JilebiCli, application_context_command_handler, clear_log_file, plugin_command_handler,
-    read_log_file,
+use crate::{
+    cli::{
+        JilebiCli, application_context_command_handler, clear_log_file,
+        download::download_and_replace_jilebi, plugin_command_handler, read_log_file,
+    },
+    utils::get_latest_release_version,
 };
 
 fn setup_database(dir: &Path) -> Result<Connection, String> {
@@ -93,7 +100,7 @@ async fn main() -> Result<(), String> {
 
     let jilebi_cli = JilebiCli::parse();
     let current_version = env!("CARGO_PKG_VERSION");
-
+    let current = semver::Version::parse(current_version).map_err(|e| e.to_string())?;
     let db = setup_database(base_jilebi_dir.data_dir())?;
     match jilebi_cli.subcommand {
         cli::SubCommands::Stdio { name } => {
@@ -129,14 +136,64 @@ async fn main() -> Result<(), String> {
             }
         }
         cli::SubCommands::Version => {
-            println!("Jilebi version: {}", current_version);
+            println!(
+                r#"
+   $$$$$\ $$\ $$\           $$\       $$\
+   \__$$ |\__|$$ |          $$ |      \__|
+      $$ |$$\ $$ | $$$$$$\  $$$$$$$\  $$\
+      $$ |$$ |$$ |$$  __$$\ $$  __$$\ $$ |
+$$\   $$ |$$ |$$ |$$$$$$$$ |$$ |  $$ |$$ |
+$$ |  $$ |$$ |$$ |$$   ____|$$ |  $$ |$$ |
+\$$$$$$  |$$ |$$ |\$$$$$$$\ $$$$$$$  |$$ |
+ \______/ \__|\__| \_______|\_______/ \__|
+
+version: {}
+"#,
+                current_version
+            );
+            Ok(())
+        }
+        cli::SubCommands::Update => {
+            let bar = ProgressBar::new_spinner();
+            bar.enable_steady_tick(Duration::from_millis(100));
+            bar.set_message("checking for updates...");
+            let latest_version = get_latest_release_version().await?;
+            let latest = semver::Version::parse(&latest_version).map_err(|e| e.to_string())?;
+            if current < latest {
+                bar.finish_and_clear();
+                println!(
+                    "A new version of Jilebi is available, downloading: {} -> {}",
+                    current_version, latest_version
+                );
+                bar.enable_steady_tick(Duration::from_millis(100));
+                bar.set_message("downloading latest version...");
+                let target = match std::env::consts::OS {
+                    "linux" => "unknown-linux-gnu",
+                    "windows" => "pc-windows-msvc",
+                    "macos" | "apple" => "apple-darwin",
+                    other => {
+                        bar.finish_and_clear();
+                        return Err(format!("Unsupported OS: {}", other));
+                    }
+                };
+                let arch = std::env::consts::ARCH;
+                let file_name = format!("jilebi-{}-{}.zip", arch, target);
+                download_and_replace_jilebi(&file_name).await?;
+                bar.finish_and_clear();
+                println!("Jilebi has been updated to version {}", latest_version);
+            } else {
+                bar.finish_and_clear();
+                println!(
+                    "You are already using the latest version of Jilebi: {}",
+                    current_version
+                );
+            }
             Ok(())
         }
     }
 }
 
 // TOP PRIORITY
-// TODO: update plugin downloading to use versions
 // TODO: self update jilebi automatically when a new version is released
 // TODO: Let all CLI functionality be done via REST APIs
 // TODO: support SSE, HTTP and Authentication

@@ -44,3 +44,4 @@ keyring = { version = "3.6.3", features = [
 	"linux-native",
 ] }
 jsonschema = "0.33.0"
+semver = "=1.0.27"

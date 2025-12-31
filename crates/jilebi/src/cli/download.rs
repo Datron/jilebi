@@ -31,6 +31,20 @@ async fn download_and_extract(url: &str, extract_path: &PathBuf) -> Result<(), S
     Ok(())
 }
 
+pub async fn download_and_replace_jilebi(file_name: &str) -> Result<(), String> {
+    let url = format!("{}/bin/{}", DOWNLOAD_URL, file_name);
+    let new_jilebi_zip_path = std::env::temp_dir().join(file_name);
+    let new_jilebi_path = if std::env::consts::OS == "windows" {
+        std::env::temp_dir().join("jilebi.exe")
+    } else {
+        std::env::temp_dir().join("jilebi")
+    };
+    println!("{:#?}", new_jilebi_zip_path);
+    download_and_extract(&url, &new_jilebi_zip_path).await?;
+    self_replace::self_replace(&new_jilebi_path).map_err(|e| e.to_string())?;
+    fs::remove_file(new_jilebi_path).map_err(|e| e.to_string())
+}
+
 pub async fn download_and_init_plugin(
     id: &str,
     plugin_path: &PathBuf,
@@ -51,7 +65,8 @@ pub async fn download_and_init_plugin(
         &fs::read_to_string(plugin_path.join("manifest.toml")).map_err(|e| e.to_string())?,
     )
     .map_err(|e| e.to_string())?;
-    let version = manifest.get("version")
+    let version = manifest
+        .get("version")
         .and_then(|v| v.as_str())
         .ok_or("Version not found in manifest")?;
     tracing::debug!("Downloaded plugin version: {}", version);
