@@ -149,15 +149,13 @@ pub(crate) mod plugins {
     }
 
     pub fn list_local_plugins(db: &Connection) -> Result<Vec<PluginMetaData>, String> {
-        let mut statement = db
-            .prepare("SELECT * FROM plugins")
-            .map_err(|err| {
-                tracing::error!(
-                    "Could not prepare statement to list plugins because of: {:?}",
-                    err
-                );
-                "Could not list plugins. Check logs to see why".to_string()
-            })?;
+        let mut statement = db.prepare("SELECT * FROM plugins").map_err(|err| {
+            tracing::error!(
+                "Could not prepare statement to list plugins because of: {:?}",
+                err
+            );
+            "Could not list plugins. Check logs to see why".to_string()
+        })?;
 
         let plugin_iter = statement
             .query_map([], row_to_plugin_metadata)
@@ -438,9 +436,10 @@ pub(crate) mod application_contexts {
     ) -> Result<(), String> {
         let plugins_str = plugins
             .iter()
+            .filter(|p| !p.is_empty())
             .map(|p| format!("'{}'", p.trim()))
             .collect::<Vec<String>>()
-            .join(", ");
+            .join(",");
         let mut statement = db
             .prepare("UPDATE application_contexts SET plugins = ?1 WHERE name = ?2")
             .map_err(|err| {
