@@ -31,6 +31,12 @@ jobs:
         with:
           crate: cocogitto
           version: "6.2.0"
+          
+      - name: install cargo-edit to perform set-version
+        uses: baptiste0928/cargo-install@v2.2.0
+        with:
+          crate: cargo-edit
+          version: "0.13.6"
 
       - name: Set version
         id: set_version
@@ -38,6 +44,14 @@ jobs:
           git config user.email "bot@jilebi.ai"
           git config user.name "Semver bot"
           cog bump --auto --skip-ci-override "[skip ci]"
+          
+      - name: Get latest tag
+        id: git_tag
+        shell: bash
+        run: |
+            version=`git tag -l --sort=-creatordate | head -n 1`
+            echo "version=$version"
+            cargo set-version --workspace $version
       
       - name: Commit
         run: |
