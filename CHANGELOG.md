@@ -2,6 +2,21 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [0.5.1](https://github.com/datron/jilebi/compare/d7dd72d8725bbb45f530ec6f171b559cd0bd6e48..0.5.1) - 2026-01-01
+### Package updates
+- [dosa](crates/plugin-runtime) bumped to [dosa-0.1.0](https://github.com/datron/jilebi/compare/bb408ad578f73207546df83ce3a4816f662a625f..dosa-0.1.0)
+- [store](crates/store) bumped to [store-0.1.0](https://github.com/datron/jilebi/compare/bb408ad578f73207546df83ce3a4816f662a625f..store-0.1.0)
+- [jilebi_types](crates/jilebi_types) bumped to [jilebi_types-0.1.0](https://github.com/datron/jilebi/compare/bb408ad578f73207546df83ce3a4816f662a625f..jilebi_types-0.1.0)
+- [jilebi](crates/jilebi) bumped to [jilebi-0.1.0](https://github.com/datron/jilebi/compare/bb408ad578f73207546df83ce3a4816f662a625f..jilebi-0.1.0)
+### Global changes
+#### Bug Fixes
+- releases - ([1fef86e](https://github.com/datron/jilebi/commit/1fef86ecdec55b35b85d1b247ea6a21aec0ec9d0)) - datron
+- release pipeline - ([d7dd72d](https://github.com/datron/jilebi/commit/d7dd72d8725bbb45f530ec6f171b559cd0bd6e48)) - datron
+#### Miscellaneous Chores
+- **(version)** 0.5.0 [skip ci] - ([521b0cd](https://github.com/datron/jilebi/commit/521b0cdda2f110856e55f416f6d1f6ac22bdd8f0)) - Semver bot
+
+- - -
+
 ## [0.5.0](https://github.com/datron/jilebi/compare/d09520384fabcc4a9abf59aaf4fa32e29a4474d5..0.5.0) - 2025-12-31
 ### Package updates
 - [jilebi](crates/jilebi) bumped to [jilebi-0.1.0](https://github.com/datron/jilebi/compare/bb408ad578f73207546df83ce3a4816f662a625f..jilebi-0.1.0)
