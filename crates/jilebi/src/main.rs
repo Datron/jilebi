@@ -228,3 +228,10 @@ version: {}
 // UI
 // TODO: think about a UI (leptos) and TUI over ssh (ratatui) for remote stuff in the CLI
 // plugins
+
+// Blog post ideas
+// - How to update your CLI remotely
+// - What is wrong with current MCPs and how Jilebi solves them
+// - How to develop a context server for zed
+// - Developing a plugin for VS Code
+// - Developing a plugin for opencode

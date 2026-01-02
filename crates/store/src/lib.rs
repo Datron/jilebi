@@ -15,6 +15,7 @@ use crate::api::{
     health,
     plugins::{get_plugin, list_plugins},
     releases::get_latest_release,
+    scripts::{install_script_ps1, install_script_sh, uninstall_script_ps1, uninstall_script_sh},
 };
 
 mod api;
@@ -62,6 +63,10 @@ fn router(env: Env) -> Router {
         .route("/api/plugins", get(list_plugins))
         .route("/api/plugins/{name}", get(get_plugin))
         .route("/api/releases/latest", get(get_latest_release))
+        .route("/install.sh", get(install_script_sh))
+        .route("/install.ps1", get(install_script_ps1))
+        .route("/uninstall.sh", get(uninstall_script_sh))
+        .route("/uninstall.ps1", get(uninstall_script_ps1))
         .layer(cors_layer)
         .with_state(app_state)
 }

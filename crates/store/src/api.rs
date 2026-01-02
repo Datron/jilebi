@@ -1,5 +1,6 @@
 pub mod plugins;
 pub mod releases;
+pub mod scripts;
 pub mod types;
 
 use std::sync::Arc;

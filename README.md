@@ -53,7 +53,83 @@ Jilebi is an MCP server implementation that enables AI assistants to interact wi
 
 ---
 
-## Download
+## Quick Install
+
+The fastest way to install Jilebi is using our installation scripts:
+
+### Linux & macOS
+
+Using `curl`:
+```bash
+curl -fsSL https://jilebi.ai/install.sh | bash
+```
+
+Using `wget`:
+```bash
+wget -qO- https://jilebi.ai/install.sh | bash
+```
+
+### Windows (PowerShell)
+
+```powershell
+irm https://jilebi.ai/install.ps1 | iex
+```
+
+Or with the full command:
+```powershell
+Invoke-RestMethod https://jilebi.ai/install.ps1 | Invoke-Expression
+```
+
+### What the installer does
+
+- Detects your platform and architecture automatically
+- Downloads the appropriate binary
+- Installs to `~/.jilebi/bin` (Unix) or `%LOCALAPPDATA%\jilebi\bin` (Windows)
+- Adds Jilebi to your PATH
+- Optionally installs recommended plugins (memory, sequential-thinking)
+
+---
+
+## Uninstall
+
+To completely remove Jilebi from your system:
+
+### Linux & macOS
+
+Using `curl`:
+```bash
+curl -fsSL https://jilebi.ai/uninstall.sh | bash
+```
+
+Using `wget`:
+```bash
+wget -qO- https://jilebi.ai/uninstall.sh | bash
+```
+
+### Windows (PowerShell)
+
+```powershell
+irm https://jilebi.ai/uninstall.ps1 | iex
+```
+
+Or with options:
+```powershell
+# Skip confirmation prompts
+irm https://jilebi.ai/uninstall.ps1 -OutFile uninstall.ps1; .\uninstall.ps1 -Force
+
+# Keep plugins and data
+irm https://jilebi.ai/uninstall.ps1 -OutFile uninstall.ps1; .\uninstall.ps1 -KeepData
+```
+
+### What the uninstaller removes
+
+- Jilebi binary and installation directory
+- PATH entry from shell profile (Unix) or user environment (Windows)
+- Optionally: plugins, data, and configuration files
+
+---
+
+## Manual Download
 
 | Platform | Architecture | Download |
 |----------|--------------|----------|
@@ -64,7 +140,7 @@ Jilebi is an MCP server implementation that enables AI assistants to interact wi
 
 ---
 
-## Installation
+## Manual Installation
 
 ### Windows
 
