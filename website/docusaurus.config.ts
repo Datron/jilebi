@@ -87,11 +87,11 @@ const config: Config = {
         { to: "/docs/download", label: "Download", position: "left" },
         { to: "/plugins", label: "Plugins", position: "left" },
         // { to: '/blog', label: 'Blog', position: 'left' },
-        // {
-        // 	href: 'https://github.com/datron/jilebi',
-        // 	label: 'GitHub',
-        // 	position: 'right',
-        // },
+        {
+        	href: 'https://github.com/datron/jilebi',
+        	label: 'GitHub',
+        	position: 'right',
+        }
       ],
     },
     footer: {
