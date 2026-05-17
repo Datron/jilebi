@@ -1,4 +1,4 @@
-use std::{borrow::Cow, collections::HashMap, fs, path::PathBuf, sync::Arc};
+use std::{collections::HashMap, fs, path::PathBuf, sync::Arc};
 
 use dosa::run_code;
 use handlebars::Handlebars;
@@ -11,9 +11,9 @@ use r2d2_sqlite::SqliteConnectionManager;
 use rmcp::{
     ServerHandler,
     model::{
-        GetPromptRequestParam, GetPromptResult, Implementation, InitializeRequestParam,
+        GetPromptRequestParams, GetPromptResult, Implementation, InitializeRequestParams,
         InitializeResult, ListPromptsResult, ListResourcesResult, ListToolsResult,
-        PaginatedRequestParam, Prompt, ProtocolVersion, Resource, ServerCapabilities, ServerInfo,
+        PaginatedRequestParams, Prompt, ProtocolVersion, Resource, ServerCapabilities, ServerInfo,
         Tool,
     },
     serde_json::json,
@@ -99,7 +99,7 @@ impl JilebiMcpServer {
 impl ServerHandler for JilebiMcpServer {
     async fn initialize(
         &self,
-        request: InitializeRequestParam,
+        request: InitializeRequestParams,
         context: RequestContext<rmcp::RoleServer>,
     ) -> Result<InitializeResult, rmcp::ErrorData> {
         if context.peer.peer_info().is_none() {
@@ -109,27 +109,24 @@ impl ServerHandler for JilebiMcpServer {
     }
 
     fn get_info(&self) -> ServerInfo {
-        ServerInfo {
-            protocol_version: ProtocolVersion::V_2025_06_18,
-            capabilities: ServerCapabilities::builder()
-                .enable_prompts()
+        ServerInfo::new(
+            ServerCapabilities::builder()
                 .enable_tools()
+                .enable_prompts()
                 .enable_resources()
                 .build(),
-            server_info: Implementation {
-                name: "Jilebi".into(),
-                version: self.version.to_string(),
-                title: Some("Jilebi MCP Runtime".into()),
-                icons: None,
-                website_url: Some("https://jilebi.ai".into()),
-            },
-            instructions: None,
-        }
+        )
+        .with_server_info(
+            Implementation::new("Jilebi", self.version)
+                .with_title("Jilebi MCP Runtime")
+                .with_website_url("https://jilebi.ai"),
+        )
+        .with_protocol_version(ProtocolVersion::V_2025_11_25)
     }
 
     async fn list_prompts(
         &self,
-        _request: Option<PaginatedRequestParam>,
+        _request: Option<PaginatedRequestParams>,
         _context: RequestContext<rmcp::RoleServer>,
     ) -> Result<ListPromptsResult, rmcp::ErrorData> {
         let mut prompts: Vec<Prompt> = Vec::new();
@@ -151,7 +148,7 @@ impl ServerHandler for JilebiMcpServer {
 
     async fn get_prompt(
         &self,
-        request: GetPromptRequestParam,
+        request: GetPromptRequestParams,
         context: RequestContext<rmcp::RoleServer>,
     ) -> Result<GetPromptResult, rmcp::ErrorData> {
         tracing::debug!("request ID for get_prompt: {}", context.id);
@@ -193,20 +190,19 @@ impl ServerHandler for JilebiMcpServer {
                 s => s,
             };
 
-            *content = rmcp::model::PromptMessage {
-                content: new_content,
-                role: content.role.clone(),
-            };
+            *content = rmcp::model::PromptMessage::new(content.role.clone(), new_content);
         }
-        Ok(GetPromptResult {
-            description: prompt.prompt.description.clone(),
-            messages: prompt.content.clone(),
-        })
+        let res = GetPromptResult::new(prompt.content);
+        if let Some(description) = prompt.prompt.description {
+            Ok(res.with_description(description))
+        } else {
+            Ok(res)
+        }
     }
 
     async fn call_tool(
         &self,
-        request: rmcp::model::CallToolRequestParam,
+        request: rmcp::model::CallToolRequestParams,
         _context: RequestContext<rmcp::RoleServer>,
     ) -> Result<rmcp::model::CallToolResult, rmcp::ErrorData> {
         let connection = self.db.get().map_err(|e| {
@@ -301,7 +297,7 @@ impl ServerHandler for JilebiMcpServer {
 
     async fn list_tools(
         &self,
-        _request: Option<PaginatedRequestParam>,
+        _request: Option<PaginatedRequestParams>,
         _context: RequestContext<rmcp::RoleServer>,
     ) -> Result<rmcp::model::ListToolsResult, rmcp::ErrorData> {
         let mut tools: Vec<Tool> = Vec::new();
@@ -312,10 +308,7 @@ impl ServerHandler for JilebiMcpServer {
             let mut p = plugin
                 .tools
                 .values()
-                .map(|tool| Tool {
-                    name: Cow::from(tool.tool.name.clone()),
-                    ..tool.tool.clone()
-                })
+                .map(|tool| tool.tool.clone())
                 .collect::<Vec<_>>();
             tools.append(&mut p);
         }
@@ -328,7 +321,7 @@ impl ServerHandler for JilebiMcpServer {
 
     async fn list_resources(
         &self,
-        _request: Option<PaginatedRequestParam>,
+        _request: Option<PaginatedRequestParams>,
         _context: RequestContext<rmcp::RoleServer>,
     ) -> Result<ListResourcesResult, rmcp::ErrorData> {
         let mut resources: Vec<Resource> = Vec::new();
@@ -350,7 +343,7 @@ impl ServerHandler for JilebiMcpServer {
 
     async fn read_resource(
         &self,
-        request: rmcp::model::ReadResourceRequestParam,
+        request: rmcp::model::ReadResourceRequestParams,
         _context: RequestContext<rmcp::RoleServer>,
     ) -> Result<rmcp::model::ReadResourceResult, rmcp::ErrorData> {
         let connection = self.db.get().map_err(|e| {

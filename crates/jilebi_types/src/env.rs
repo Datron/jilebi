@@ -26,7 +26,7 @@ pub struct PluginEnv {
     pub env_name: String,
     pub value: String,
     pub env_type: EnvType,
-	pub schema: String,
+    pub schema: String,
 }
 
 pub type PluginEnvs = HashSet<PluginEnv>;

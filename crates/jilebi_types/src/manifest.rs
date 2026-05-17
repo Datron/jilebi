@@ -4,9 +4,10 @@ use derive_more::Deref;
 use regex::Regex;
 use rmcp::model::{
     Prompt, PromptArgument, PromptMessage, PromptMessageContent, PromptMessageRole, RawResource,
-    Resource, Tool,
+    Resource, Tool, object,
 };
 use serde::{Deserialize, Serialize};
+use serde_json::json;
 use toml::Table;
 use tracing::debug;
 
@@ -144,20 +145,20 @@ impl Tools {
             let output_schema = op_table
                 .get("output_schema")
                 .cloned()
-                .and_then(|schema| serde_json::json!(schema).as_object().cloned())
-                .map(|obj| Arc::new(obj));
+                .map(|schema| Arc::new(object(json!(schema))));
             let tool_name = mandatory_extractor(op_table, key, &"name".to_string())?;
             validate_section_key_name(key)?;
-            let tool = Tool {
-                name: Cow::from(format!("{plugin_name}{SEPARATOR}{tool_name}")),
-                description: optional_extractor(op_table, &"description".to_string())
-                    .map(Cow::from),
+            let tool = Tool::new_with_raw(
+                Cow::from(format!("{plugin_name}{SEPARATOR}{tool_name}")),
+                optional_extractor(op_table, &"description".to_string()).map(Cow::from),
                 input_schema,
-                annotations: None,
-                output_schema,
-                title: Some(tool_name),
-                icons: None,
-                meta: None,
+            )
+            .with_title(tool_name);
+
+            let tool = if let Some(output_schema) = output_schema {
+                tool.with_raw_output_schema(output_schema)
+            } else {
+                tool
             };
             let jilebi_tool = JilebiTool {
                 tool,
@@ -200,27 +201,35 @@ impl Prompts {
                     args.iter()
                         .map(|argument| {
                             let table = argument.as_table().cloned().unwrap_or_default();
-                            PromptArgument {
-                                name: mandatory_extractor(&table, key, &"name".to_string())
+                            let arg = PromptArgument::new(
+                                mandatory_extractor(&table, key, &"name".to_string())
                                     .unwrap_or_default(),
-                                description: optional_extractor(&table, &"description".to_string()),
-                                required: optional_extractor(&table, &"required".to_string())
-                                    .and_then(|s| s.parse().ok()),
-                                title: None,
+                            );
+                            let arg = if let Some(description) =
+                                optional_extractor(&table, &"description".to_string())
+                            {
+                                arg.with_description(description)
+                            } else {
+                                arg
+                            };
+                            if let Some(required) =
+                                optional_extractor(&table, &"required".to_string())
+                                    .and_then(|s| s.parse().ok())
+                            {
+                                arg.with_required(required)
+                            } else {
+                                arg
                             }
                         })
                         .collect()
                 });
             let prompt_name = mandatory_extractor(op_table, key, &"name".to_string())?;
             validate_section_key_name(key)?;
-            let prompt = Prompt {
-                name: format!("{plugin_name}{SEPARATOR}{prompt_name}"),
-                description: optional_extractor(op_table, &"description".to_string()),
+            let prompt = Prompt::new(
+                format!("{plugin_name}{SEPARATOR}{prompt_name}"),
+                optional_extractor(op_table, &"description".to_string()),
                 arguments,
-                title: None,
-                icons: None,
-                meta: None,
-            };
+            );
             let content: Vec<PromptMessage> = op_table
                 .get("messages")
                 .and_then(|s| s.as_array())
@@ -239,7 +248,7 @@ impl Prompts {
                             let text = mandatory_extractor(&table, key, &"content".to_string())
                                 .unwrap_or_default();
                             let content = PromptMessageContent::text(text);
-                            PromptMessage { role, content }
+                            PromptMessage::new(role, content)
                         })
                         .collect()
                 })
