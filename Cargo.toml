@@ -6,7 +6,7 @@ members = [
 	"crates/plugin-runtime",
 	"crates/store",
 ]
-package.version = "0.5.2"
+package.version = "0.6.0"
 
 
 [workspace.dependencies]
