@@ -2,6 +2,26 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [0.6.0](https://github.com/datron/jilebi/compare/9558d79a5319e00d6437cc8910d684a0e03243a7..0.6.0) - 2026-05-17
+### Package updates
+- [jilebi](crates/jilebi) bumped to [jilebi-0.1.0](https://github.com/datron/jilebi/compare/bb408ad578f73207546df83ce3a4816f662a625f..jilebi-0.1.0)
+- [dosa](crates/plugin-runtime) bumped to [dosa-0.1.0](https://github.com/datron/jilebi/compare/bb408ad578f73207546df83ce3a4816f662a625f..dosa-0.1.0)
+- [store](crates/store) bumped to [store-0.1.0](https://github.com/datron/jilebi/compare/bb408ad578f73207546df83ce3a4816f662a625f..store-0.1.0)
+- [jilebi_types](crates/jilebi_types) bumped to [jilebi_types-0.1.0](https://github.com/datron/jilebi/compare/bb408ad578f73207546df83ce3a4816f662a625f..jilebi_types-0.1.0)
+### Global changes
+#### Bug Fixes
+- update docusaurus to show github links - ([9a4ebfb](https://github.com/datron/jilebi/commit/9a4ebfbf2d39b774e15d021d5473c75c559584b4)) - datron
+#### Features
+- add installation and uninstallation scripts - ([2ce3ef9](https://github.com/datron/jilebi/commit/2ce3ef93ed93aa8202065494a50dfe66c570434e)) - datron
+- update to mcp spec 2026-11-25, rmcp v1.7.0 - ([ecc423f](https://github.com/datron/jilebi/commit/ecc423f365256f2195ddd4e948d368be7439a3a5)) - datron
+- add support for remote MCP servers (#2) - ([9558d79](https://github.com/datron/jilebi/commit/9558d79a5319e00d6437cc8910d684a0e03243a7)) - Datron
+#### Miscellaneous Chores
+- **(git)** update gitignore - ([a2abc6f](https://github.com/datron/jilebi/commit/a2abc6f2a1a607c70983e338d0a495fcb47b2d58)) - datron
+- **(version)** 0.5.2 [skip ci] - ([b3c6e52](https://github.com/datron/jilebi/commit/b3c6e527c8cbf15ef42c467aa602c17103bdb552)) - Semver bot
+- update documentation - ([876eb8c](https://github.com/datron/jilebi/commit/876eb8c1cbc3617d43b748f1fce92cdbc9452884)) - datron
+
+- - -
+
 ## [0.5.2](https://github.com/datron/jilebi/compare/2684ea6a4d08a8332254300698ce26fb9516770c..0.5.2) - 2026-01-02
 ### Package updates
 - [dosa](crates/plugin-runtime) bumped to [dosa-0.1.0](https://github.com/datron/jilebi/compare/bb408ad578f73207546df83ce3a4816f662a625f..dosa-0.1.0)
