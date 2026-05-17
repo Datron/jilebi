@@ -7,3 +7,5 @@ logs
 **/build
 crates/store/website
 **/.wrangler
+.codex
+.cargo
