@@ -1,5 +1,6 @@
 #![deny(unused_crate_dependencies)]
 use std::{
+    net::SocketAddr,
     path::{Path, PathBuf},
     time::Duration,
 };
@@ -7,12 +8,26 @@ mod cli;
 mod db;
 mod server;
 mod utils;
+use axum::{
+    Router,
+    http::{HeaderName, HeaderValue, StatusCode},
+    routing::get,
+};
 use clap::Parser;
 use directories::ProjectDirs;
 use indicatif::ProgressBar;
-use rmcp::{ServiceExt, transport::stdio};
+use rmcp::{
+    ServiceExt,
+    transport::{
+        StreamableHttpServerConfig, stdio,
+        streamable_http_server::{
+            session::local::LocalSessionManager, tower::StreamableHttpService,
+        },
+    },
+};
 use rusqlite::Connection;
 use server::JilebiMcpServer;
+use tower_http::cors::{Any, CorsLayer};
 use tracing_subscriber::{EnvFilter, fmt, layer::SubscriberExt, util::SubscriberInitExt};
 
 use crate::{
@@ -68,6 +83,98 @@ fn setup_database(dir: &Path) -> Result<Connection, String> {
         .map_err(|e| e.to_string())?;
     Ok(connection)
 }
+
+fn http_bind_addr() -> Result<SocketAddr, String> {
+    let bind_address = dotenvy::var("HTTP_BIND_ADDRESS").unwrap_or("0.0.0.0".to_string());
+    let port = dotenvy::var("HTTP_PORT").unwrap_or("3000".to_string());
+    format!("{bind_address}:{port}")
+        .parse::<SocketAddr>()
+        .map_err(|e| format!("Invalid HTTP bind address or port: {e}"))
+}
+
+fn mcp_path() -> Result<String, String> {
+    let path = dotenvy::var("HTTP_MCP_PATH").unwrap_or("/mcp".to_string());
+    if path.trim().is_empty() {
+        return Err("MCP path cannot be empty".to_string());
+    }
+    Ok(if path.starts_with('/') {
+        path
+    } else {
+        format!("/{path}")
+    })
+}
+
+fn cors_env_values(name: &str, default: &str) -> Vec<String> {
+    dotenvy::var(name)
+        .unwrap_or(default.to_string())
+        .split(",")
+        .into_iter()
+        .map(|value| value.to_string())
+        .collect()
+}
+
+fn cors_layer() -> Result<CorsLayer, String> {
+    let allowed_origins = cors_env_values("MCP_ALLOWED_ORIGINS", "*");
+
+    let cors_layer = CorsLayer::new()
+        .allow_methods(Any)
+        .allow_headers(Any)
+        .expose_headers([HeaderName::from_static("mcp-session-id")]);
+
+    if allowed_origins.iter().any(|value| value == "*") {
+        return Ok(cors_layer.allow_origin(Any));
+    }
+
+    let origins = allowed_origins
+        .into_iter()
+        .map(|origin| {
+            origin
+                .parse::<HeaderValue>()
+                .map_err(|e| format!("Invalid CORS origin `{origin}`: {e}"))
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+
+    if origins.is_empty() {
+        Ok(cors_layer)
+    } else {
+        Ok(cors_layer.allow_origin(origins))
+    }
+}
+
+async fn serve_http(server: JilebiMcpServer) -> Result<(), String> {
+    let addr = http_bind_addr()?;
+    let mcp_path = mcp_path()?;
+    let cors_layer = cors_layer()?;
+    let mcp_service: StreamableHttpService<JilebiMcpServer, LocalSessionManager> =
+        StreamableHttpService::new(
+            move || Ok(server.clone()),
+            LocalSessionManager::default().into(),
+            StreamableHttpServerConfig::default(),
+        );
+
+    let app = Router::new()
+        .route("/health", get(|| async { StatusCode::OK }))
+        .nest_service(&mcp_path, mcp_service)
+        .layer(cors_layer);
+
+    let listener = tokio::net::TcpListener::bind(addr)
+        .await
+        .map_err(|e| format!("Could not bind HTTP server on {addr}: {e}"))?;
+    tracing::info!("Jilebi HTTP server listening on {}", addr);
+    tracing::info!(
+        "Jilebi MCP streamable HTTP endpoint mounted at {}",
+        mcp_path
+    );
+
+    axum::serve(listener, app)
+        .with_graceful_shutdown(async {
+            tokio::signal::ctrl_c().await.ok();
+            tracing::info!("Shutting down Jilebi HTTP server");
+        })
+        .await
+        .map_err(|e| e.to_string())
+}
+
 #[tokio::main]
 async fn main() -> Result<(), String> {
     dotenvy::dotenv().unwrap_or_default();
@@ -120,6 +227,16 @@ async fn main() -> Result<(), String> {
             })?;
             service.waiting().await.map_err(|e| e.to_string())?;
             Ok(())
+        }
+        cli::SubCommands::Http { name } => {
+            tracing::info!("Starting Jilebi HTTP Server...");
+            let plugins = utils::load_plugins(&db, name)?;
+            let db_path = utils::generate_path(base_jilebi_dir.data_dir(), "jilebi.db3", false)?;
+            let pool = r2d2_sqlite::SqliteConnectionManager::file(db_path);
+            let db = r2d2::Pool::new(pool).map_err(|e| e.to_string())?;
+            tracing::trace!(?plugins, "Plugins and manifests loaded");
+            let server = JilebiMcpServer::new(plugins, db, log_path, current_version);
+            serve_http(server).await
         }
         cli::SubCommands::Plugins { subcommand } => {
             plugin_command_handler(subcommand, &log_file, &plugin_directory, db).await
