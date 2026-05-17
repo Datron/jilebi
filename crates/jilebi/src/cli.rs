@@ -38,6 +38,11 @@ pub enum SubCommands {
         #[arg(short, long)]
         name: Option<String>,
     },
+    /// Run jilebi as a remote streamable HTTP MCP server
+    Http {
+        #[arg(short, long)]
+        name: Option<String>,
+    },
     /// Commands for managing application contexts
     Context {
         #[command(subcommand)]
