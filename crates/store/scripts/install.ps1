@@ -29,7 +29,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$JILEBI_BASE_URL = "https://jilebi.ai/api/download/bin"
+$JILEBI_BASE_URL = "https://mcp.jilebi.ai/api/download/bin"
 
 function Write-Info {
     param([string]$Message)

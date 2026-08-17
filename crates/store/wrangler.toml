@@ -8,10 +8,10 @@ not_found_handling = "single-page-application"
 binding = "ASSETS"
 
 [build]
-command = "cargo install -q worker-build && worker-build --release"
+command = "cargo install -q worker-build && /home/kartik/.cargo/bin/worker-build --release"
 
 [env.dev]
-build = { command = "cargo install -q worker-build && worker-build --dev" }
+build = { command = "cargo install -q worker-build && /home/kartik/.cargo/bin/worker-build --dev" }
 r2_buckets = [
     { binding = "JILEBI", bucket_name = "jilebi", preview_bucket_name = "jilebi" }
 ]
@@ -33,5 +33,5 @@ database_name = "jilebi"
 database_id = "59fd6769-15fc-4901-8ebc-e2553fbe551d"
 
 [[routes]]
-pattern = "jilebi.ai"
+pattern = "mcp.jilebi.ai"
 custom_domain = true

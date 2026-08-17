@@ -4,7 +4,7 @@ use rusqlite::Connection;
 
 use crate::db;
 
-const DOWNLOAD_URL: &str = "https://jilebi.ai/api/download";
+const DOWNLOAD_URL: &str = "https://mcp.jilebi.ai/api/download";
 
 async fn download(url: &str, download_path: &PathBuf) -> Result<(), String> {
     let response = reqwest::get(url)

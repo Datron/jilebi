@@ -2,7 +2,7 @@ import React, { useEffect, useState, type ReactNode } from "react";
 import Link from "@docusaurus/Link";
 import styles from "./PluginDetail.module.css";
 
-const API_BASE_URL = "https://jilebi.ai";
+const API_BASE_URL = "https://mcp.jilebi.ai";
 
 type InputSchema = {
   type: string;

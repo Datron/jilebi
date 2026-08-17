@@ -4,7 +4,7 @@ set -euo pipefail
 # Jilebi Installation Script
 # Supports: Linux (x86_64), macOS (Intel & Apple Silicon)
 
-JILEBI_BASE_URL="https://jilebi.ai/api/download/bin"
+JILEBI_BASE_URL="https://mcp.jilebi.ai/api/download/bin"
 INSTALL_DIR="${JILEBI_HOME:-$HOME/.jilebi}"
 BIN_DIR="$INSTALL_DIR/bin"
 

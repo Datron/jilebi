@@ -116,7 +116,7 @@ pub fn get_plugin_path(db: &Connection, plugin_name: &str) -> Result<PathBuf, St
 }
 
 pub async fn get_latest_release_version() -> Result<String, String> {
-    reqwest::get("https://jilebi.ai/api/releases/latest")
+    reqwest::get("https://mcp.jilebi.ai/api/releases/latest")
         .await
         .map_err(|e| e.to_string())?
         .text()

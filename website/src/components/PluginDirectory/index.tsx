@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo, type ReactNode } from "react";
 import Link from "@docusaurus/Link";
 import styles from "./PluginDirectory.module.css";
 
-const API_BASE_URL = "https://jilebi.ai";
+const API_BASE_URL = "https://mcp.jilebi.ai";
 // const API_BASE_URL = "http://localhost:8787";
 
 type PluginListItem = {

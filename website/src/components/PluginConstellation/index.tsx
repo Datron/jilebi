@@ -54,8 +54,8 @@ function CopyButton({ text }: { text: string }) {
 }
 
 function InstallCommands() {
-  const linuxCommand = "curl -fsSL https://jilebi.ai/install.sh | bash";
-  const windowsCommand = "irm https://jilebi.ai/install.ps1 | iex";
+  const linuxCommand = "curl -fsSL https://mcp.jilebi.ai/install.sh | bash";
+  const windowsCommand = "irm https://mcp.jilebi.ai/install.ps1 | iex";
 
   return (
     <div className={styles.installSection}>

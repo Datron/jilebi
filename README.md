@@ -61,23 +61,23 @@ The fastest way to install Jilebi is using our installation scripts:
 
 Using `curl`:
 ```bash
-curl -fsSL https://jilebi.ai/install.sh | bash
+curl -fsSL https://mcp.jilebi.ai/install.sh | bash
 ```
 
 Using `wget`:
 ```bash
-wget -qO- https://jilebi.ai/install.sh | bash
+wget -qO- https://mcp.jilebi.ai/install.sh | bash
 ```
 
 ### Windows (PowerShell)
 
 ```powershell
-irm https://jilebi.ai/install.ps1 | iex
+irm https://mcp.jilebi.ai/install.ps1 | iex
 ```
 
 Or with the full command:
 ```powershell
-Invoke-RestMethod https://jilebi.ai/install.ps1 | Invoke-Expression
+Invoke-RestMethod https://mcp.jilebi.ai/install.ps1 | Invoke-Expression
 ```
 
 ### What the installer does
@@ -98,27 +98,27 @@ To completely remove Jilebi from your system:
 
 Using `curl`:
 ```bash
-curl -fsSL https://jilebi.ai/uninstall.sh | bash
+curl -fsSL https://mcp.jilebi.ai/uninstall.sh | bash
 ```
 
 Using `wget`:
 ```bash
-wget -qO- https://jilebi.ai/uninstall.sh | bash
+wget -qO- https://mcp.jilebi.ai/uninstall.sh | bash
 ```
 
 ### Windows (PowerShell)
 
 ```powershell
-irm https://jilebi.ai/uninstall.ps1 | iex
+irm https://mcp.jilebi.ai/uninstall.ps1 | iex
 ```
 
 Or with options:
 ```powershell
 # Skip confirmation prompts
-irm https://jilebi.ai/uninstall.ps1 -OutFile uninstall.ps1; .\uninstall.ps1 -Force
+irm https://mcp.jilebi.ai/uninstall.ps1 -OutFile uninstall.ps1; .\uninstall.ps1 -Force
 
 # Keep plugins and data
-irm https://jilebi.ai/uninstall.ps1 -OutFile uninstall.ps1; .\uninstall.ps1 -KeepData
+irm https://mcp.jilebi.ai/uninstall.ps1 -OutFile uninstall.ps1; .\uninstall.ps1 -KeepData
 ```
 
 ### What the uninstaller removes
@@ -133,10 +133,10 @@ irm https://jilebi.ai/uninstall.ps1 -OutFile uninstall.ps1; .\uninstall.ps1 -Kee
 
 | Platform | Architecture | Download |
 |----------|--------------|----------|
-| Windows 10/11 | x86_64 | [Download](https://jilebi.ai/api/download/bin/jilebi-x86_64-pc-windows-msvc.zip) |
-| Linux | x86_64 | [Download](https://jilebi.ai/api/download/bin/jilebi-x86_64-unknown-linux-gnu.zip) |
-| macOS | Apple Silicon | [Download](https://jilebi.ai/api/download/bin/jilebi-aarch64-apple-darwin.zip) |
-| macOS | Intel | [Download](https://jilebi.ai/api/download/bin/jilebi-x86_64-apple-darwin.zip) |
+| Windows 10/11 | x86_64 | [Download](https://mcp.jilebi.ai/api/download/bin/jilebi-x86_64-pc-windows-msvc.zip) |
+| Linux | x86_64 | [Download](https://mcp.jilebi.ai/api/download/bin/jilebi-x86_64-unknown-linux-gnu.zip) |
+| macOS | Apple Silicon | [Download](https://mcp.jilebi.ai/api/download/bin/jilebi-aarch64-apple-darwin.zip) |
+| macOS | Intel | [Download](https://mcp.jilebi.ai/api/download/bin/jilebi-x86_64-apple-darwin.zip) |
 
 ---
 

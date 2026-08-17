@@ -119,7 +119,7 @@ impl ServerHandler for JilebiMcpServer {
         .with_server_info(
             Implementation::new("Jilebi", self.version)
                 .with_title("Jilebi MCP Runtime")
-                .with_website_url("https://jilebi.ai"),
+                .with_website_url("https://mcp.jilebi.ai"),
         )
         .with_protocol_version(ProtocolVersion::V_2025_11_25)
     }
