@@ -22,3 +22,9 @@ reqwest = { workspace = true }
 toml = { workspace = true }
 semver = { workspace = true }
 tower-http = { version = "0.6.8", features = ["cors"] }
+
+[profile.release]
+lto = true
+strip = true
+codegen-units = 1
+opt-level = "z"

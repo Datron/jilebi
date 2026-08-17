@@ -8,10 +8,10 @@ not_found_handling = "single-page-application"
 binding = "ASSETS"
 
 [build]
-command = "cargo install -q worker-build && /home/kartik/.cargo/bin/worker-build --release"
+command = "cargo install -q worker-build && worker-build --release --no-opt"
 
 [env.dev]
-build = { command = "cargo install -q worker-build && /home/kartik/.cargo/bin/worker-build --dev" }
+build = { command = "cargo install -q worker-build && worker-build --dev --no-opt" }
 r2_buckets = [
     { binding = "JILEBI", bucket_name = "jilebi", preview_bucket_name = "jilebi" }
 ]
