@@ -166,7 +166,7 @@ pub fn clear_log_file(path: &PathBuf) -> Result<(), String> {
 }
 
 pub async fn list_remote_plugins() -> Result<Vec<(String, String, String)>, String> {
-    let client = reqwest::Client::new();
+    let client = crate::utils::http_client()?;
     let plugins = client
         .get("https://mcp.jilebi.ai/api/plugins")
         .send()

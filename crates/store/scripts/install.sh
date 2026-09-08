@@ -83,7 +83,7 @@ download_and_install() {
     info "Downloading Jilebi from $download_url..."
 
     if command -v curl &> /dev/null; then
-        curl -fsSL "$download_url" -o "$tmp_dir/jilebi.zip"
+        curl -fsSL -A "Mozilla" "$download_url" -o "$tmp_dir/jilebi.zip"
     elif command -v wget &> /dev/null; then
         wget -q "$download_url" -O "$tmp_dir/jilebi.zip"
     else

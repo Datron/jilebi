@@ -7,7 +7,9 @@ use crate::db;
 const DOWNLOAD_URL: &str = "https://mcp.jilebi.ai/api/download";
 
 async fn download(url: &str, download_path: &PathBuf) -> Result<(), String> {
-    let response = reqwest::get(url)
+    let response = crate::utils::http_client()?
+        .get(url)
+        .send()
         .await
         .map_err(|e| e.to_string())?
         .bytes()

@@ -115,8 +115,19 @@ pub fn get_plugin_path(db: &Connection, plugin_name: &str) -> Result<PathBuf, St
     Ok(PathBuf::from(plugin_path).join(plugin_name))
 }
 
+pub const USER_AGENT: &str = concat!("jilebi/", env!("CARGO_PKG_VERSION"));
+
+pub fn http_client() -> Result<reqwest::Client, String> {
+    reqwest::Client::builder()
+        .user_agent(USER_AGENT)
+        .build()
+        .map_err(|e| e.to_string())
+}
+
 pub async fn get_latest_release_version() -> Result<String, String> {
-    reqwest::get("https://mcp.jilebi.ai/api/releases/latest")
+    http_client()?
+        .get("https://mcp.jilebi.ai/api/releases/latest")
+        .send()
         .await
         .map_err(|e| e.to_string())?
         .text()
