@@ -7,7 +7,7 @@
 .backLink {
     display: inline-flex;
     align-items: center;
-    color: #ffa000;
+    color: #4b5563;
     text-decoration: none;
     font-size: 0.85rem;
     margin-bottom: 1rem;
@@ -15,13 +15,14 @@
 }
 
 .backLink:hover {
-    color: #fdd835;
+    color: #111827;
     text-decoration: none;
 }
 
 .header {
-    background: linear-gradient(145deg, #2a3a2a, #1a2a1a);
-    border: 1px solid rgba(251, 192, 45, 0.4);
+    background: #ffffff;
+    box-shadow: 0 20px 50px -20px rgba(0, 0, 0, 0.15);
+    border: 1px solid #e5e7eb;
     border-radius: 10px;
     padding: 1rem 1.25rem;
     margin-bottom: 1.5rem;
@@ -41,19 +42,18 @@
 .pluginIcon {
     width: 48px;
     height: 48px;
-    background: linear-gradient(145deg, #fdd835, #fbc02d);
+    background: #fdf0c4;
     border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    box-shadow: 0 2px 8px rgba(253, 216, 53, 0.3);
 }
 
 .pluginIconText {
     font-size: 1.5rem;
     font-weight: bold;
-    color: #1a2a1a;
+    color: #5f4300;
 }
 
 .headerInfo {
@@ -63,7 +63,7 @@
 }
 
 .pluginName {
-    color: #fdd835;
+    color: #111827;
     font-size: 1.4rem;
     font-weight: bold;
     margin: 0;
@@ -78,7 +78,7 @@
 }
 
 .version {
-    color: #ffa000;
+    color: #4b5563;
     font-size: 0.8rem;
     background: rgba(251, 192, 45, 0.15);
     padding: 0.15rem 0.5rem;
@@ -86,19 +86,19 @@
 }
 
 .creator {
-    color: #ffa000;
+    color: #4b5563;
     font-size: 0.8rem;
     opacity: 0.8;
 }
 
 .downloads {
-    color: #90caf9;
+    color: #1e40af;
     font-size: 0.8rem;
     opacity: 0.8;
 }
 
 .contactLink {
-    color: #ffa000;
+    color: #4b5563;
     text-decoration: none;
     font-size: 0.85rem;
     padding: 0.4rem 0.75rem;
@@ -129,7 +129,7 @@
 }
 
 .sectionTitle {
-    color: #fdd835;
+    color: #111827;
     font-size: 1rem;
     font-weight: 600;
     margin: 0;
@@ -144,7 +144,7 @@
 
 .sectionCount {
     background: rgba(251, 192, 45, 0.15);
-    color: #fdd835;
+    color: #111827;
     padding: 0.15rem 0.5rem;
     border-radius: 10px;
     font-size: 0.75rem;
@@ -159,8 +159,8 @@
 
 /* Item Card Styles */
 .itemCard {
-    background: linear-gradient(145deg, #252f25, #1a241a);
-    border: 1px solid rgba(251, 192, 45, 0.2);
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
     border-radius: 8px;
     padding: 0.75rem 1rem;
     transition: all 0.2s ease;
@@ -189,7 +189,7 @@
 }
 
 .itemName {
-    color: #fdd835;
+    color: #111827;
     font-size: 0.9rem;
     font-weight: 600;
     margin: 0;
@@ -197,7 +197,7 @@
 
 .badge {
     background: rgba(100, 200, 100, 0.2);
-    color: #90ee90;
+    color: #15803d;
     padding: 0.1rem 0.35rem;
     border-radius: 3px;
     font-size: 0.65rem;
@@ -206,11 +206,11 @@
 
 .badgeWarning {
     background: rgba(255, 100, 100, 0.2);
-    color: #ff8a80;
+    color: #b91c1c;
 }
 
 .expandIcon {
-    color: #ffa000;
+    color: #4b5563;
     font-size: 1rem;
     font-weight: bold;
     width: 20px;
@@ -219,7 +219,7 @@
 }
 
 .itemDescription {
-    color: #ffa000;
+    color: #4b5563;
     font-size: 0.8rem;
     margin: 0.4rem 0 0 0;
     opacity: 0.85;
@@ -241,20 +241,20 @@
 }
 
 .detailLabel {
-    color: #ffa000;
+    color: #4b5563;
     font-size: 0.75rem;
     opacity: 0.7;
     min-width: 50px;
 }
 
 .detailValue {
-    color: #fdd835;
+    color: #111827;
     font-size: 0.8rem;
 }
 
 .codeValue {
-    background: rgba(0, 0, 0, 0.3);
-    color: #fdd835;
+    background: #f3f4f6;
+    color: #111827;
     padding: 0.15rem 0.4rem;
     border-radius: 3px;
     font-family: "Monaco", "Menlo", monospace;
@@ -270,7 +270,7 @@
 
 .permBadge {
     background: rgba(100, 150, 200, 0.15);
-    color: #90caf9;
+    color: #1e40af;
     padding: 0.1rem 0.35rem;
     border-radius: 3px;
     font-size: 0.65rem;
@@ -279,7 +279,7 @@
 
 .permBadgeSecret {
     background: rgba(255, 150, 100, 0.15);
-    color: #ffab91;
+    color: #c2410c;
 }
 
 /* Permission Details */
@@ -297,7 +297,7 @@
 }
 
 .permLabel {
-    color: #ffa000;
+    color: #4b5563;
     font-size: 0.7rem;
     opacity: 0.7;
     min-width: 50px;
@@ -311,8 +311,8 @@
 }
 
 .permValue {
-    background: rgba(0, 0, 0, 0.25);
-    color: #90caf9;
+    background: #f3f4f6;
+    color: #1e40af;
     padding: 0.1rem 0.35rem;
     border-radius: 3px;
     font-family: "Monaco", "Menlo", monospace;
@@ -320,14 +320,14 @@
 }
 
 .permValueSecret {
-    color: #ffab91;
+    color: #c2410c;
     background: rgba(255, 150, 100, 0.1);
 }
 
 /* Global Permissions Section */
 .globalPermissions {
-    background: linear-gradient(145deg, #2a2f2a, #1a1f1a);
-    border: 1px solid rgba(251, 192, 45, 0.25);
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
     border-radius: 8px;
     padding: 1rem;
     display: flex;
@@ -341,7 +341,7 @@
 }
 
 .globalPermTitle {
-    color: #ffa000;
+    color: #4b5563;
     font-size: 0.8rem;
     font-weight: 500;
     margin: 0 0 0.5rem 0;
@@ -354,8 +354,8 @@
 }
 
 .globalPermItem {
-    background: rgba(0, 0, 0, 0.3);
-    color: #90caf9;
+    background: #f3f4f6;
+    color: #1e40af;
     padding: 0.2rem 0.5rem;
     border-radius: 4px;
     font-family: "Monaco", "Menlo", monospace;
@@ -363,7 +363,7 @@
 }
 
 .globalPermItemSecret {
-    color: #ffab91;
+    color: #c2410c;
     background: rgba(255, 150, 100, 0.15);
 }
 
@@ -375,7 +375,7 @@
 }
 
 .schemaTitle {
-    color: #ffa000;
+    color: #4b5563;
     font-size: 0.7rem;
     font-weight: 600;
     margin: 0 0 0.4rem 0;
@@ -391,7 +391,7 @@
 }
 
 .parameterItem {
-    background: rgba(0, 0, 0, 0.15);
+    background: #f9fafb;
     border-radius: 4px;
     padding: 0.4rem 0.6rem;
 }
@@ -404,13 +404,13 @@
 }
 
 .parameterName {
-    color: #fdd835;
+    color: #111827;
     font-family: "Monaco", "Menlo", monospace;
     font-size: 0.8rem;
 }
 
 .parameterType {
-    color: #90caf9;
+    color: #1e40af;
     font-size: 0.7rem;
     background: rgba(100, 150, 200, 0.15);
     padding: 0.05rem 0.3rem;
@@ -418,13 +418,13 @@
 }
 
 .requiredBadge {
-    color: #ff8a80;
+    color: #b91c1c;
     font-size: 0.8rem;
     font-weight: bold;
 }
 
 .parameterDescription {
-    color: #ffa000;
+    color: #4b5563;
     font-size: 0.75rem;
     margin: 0.25rem 0 0 0;
     opacity: 0.85;
@@ -438,8 +438,8 @@
 }
 
 .hostItem {
-    background: rgba(0, 0, 0, 0.3);
-    color: #90caf9;
+    background: #f3f4f6;
+    color: #1e40af;
     padding: 0.2rem 0.5rem;
     border-radius: 4px;
     font-family: "Monaco", "Menlo", monospace;
@@ -448,7 +448,7 @@
 
 /* Message Styles */
 .messageItem {
-    background: rgba(0, 0, 0, 0.15);
+    background: #f9fafb;
     border-radius: 6px;
     padding: 0.5rem 0.75rem;
     margin-bottom: 0.35rem;
@@ -456,7 +456,7 @@
 
 .messageRole {
     display: inline-block;
-    color: #90caf9;
+    color: #1e40af;
     font-size: 0.65rem;
     text-transform: uppercase;
     font-weight: 600;
@@ -467,7 +467,7 @@
 }
 
 .messageContent {
-    color: #ffa000;
+    color: #4b5563;
     font-size: 0.75rem;
     margin: 0;
     white-space: pre-wrap;
@@ -502,7 +502,7 @@
 }
 
 .loadingText {
-    color: #ffa000;
+    color: #4b5563;
     font-size: 0.85rem;
     margin: 0;
 }
@@ -511,7 +511,7 @@
 .errorContainer {
     text-align: center;
     padding: 2rem 1.5rem;
-    background: linear-gradient(145deg, #3a2a2a, #2a1a1a);
+    background: #fef2f2;
     border: 1px solid rgba(255, 100, 100, 0.3);
     border-radius: 10px;
     max-width: 400px;
@@ -524,13 +524,13 @@
 }
 
 .errorTitle {
-    color: #ff8a80;
+    color: #b91c1c;
     font-size: 1.1rem;
     margin: 0 0 0.35rem 0;
 }
 
 .errorMessage {
-    color: #ffa000;
+    color: #4b5563;
     font-size: 0.85rem;
     opacity: 0.8;
     margin-bottom: 1rem;
@@ -538,8 +538,8 @@
 
 .backButton {
     display: inline-block;
-    background: linear-gradient(145deg, #fdd835, #fbc02d);
-    color: #1a2a1a;
+    background: #fbc02d;
+    color: #111827;
     border: none;
     padding: 0.5rem 1.25rem;
     border-radius: 6px;
@@ -560,13 +560,13 @@
 .emptyState {
     text-align: center;
     padding: 2rem 1.5rem;
-    background: linear-gradient(145deg, #2a3a2a, #1a2a1a);
-    border: 1px solid rgba(251, 192, 45, 0.2);
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
     border-radius: 8px;
 }
 
 .emptyText {
-    color: #ffa000;
+    color: #4b5563;
     font-size: 0.9rem;
     margin: 0;
     opacity: 0.7;
@@ -606,7 +606,7 @@
 
 /* Configuration Required Section */
 .configSection {
-    background: linear-gradient(145deg, #2d2a1a, #1f1c12);
+    background: #fef9e7;
     border: 1px solid rgba(255, 193, 7, 0.4);
     border-radius: 10px;
     padding: 1rem 1.25rem;
@@ -625,7 +625,7 @@
 }
 
 .configTitle {
-    color: #ffc107;
+    color: #b78100;
     font-size: 1rem;
     font-weight: 600;
     margin: 0;
@@ -638,7 +638,7 @@
 }
 
 .configGroup {
-    background: rgba(0, 0, 0, 0.2);
+    background: #f3f4f6;
     border-radius: 8px;
     padding: 0.75rem 1rem;
 }
@@ -651,14 +651,14 @@
 }
 
 .configGroupTitle {
-    color: #ffa000;
+    color: #4b5563;
     font-size: 0.85rem;
     font-weight: 600;
     margin: 0;
 }
 
 .configGroupDesc {
-    color: #ffa000;
+    color: #4b5563;
     font-size: 0.75rem;
     opacity: 0.7;
     margin: 0 0 0.5rem 0;
@@ -685,13 +685,13 @@
 }
 
 .configItemName {
-    color: #90caf9;
+    color: #1e40af;
     font-family: "Monaco", "Menlo", monospace;
     font-size: 0.8rem;
 }
 
 .configItemSecret .configItemName {
-    color: #ffab91;
+    color: #c2410c;
 }
 
 /* Network Hosts List */
@@ -728,11 +728,11 @@
 }
 
 .configItemNameSecret {
-    color: #ffab91;
+    color: #c2410c;
 }
 
 .configItemType {
-    color: #90caf9;
+    color: #1e40af;
     font-size: 0.7rem;
     background: rgba(100, 150, 200, 0.2);
     padding: 0.1rem 0.35rem;
@@ -747,16 +747,125 @@
 }
 
 .configItemDefaultLabel {
-    color: #ffa000;
+    color: #4b5563;
     font-size: 0.7rem;
     opacity: 0.7;
 }
 
 .configItemDefaultValue {
-    background: rgba(0, 0, 0, 0.25);
-    color: #90ee90;
+    background: #f3f4f6;
+    color: #15803d;
     padding: 0.1rem 0.4rem;
     border-radius: 3px;
     font-family: "Monaco", "Menlo", monospace;
     font-size: 0.75rem;
+}
+
+/* Dark mode matches jilebi.ai: #0a0a0a bg, #141414 surfaces, #232323 borders */
+[data-theme='dark'] .backLink {
+    color: #a3a3a3;
+}
+
+[data-theme='dark'] .backLink:hover {
+    color: #f7cf5a;
+}
+
+[data-theme='dark'] .header,
+[data-theme='dark'] .itemCard,
+[data-theme='dark'] .emptyState {
+    background: #141414;
+    border-color: #232323;
+    box-shadow: none;
+}
+
+[data-theme='dark'] .itemCard:hover {
+    border-color: #6b4d00;
+}
+
+[data-theme='dark'] .pluginIcon {
+    background: #422006;
+}
+
+[data-theme='dark'] .pluginIconText {
+    color: #f9d878;
+}
+
+[data-theme='dark'] .pluginName,
+[data-theme='dark'] .sectionTitle,
+[data-theme='dark'] .itemName,
+[data-theme='dark'] .detailValue,
+[data-theme='dark'] .codeValue,
+[data-theme='dark'] .parameterName {
+    color: #f3f4f6;
+}
+
+[data-theme='dark'] .version,
+[data-theme='dark'] .creator,
+[data-theme='dark'] .itemDescription,
+[data-theme='dark'] .detailLabel,
+[data-theme='dark'] .permLabel,
+[data-theme='dark'] .globalPermTitle,
+[data-theme='dark'] .schemaTitle,
+[data-theme='dark'] .parameterDescription,
+[data-theme='dark'] .messageContent,
+[data-theme='dark'] .loadingText,
+[data-theme='dark'] .configGroupTitle,
+[data-theme='dark'] .configGroupDesc,
+[data-theme='dark'] .configItemDefaultLabel,
+[data-theme='dark'] .emptyText {
+    color: #a3a3a3;
+}
+
+[data-theme='dark'] .sectionHeader {
+    border-bottom-color: #232323;
+}
+
+[data-theme='dark'] .sectionCount,
+[data-theme='dark'] .version {
+    background: #422006;
+    color: #f9d878;
+}
+
+[data-theme='dark'] .itemDetails {
+    border-top-color: #232323;
+}
+
+[data-theme='dark'] .codeValue,
+[data-theme='dark'] .parameterItem,
+[data-theme='dark'] .messageItem {
+    background: #1a1a1a;
+}
+
+[data-theme='dark'] .globalPermissions,
+[data-theme='dark'] .configGroup {
+    background: #151515;
+    border-color: #232323;
+}
+
+[data-theme='dark'] .contactLink {
+    background: #422006;
+    border-color: #6b4d00;
+    color: #f9d878;
+}
+
+[data-theme='dark'] .configSection {
+    background: #1c1503;
+    border-color: #6b4d00;
+}
+
+[data-theme='dark'] .configTitle {
+    color: #f7cf5a;
+}
+
+[data-theme='dark'] .errorContainer {
+    background: #450a0a;
+    border-color: #7f1d1d;
+}
+
+[data-theme='dark'] .errorTitle {
+    color: #fca5a5;
+}
+
+[data-theme='dark'] .errorMessage {
+    color: #a3a3a3;
 }

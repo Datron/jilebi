@@ -8,7 +8,7 @@ not_found_handling = "single-page-application"
 binding = "ASSETS"
 
 [build]
-command = "cargo install -q worker-build && worker-build --release --no-opt"
+command = "cargo install -q worker-build && ~/.cargo/bin/worker-build --release --no-opt"
 
 [env.dev]
 build = { command = "cargo install -q worker-build && worker-build --dev --no-opt" }

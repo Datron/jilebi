@@ -10,24 +10,24 @@
 }
 
 .title {
-    color: #fdd835;
+    color: #111827;
     font-size: 2.5rem;
-    font-weight: bold;
+    font-weight: 700;
+    letter-spacing: -0.025em;
     margin-bottom: 0.75rem;
-    text-shadow: 0 0 20px rgba(253, 216, 53, 0.5);
 }
 
 .subtitle {
-    color: #ffa000;
+    color: #4b5563;
     font-size: 1.1rem;
-    opacity: 0.9;
+    line-height: 1.625;
     max-width: 600px;
     margin: 0 auto;
 }
 
 .resultsInfo {
     margin-bottom: 1.5rem;
-    color: #ffa000;
+    color: #6b7280;
     font-size: 0.9rem;
 }
 
@@ -67,14 +67,12 @@
 }
 
 .pluginCard {
-    background: linear-gradient(145deg, #2a3a2a, #1a2a1a);
-    border: 2px solid rgba(251, 192, 45, 0.4);
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
     border-radius: 12px;
     padding: 1.5rem;
     transition: all 0.3s ease;
-    box-shadow:
-        inset 0 0 10px rgba(0, 0, 0, 0.3),
-        0 2px 8px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 20px 50px -20px rgba(0, 0, 0, 0.15);
     height: 100%;
     display: flex;
     flex-direction: column;
@@ -83,10 +81,10 @@
 }
 
 .pluginCard:hover {
-    border-color: rgba(253, 216, 53, 0.8);
+    border-color: #fbe49e;
     box-shadow:
-        inset 0 0 15px rgba(251, 192, 45, 0.1),
-        0 4px 20px rgba(253, 216, 53, 0.3);
+        inset 0 1px 0 rgba(255, 255, 255, 0.35),
+        0 4px 20px rgba(251, 192, 45, 0.3);
     transform: translateY(-4px);
 }
 
@@ -99,19 +97,18 @@
 .pluginIcon {
     width: 50px;
     height: 50px;
-    background: linear-gradient(145deg, #fdd835, #fbc02d);
+    background: #fdf0c4;
     border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    box-shadow: 0 2px 8px rgba(253, 216, 53, 0.3);
 }
 
 .pluginIconText {
     font-size: 1.5rem;
     font-weight: bold;
-    color: #1a2a1a;
+    color: #5f4300;
 }
 
 .pluginMeta {
@@ -120,31 +117,29 @@
 }
 
 .pluginName {
-    color: #fdd835;
+    color: #111827;
     font-size: 1.2rem;
     font-weight: 600;
     margin: 0 0 0.25rem 0;
-    text-shadow: 0 0 5px rgba(253, 216, 53, 0.3);
     word-break: break-word;
 }
 
 .pluginVersion {
-    color: #ffa000;
+    color: #6b7280;
     font-size: 0.85rem;
-    opacity: 0.8;
 }
 
 .cardFooter {
     margin-top: 1rem;
     padding-top: 1rem;
-    border-top: 1px solid rgba(251, 192, 45, 0.2);
+    border-top: 1px solid #e5e7eb;
 }
 
 .downloadCount {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    color: #ffa000;
+    color: #6b7280;
     font-size: 0.85rem;
 }
 
@@ -155,8 +150,8 @@
 
 /* Loading Skeleton Styles */
 .skeletonCard {
-    background: linear-gradient(145deg, #2a3a2a, #1a2a1a);
-    border: 2px solid rgba(251, 192, 45, 0.2);
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
     border-radius: 12px;
     padding: 1.5rem;
     min-height: 150px;
@@ -171,7 +166,7 @@
 .skeletonIcon {
     width: 50px;
     height: 50px;
-    background: linear-gradient(90deg, #2a3a2a 25%, #3a4a3a 50%, #2a3a2a 75%);
+    background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
     border-radius: 10px;
@@ -184,7 +179,7 @@
 .skeletonTitle {
     height: 20px;
     width: 70%;
-    background: linear-gradient(90deg, #2a3a2a 25%, #3a4a3a 50%, #2a3a2a 75%);
+    background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
     border-radius: 4px;
@@ -194,7 +189,7 @@
 .skeletonVersion {
     height: 14px;
     width: 40%;
-    background: linear-gradient(90deg, #2a3a2a 25%, #3a4a3a 50%, #2a3a2a 75%);
+    background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
     border-radius: 4px;
@@ -204,7 +199,7 @@
     height: 16px;
     width: 50%;
     margin-top: 2rem;
-    background: linear-gradient(90deg, #2a3a2a 25%, #3a4a3a 50%, #2a3a2a 75%);
+    background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
     border-radius: 4px;
@@ -223,8 +218,8 @@
 .errorContainer {
     text-align: center;
     padding: 3rem 2rem;
-    background: linear-gradient(145deg, #3a2a2a, #2a1a1a);
-    border: 2px solid rgba(255, 100, 100, 0.4);
+    background: #fef2f2;
+    border: 1px solid #fecaca;
     border-radius: 12px;
     max-width: 500px;
     margin: 2rem auto;
@@ -236,20 +231,19 @@
 }
 
 .errorTitle {
-    color: #ff8a80;
+    color: #b91c1c;
     font-size: 1.3rem;
     margin: 0 0 0.5rem 0;
 }
 
 .errorMessage {
-    color: #ffa000;
-    opacity: 0.8;
+    color: #4b5563;
     margin-bottom: 1.5rem;
 }
 
 .retryButton {
-    background: linear-gradient(145deg, #fdd835, #fbc02d);
-    color: #1a2a1a;
+    background: #fbc02d;
+    color: #111827;
     border: none;
     padding: 0.75rem 2rem;
     border-radius: 8px;
@@ -257,11 +251,12 @@
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 
 .retryButton:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(253, 216, 53, 0.4);
+    background: #f5a623;
 }
 
 /* Search Bar Styles */
@@ -278,7 +273,7 @@
     transform: translateY(-50%);
     width: 20px;
     height: 20px;
-    color: #ffa000;
+    color: #6b7280;
     opacity: 0.7;
     pointer-events: none;
 }
@@ -286,26 +281,23 @@
 .searchInput {
     width: 100%;
     padding: 0.875rem 2.5rem 0.875rem 3rem;
-    background: linear-gradient(145deg, #2a3a2a, #1a2a1a);
-    border: 2px solid rgba(251, 192, 45, 0.3);
-    border-radius: 10px;
-    color: #fdd835;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    color: #374151;
     font-size: 1rem;
     transition: all 0.3s ease;
-    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 20px 50px -20px rgba(0, 0, 0, 0.15);
 }
 
 .searchInput::placeholder {
-    color: #ffa000;
-    opacity: 0.6;
+    color: #9ca3af;
 }
 
 .searchInput:focus {
     outline: none;
-    border-color: rgba(253, 216, 53, 0.6);
-    box-shadow:
-        inset 0 0 10px rgba(0, 0, 0, 0.3),
-        0 0 15px rgba(253, 216, 53, 0.2);
+    border-color: #fbc02d;
+    box-shadow: 0 0 0 2px rgba(251, 192, 45, 0.25);
 }
 
 .searchClear {
@@ -313,9 +305,9 @@
     right: 0.75rem;
     top: 50%;
     transform: translateY(-50%);
-    background: rgba(251, 192, 45, 0.2);
+    background: #fdf0c4;
     border: none;
-    color: #ffa000;
+    color: #5f4300;
     width: 24px;
     height: 24px;
     border-radius: 50%;
@@ -329,31 +321,31 @@
 }
 
 .searchClear:hover {
-    background: rgba(251, 192, 45, 0.4);
-    color: #fdd835;
+    background: #fbe49e;
+    color: #111827;
 }
 
 /* No Results State */
 .noResults {
     text-align: center;
     padding: 3rem 2rem;
-    background: linear-gradient(145deg, #2a3a2a, #1a2a1a);
-    border: 2px solid rgba(251, 192, 45, 0.2);
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
     border-radius: 12px;
     max-width: 500px;
     margin: 2rem auto;
+    box-shadow: 0 20px 50px -20px rgba(0, 0, 0, 0.15);
 }
 
 .noResultsText {
-    color: #ffa000;
+    color: #4b5563;
     font-size: 1.1rem;
     margin: 0 0 1.5rem 0;
-    opacity: 0.9;
 }
 
 .clearSearchButton {
-    background: linear-gradient(145deg, #fdd835, #fbc02d);
-    color: #1a2a1a;
+    background: #fbc02d;
+    color: #111827;
     border: none;
     padding: 0.6rem 1.5rem;
     border-radius: 8px;
@@ -361,11 +353,12 @@
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 
 .clearSearchButton:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(253, 216, 53, 0.4);
+    background: #f5a623;
 }
 
 /* GitHub Link Styles */
@@ -375,10 +368,10 @@
     gap: 0.5rem;
     margin-top: 1.25rem;
     padding: 0.6rem 1.25rem;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
     border-radius: 8px;
-    color: #ffa000;
+    color: #374151;
     font-size: 0.9rem;
     font-weight: 500;
     text-decoration: none;
@@ -386,9 +379,9 @@
 }
 
 .githubLink:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(253, 216, 53, 0.4);
-    color: #fdd835;
+    background: #f9fafb;
+    border-color: #fbe49e;
+    color: #111827;
     text-decoration: none;
     transform: translateY(-2px);
 }
@@ -396,4 +389,110 @@
 .githubIcon {
     width: 20px;
     height: 20px;
+}
+
+/* Dark mode matches jilebi.ai: #0a0a0a bg, #141414 surfaces, #232323 borders */
+[data-theme='dark'] .title {
+    color: #f3f4f6;
+}
+
+[data-theme='dark'] .subtitle,
+[data-theme='dark'] .resultsInfo {
+    color: #a3a3a3;
+}
+
+[data-theme='dark'] .pluginCard {
+    background: #141414;
+    border-color: #232323;
+}
+
+[data-theme='dark'] .pluginCard:hover {
+    border-color: #6b4d00;
+}
+
+[data-theme='dark'] .pluginIcon {
+    background: #422006;
+}
+
+[data-theme='dark'] .pluginIconText {
+    color: #f9d878;
+}
+
+[data-theme='dark'] .pluginName {
+    color: #f3f4f6;
+}
+
+[data-theme='dark'] .pluginVersion,
+[data-theme='dark'] .downloadCount {
+    color: #a3a3a3;
+}
+
+[data-theme='dark'] .cardFooter {
+    border-top-color: #232323;
+}
+
+[data-theme='dark'] .searchIcon {
+    color: #8b8b8b;
+}
+
+[data-theme='dark'] .searchInput {
+    background: #141414;
+    border-color: #333;
+    color: #e5e7eb;
+}
+
+[data-theme='dark'] .searchInput::placeholder {
+    color: #6b7280;
+}
+
+[data-theme='dark'] .searchClear {
+    background: #422006;
+    color: #f9d878;
+}
+
+[data-theme='dark'] .noResults {
+    background: #141414;
+    border-color: #232323;
+}
+
+[data-theme='dark'] .noResultsText {
+    color: #a3a3a3;
+}
+
+[data-theme='dark'] .githubLink {
+    background: #141414;
+    border-color: #333;
+    color: #e5e7eb;
+}
+
+[data-theme='dark'] .githubLink:hover {
+    background: #1a1a1a;
+    border-color: #6b4d00;
+    color: #f3f4f6;
+}
+
+[data-theme='dark'] .skeletonCard {
+    background: #141414;
+    border-color: #232323;
+}
+
+[data-theme='dark'] .skeletonIcon,
+[data-theme='dark'] .skeletonTitle,
+[data-theme='dark'] .skeletonVersion,
+[data-theme='dark'] .skeletonFooter {
+    background: linear-gradient(90deg, #1a1a1a 25%, #222 50%, #1a1a1a 75%);
+    background-size: 200% 100%;
+}
+
+[data-theme='dark'] .errorContainer {
+    background: #450a0a;
+    border-color: #7f1d1d;
+}
+
+[data-theme='dark'] .errorTitle {
+    color: #fca5a5;
+}
+
+[data-theme='dark'] .errorMessage {
+    color: #a3a3a3;
 }

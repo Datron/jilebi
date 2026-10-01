@@ -5,17 +5,17 @@ import type * as Preset from "@docusaurus/preset-classic";
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
 const config: Config = {
-  title: "Jilebi",
-  tagline: "The secure MCP runtime with a powerful plugin ecosystem",
-  favicon: "img/jilebi_logo.svg",
+	title: "Jilebi",
+	tagline: "Secure MCP runtime with a powerful plugin ecosystem",
+	favicon: "img/jilebi_logo.svg",
 
   // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
   future: {
     v4: true, // Improve compatibility with the upcoming Docusaurus v4
   },
 
-  // Set the production url of your site here
-  url: "https://your-docusaurus-site.example.com",
+	// Set the production url of your site here
+	url: "https://mcp.jilebi.ai",
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: "/",
@@ -71,87 +71,68 @@ const config: Config = {
   themeConfig: {
     // Replace with your project's social card
     image: "img/docusaurus-social-card.jpg",
-    navbar: {
-      title: "Jilebi",
-      logo: {
-        alt: "Jilebi Logo",
-        src: "img/jilebi_logo.svg",
-      },
-      items: [
-        {
-          type: "docSidebar",
-          sidebarId: "tutorialSidebar",
-          position: "left",
-          label: "Docs",
-        },
-        { to: "/docs/download", label: "Download", position: "left" },
-        { to: "/plugins", label: "Plugins", position: "left" },
-        // { to: '/blog', label: 'Blog', position: 'left' },
-        {
-        	href: 'https://github.com/datron/jilebi',
-        	label: 'GitHub',
-        	position: 'right',
-        }
-      ],
-    },
-    footer: {
-      style: "dark",
-      // links: [
-      // 	{
-      // 		title: 'Docs',
-      // 		items: [
-      // 			{
-      // 				label: 'Get Started',
-      // 				to: '/docs/intro',
-      // 			},
-      // 			{
-      // 				label: 'Download',
-      // 				to: '/docs/download',
-      // 			},
-      // 		],
-      // 	},
-      // 	{
-      // 		title: 'Community',
-      // 		items: [
-      // 			{
-      // 				label: 'Stack Overflow',
-      // 				href: 'https://stackoverflow.com/questions/tagged/docusaurus',
-      // 			},
-      // 			{
-      // 				label: 'Discord',
-      // 				href: 'https://discordapp.com/invite/docusaurus',
-      // 			},
-      // 			{
-      // 				label: 'X',
-      // 				href: 'https://x.com/docusaurus',
-      // 			},
-      // 		],
-      // 	},
-      // 	{
-      // 		title: 'More',
-      // 		items: [
-      // 			{
-      // 				label: 'Blog',
-      // 				to: '/blog',
-      // 			},
-      // 			{
-      // 				label: 'GitHub',
-      // 				href: 'https://github.com/datron/jilebi',
-      // 			},
-      // 		],
-      // 	},
-      // ],
-      copyright: `Copyright © ${new Date().getFullYear()} Jilebi, Inc. Built with Docusaurus.`,
-    },
+	navbar: {
+		title: "Jilebi",
+		logo: {
+			alt: "Jilebi Logo",
+			src: "img/jilebi_logo.svg",
+		},
+		items: [
+			{
+				type: "docSidebar",
+				sidebarId: "tutorialSidebar",
+				position: "left",
+				label: "Docs",
+			},
+			{ to: "/docs/download", label: "Download", position: "left" },
+			{ to: "/plugins", label: "Plugins", position: "left" },
+			{ href: "https://jilebi.ai/blog/", label: "Blog", position: "left" },
+			{ href: "https://jilebi.ai", label: "Cloud", position: "left" },
+			{
+				href: "https://github.com/datron/jilebi",
+				label: "GitHub",
+				position: "right",
+			},
+		],
+	},
+	footer: {
+		style: "light",
+		links: [
+			{
+				title: "Product",
+				items: [
+					{ label: "Home", to: "/" },
+					{ label: "Download", to: "/docs/download" },
+					{ label: "Plugins", to: "/plugins" },
+				],
+			},
+			{
+				title: "Jilebi",
+				items: [
+					{ label: "Cloud", href: "https://jilebi.ai" },
+					{ label: "Blog", href: "https://jilebi.ai/blog/" },
+					{ label: "GitHub", href: "https://github.com/datron/jilebi" },
+				],
+			},
+			{
+				title: "Legal",
+				items: [
+					{ label: "Privacy Policy", href: "https://jilebi.ai/privacy" },
+					{ label: "Terms of Service", href: "https://jilebi.ai/terms-of-service" },
+				],
+			},
+		],
+		copyright: `Copyright © ${new Date().getFullYear()} Jilebi, Inc.`,
+	},
     prism: {
       theme: prismThemes.github,
       darkTheme: prismThemes.dracula,
     },
-    colorMode: {
-      defaultMode: "dark",
-      disableSwitch: true,
-      respectPrefersColorScheme: true,
-    },
+	colorMode: {
+		defaultMode: "light",
+		disableSwitch: false,
+		respectPrefersColorScheme: true,
+	},
   } satisfies Preset.ThemeConfig,
 };
 

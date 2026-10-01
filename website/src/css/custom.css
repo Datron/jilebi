@@ -1,44 +1,459 @@
 /**
- * Any CSS included here will be global. The classic template
- * bundles Infima by default. Infima is a CSS framework designed to
- * work well for content-centric websites.
+ * Jilebi docs — matched to jilebi.ai styling.
+ * Source tokens extracted from https://jilebi.ai/css/output.css
+ * Primary (yellow): 50 #fef9e7, 100 #fdf0c4, 200 #fbe49e,
+ *   400 #f7cf5a, 500 #fbc02d, 600 #f5a623,
+ *   700 #b78100, 800 #8a6100, 900 #5f4300
+ * Sans: Inter, Mono: JetBrains Mono
  */
 
-/* You can override the default Infima variables here. */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap");
+
 :root {
-	--ifm-color-primary: #fbc02d;
-	--ifm-color-primary-dark: #FF8F00;
-	--ifm-color-primary-darker: #EF6C00;
-	--ifm-color-primary-darkest: #af8600;
-	--ifm-color-primary-light: #fcc947;
-	--ifm-color-primary-lighter: #fcd052;
-	--ifm-color-primary-lightest: #fdd976;
-	--ifm-color-secondary: #ffa000;
-	--ifm-color-secondary-dark: #e69000;
-	--ifm-color-secondary-darker: #d98700;
-	--ifm-color-secondary-darkest: #b36f00;
-	--ifm-color-secondary-light: #ffab1a;
-	--ifm-color-secondary-lighter: #ffb326;
-	--ifm-color-secondary-lightest: #ffc64d;
-	--ifm-code-font-size: 95%;
-	--docusaurus-highlighted-code-line-bg: rgba(251, 192, 45, 0.1);
+  --jilebi-primary-50: #fef9e7;
+  --jilebi-primary-100: #fdf0c4;
+  --jilebi-primary-200: #fbe49e;
+  --jilebi-primary-400: #f7cf5a;
+  --jilebi-primary-500: #fbc02d;
+  --jilebi-primary-600: #f5a623;
+  --jilebi-primary-700: #b78100;
+  --jilebi-primary-800: #8a6100;
+  --jilebi-primary-900: #5f4300;
+
+  --jilebi-gray-50: #f9fafb;
+  --jilebi-gray-100: #f3f4f6;
+  --jilebi-gray-200: #e5e7eb;
+  --jilebi-gray-300: #d1d5db;
+  --jilebi-gray-400: #9ca3af;
+  --jilebi-gray-500: #6b7280;
+  --jilebi-gray-600: #4b5563;
+  --jilebi-gray-700: #374151;
+  --jilebi-gray-800: #1f2937;
+  --jilebi-gray-900: #111827;
+
+  --ifm-color-primary: var(--jilebi-primary-500);
+  --ifm-color-primary-dark: var(--jilebi-primary-600);
+  --ifm-color-primary-darker: var(--jilebi-primary-700);
+  --ifm-color-primary-darkest: var(--jilebi-primary-800);
+  --ifm-color-primary-light: var(--jilebi-primary-400);
+  --ifm-color-primary-lighter: var(--jilebi-primary-200);
+  --ifm-color-primary-lightest: var(--jilebi-primary-100);
+
+  --ifm-font-family-base: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --ifm-font-family-monospace: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --ifm-code-font-size: 90%;
+  --ifm-line-height-base: 1.625;
+  --ifm-heading-font-weight: 700;
+  --ifm-heading-letter-spacing: -0.025em;
+
+  --ifm-background-color: #ffffff;
+  --ifm-background-surface-color: #ffffff;
+  --ifm-color-emphasis-100: var(--jilebi-gray-100);
+  --ifm-color-emphasis-200: var(--jilebi-gray-200);
+
+  --ifm-navbar-height: 4rem;
+  --ifm-navbar-background-color: rgba(255, 255, 255, 0.8);
+  --ifm-navbar-shadow: 0 1px 0 var(--jilebi-gray-200);
+  --ifm-footer-background-color: var(--jilebi-gray-50);
+  --ifm-footer-link-color: var(--jilebi-gray-600);
+
+  --ifm-button-border-radius: 0.5rem;
+  --ifm-card-border-radius: 0.75rem;
+  --ifm-global-radius: 0.5rem;
+  --ifm-code-border-radius: 0.375rem;
+
+  --docusaurus-highlighted-code-line-bg: rgba(251, 192, 45, 0.1);
 }
 
-/* For readability concerns, you should choose a lighter palette in dark mode. */
-[data-theme='dark'] {
-	--ifm-color-primary: #fdd835;
-	--ifm-color-primary-dark: #fcd317;
-	--ifm-color-primary-darker: #fbcf0a;
-	--ifm-color-primary-darkest: #d4ae00;
-	--ifm-color-primary-light: #fedd53;
-	--ifm-color-primary-lighter: #fee160;
-	--ifm-color-primary-lightest: #feea7a;
-	--ifm-color-secondary: #ffb74d;
-	--ifm-color-secondary-dark: #ffab33;
-	--ifm-color-secondary-darker: #ffa726;
-	--ifm-color-secondary-darkest: #ff9800;
-	--ifm-color-secondary-light: #ffc366;
-	--ifm-color-secondary-lighter: #ffca73;
-	--ifm-color-secondary-lightest: #ffd699;
-	--docusaurus-highlighted-code-line-bg: rgba(253, 216, 53, 0.2);
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--ifm-font-family-base);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+pre,
+code,
+kbd,
+samp {
+  font-family: var(--ifm-font-family-monospace);
+  font-variant-numeric: tabular-nums;
+}
+
+::selection {
+  background: var(--jilebi-primary-500);
+  color: #1a1200;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--jilebi-primary-500);
+  outline-offset: 2px;
+}
+
+/* Grain overlay, same as jilebi.ai body.grain */
+body::before {
+  content: "";
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  position: fixed;
+  inset: 0;
+}
+
+/* ---------- Navbar (jilebi.ai: sticky, blur, h-16, max-w-7xl) ---------- */
+.navbar {
+  border-bottom: 1px solid var(--jilebi-gray-200);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 0 1rem;
+}
+
+.navbar__inner {
+  max-width: 80rem;
+  margin: 0 auto;
+}
+
+.navbar__title {
+  font-weight: 700;
+  font-size: 1.25rem;
+  letter-spacing: -0.025em;
+}
+
+.navbar__link {
+  font-size: 0.875rem;
+  color: var(--jilebi-gray-600);
+  padding: 0.375rem 0.625rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+}
+
+.navbar__link:hover,
+.navbar__link--active {
+  color: var(--jilebi-gray-900);
+  background: var(--jilebi-gray-100);
+}
+
+/* Mimic jilebi.ai Sign In (outline) + Sign Up (yellow solid) links */
+.navbar__link--signup {
+  background: var(--jilebi-primary-500) !important;
+  color: var(--jilebi-gray-900) !important;
+  font-weight: 600 !important;
+  padding: 0.5rem 1rem !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.navbar__link--signup:hover {
+  background: var(--jilebi-primary-600) !important;
+  color: var(--jilebi-gray-900) !important;
+}
+
+.navbar__link--signin {
+  border: 1px solid var(--jilebi-gray-200);
+  padding: 0.5rem 1rem !important;
+  color: var(--jilebi-gray-700) !important;
+}
+
+.navbar__link--signin:hover {
+  background: var(--jilebi-gray-50) !important;
+}
+
+/* ---------- Buttons ---------- */
+.button {
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-family: var(--ifm-font-family-base);
+}
+
+.button--primary,
+.button--secondary.button--primary {
+  background: var(--jilebi-primary-500);
+  border-color: var(--jilebi-primary-500);
+  color: var(--jilebi-gray-900);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.button--primary:hover,
+.button--secondary.button--primary:hover {
+  background: var(--jilebi-primary-600);
+  border-color: var(--jilebi-primary-600);
+  color: var(--jilebi-gray-900);
+}
+
+.button--secondary {
+  background: #ffffff;
+  border: 1px solid var(--jilebi-gray-200);
+  color: var(--jilebi-gray-700);
+  font-weight: 500;
+}
+
+.button--secondary:hover {
+  background: var(--jilebi-gray-50);
+  color: var(--jilebi-gray-900);
+  border-color: var(--jilebi-gray-200);
+}
+
+.button--outline.button--secondary {
+  background: transparent;
+  border: 1px solid var(--jilebi-gray-200);
+  color: var(--jilebi-gray-700);
+}
+
+.button--outline.button--secondary:hover {
+  background: var(--jilebi-gray-50);
+  color: var(--jilebi-gray-900);
+}
+
+/* ---------- Footer (jilebi.ai: border-t, gray-50, minimal) ---------- */
+.footer {
+  border-top: 1px solid var(--jilebi-gray-200);
+  background: var(--jilebi-gray-50);
+  padding: 2.5rem 0;
+}
+
+.footer__copyright {
+  color: var(--jilebi-gray-500);
+  font-size: 0.875rem;
+}
+
+.footer__link-item {
+  color: var(--jilebi-gray-600);
+  font-size: 0.875rem;
+}
+
+.footer__link-item:hover {
+  color: var(--jilebi-gray-900);
+}
+
+/* ---------- Docs chrome: sidebar, TOC, breadcrumbs ---------- */
+.theme-doc-sidebar-container {
+  border-right: 1px solid var(--jilebi-gray-200) !important;
+}
+
+.menu__link {
+  font-size: 0.875rem;
+  border-radius: 0.375rem;
+  color: var(--jilebi-gray-600);
+}
+
+.menu__link:hover {
+  background: var(--jilebi-gray-100);
+  color: var(--jilebi-gray-900);
+}
+
+.menu__link--active {
+  background: var(--jilebi-primary-50);
+  color: var(--jilebi-primary-900);
+  font-weight: 600;
+}
+
+.menu__link--active:hover {
+  background: var(--jilebi-primary-100);
+  color: var(--jilebi-primary-900);
+}
+
+.breadcrumbs__link {
+  border-radius: 0.375rem;
+}
+
+.pagination-nav__link {
+  border: 1px solid var(--jilebi-gray-200);
+  border-radius: 0.75rem;
+  box-shadow: 0 20px 50px -20px rgba(0, 0, 0, 0.15);
+}
+
+.pagination-nav__link:hover {
+  border-color: var(--jilebi-primary-200);
+}
+
+.table-of-contents__link--active {
+  color: var(--jilebi-primary-800);
+  font-weight: 600;
+}
+
+/* ---------- Markdown: headings, links, code, admonitions, tables ---------- */
+.markdown h1,
+.markdown h2,
+.markdown h3 {
+  letter-spacing: -0.025em;
+  color: var(--jilebi-gray-900);
+}
+
+.markdown > h1:first-child {
+  font-size: 2.25rem;
+  line-height: 1.05;
+}
+
+.markdown a {
+  color: var(--jilebi-primary-700);
+  font-weight: 500;
+}
+
+.markdown a:hover {
+  color: var(--jilebi-primary-800);
+}
+
+.markdown code {
+  background: var(--jilebi-gray-100);
+  border: none;
+  border-radius: 0.375rem;
+  padding: 0.125rem 0.375rem;
+  color: var(--jilebi-gray-800);
+}
+
+div[class*="codeBlockContainer"] {
+  border: 1px solid var(--jilebi-gray-200);
+  border-radius: 0.75rem;
+  box-shadow: 0 20px 50px -20px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+
+div[class*="codeBlockTitle"] {
+  border-bottom: 1px solid var(--jilebi-gray-200);
+  background: var(--jilebi-gray-50);
+}
+
+.alert {
+  border-radius: 0.75rem;
+  border-width: 1px;
+}
+
+.alert--info {
+  background: var(--jilebi-primary-50);
+  border-color: var(--jilebi-primary-200);
+}
+
+table thead tr {
+  background: var(--jilebi-gray-50);
+}
+
+/* Hero pill badge shared by homepage hero */
+.jilebi-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  border: 1px solid var(--jilebi-primary-200);
+  background: var(--jilebi-primary-50);
+  color: var(--jilebi-primary-900);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+/* ---------- Dark mode (jilebi.ai: #0a0a0a bg, #141414 surfaces, #232323 borders) ---------- */
+[data-theme="dark"] {
+  --ifm-color-primary: #fbc02d;
+  --ifm-color-primary-dark: #f5a623;
+  --ifm-color-primary-darker: #f7cf5a;
+  --ifm-color-primary-darkest: #f7cf5a;
+  --ifm-color-primary-light: #f7cf5a;
+  --ifm-color-primary-lighter: #f9d878;
+  --ifm-color-primary-lightest: #fdf0c4;
+
+  --ifm-background-color: #0a0a0a;
+  --ifm-background-surface-color: #141414;
+  --ifm-navbar-background-color: rgba(10, 10, 10, 0.8);
+  --ifm-navbar-shadow: 0 1px 0 #232323;
+  --ifm-footer-background-color: #0a0a0a;
+
+  --docusaurus-highlighted-code-line-bg: rgba(251, 192, 45, 0.2);
+}
+
+[data-theme="dark"] .navbar {
+  border-bottom-color: #232323;
+  background: rgba(10, 10, 10, 0.8);
+}
+
+[data-theme="dark"] .navbar__link {
+  color: #a3a3a3;
+}
+
+[data-theme="dark"] .navbar__link:hover,
+[data-theme="dark"] .navbar__link--active {
+  color: #f3f4f6;
+  background: #1a1a1a;
+}
+
+[data-theme="dark"] .navbar__link--signin {
+  border-color: #333;
+  color: #d1d5db !important;
+}
+
+[data-theme="dark"] .navbar__link--signin:hover {
+  background: #1a1a1a !important;
+}
+
+[data-theme="dark"] .footer {
+  background: #0a0a0a;
+  border-top-color: #232323;
+}
+
+[data-theme="dark"] .menu__link {
+  color: #a3a3a3;
+}
+
+[data-theme="dark"] .menu__link:hover {
+  background: #1a1a1a;
+  color: #f3f4f6;
+}
+
+[data-theme="dark"] .menu__link--active {
+  background: #422006;
+  color: #f9d878;
+}
+
+[data-theme="dark"] .theme-doc-sidebar-container {
+  border-right-color: #232323 !important;
+}
+
+[data-theme="dark"] .markdown h1,
+[data-theme="dark"] .markdown h2,
+[data-theme="dark"] .markdown h3 {
+  color: #f3f4f6;
+}
+
+[data-theme="dark"] .markdown code {
+  background: #1a1a1a;
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .button--secondary,
+[data-theme="dark"] .button--outline.button--secondary {
+  background: #141414;
+  border-color: #333;
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .button--secondary:hover,
+[data-theme="dark"] .button--outline.button--secondary:hover {
+  background: #1a1a1a;
+  color: #f3f4f6;
+}
+
+[data-theme="dark"] .pagination-nav__link {
+  border-color: #232323;
+}
+
+[data-theme="dark"] div[class*="codeBlockContainer"] {
+  border-color: #232323;
+}
+
+[data-theme="dark"] div[class*="codeBlockTitle"] {
+  background: #151515;
+  border-bottom-color: #232323;
+}
+
+[data-theme="dark"] .alert--info {
+  background: #422006;
+  border-color: #6b4d00;
+}
+
+[data-theme="dark"] table thead tr {
+  background: #151515;
 }

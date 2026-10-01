@@ -173,7 +173,7 @@ const plugins: Plugin[] = [
     id: "aws-docs",
     name: "AWS Docs",
     icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/amazonwebservices/amazonwebservices-plain-wordmark.svg",
-    number_of_downloads: "Coming soon",
+    number_of_downloads: "100+",
   },
   {
     id: "exa-search",
@@ -190,20 +190,20 @@ const plugins: Plugin[] = [
   {
     id: "whatsapp",
     name: "WhatsApp",
-    icon: "https://static.whatsapp.net/rsrc.php/yZ/r/JvsnINJ2CZv.svg",
+    icon: "https://cdn.simpleicons.org/whatsapp",
     number_of_downloads: "Coming soon",
   },
   {
     id: "jira",
     name: "JIRA",
     icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/jira/jira-original.svg",
-    number_of_downloads: "Coming soon",
+    number_of_downloads: "100+",
   },
   {
     id: "Figma",
     name: "Figma",
     icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/figma/figma-original.svg",
-    number_of_downloads: "Coming soon",
+    number_of_downloads: "100+",
   },
   {
     id: "Azure",
@@ -328,13 +328,13 @@ export default function PluginConstellation(): ReactNode {
           <InstallCommands />
           <div className={styles.buttons}>
             <Link
-              className="button button--secondary button--lg"
+              className="button button--primary button--lg"
               to="/docs/download"
             >
               Download Jilebi
             </Link>
             <Link
-              className="button button--outline button--secondary button--lg"
+              className="button button--secondary button--lg"
               to="/plugins"
             >
               Find Plugins
