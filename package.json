@@ -1,13 +1,22 @@
 {
+	"private": true,
 	"scripts": {
 		"inspector": "npx @modelcontextprotocol/inspector",
 		"frontend": "cd website && npm run build && mv build/ ../crates/store/website",
 		"website-dev": "cd website && npm run start",
 		"store-dev": "cd crates/store && npx wrangler dev --env dev",
-		"deploy-site": "cd crates/store && npx wrangler deploy"
+		"deploy-site": "cd crates/store && npx wrangler deploy",
+		"sdk:spec": "node sdks/scripts/fetch-spec.mjs",
+		"sdk:version": "node sdks/scripts/set-version.mjs",
+		"sdk:generate": "npm run sdk:generate:rust && npm run sdk:generate:typescript && npm run sdk:generate:python && npm run sdk:generate:go && npm run sdk:version",
+		"sdk:generate:rust": "openapi-generator-cli generate --generator-key rust",
+		"sdk:generate:typescript": "openapi-generator-cli generate --generator-key typescript",
+		"sdk:generate:python": "openapi-generator-cli generate --generator-key python",
+		"sdk:generate:go": "openapi-generator-cli generate --generator-key go"
 	},
 	"devDependencies": {
 		"@modelcontextprotocol/inspector": "^0.16.8",
+		"@openapitools/openapi-generator-cli": "^2.41.0",
 		"wrangler": "^4.54.0"
 	}
 }

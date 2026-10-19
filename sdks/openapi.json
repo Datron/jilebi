@@ -1,0 +1,4214 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "jilebi API",
+    "description": "Programmatic API for jilebi microVMs, routes, SSH keys, nodes and billing.\n\nAuthenticate with an API key (`X-API-Key` header or `Authorization: Bearer <key>`), or with a browser session cookie. API keys carry scopes — see the `POST /api/v1/api-keys` endpoint for the full list.",
+    "version": "1.0.0",
+    "license": {
+      "name": "AGPL-3.0",
+      "url": "https://www.gnu.org/licenses/agpl-3.0.html"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://jilebi.ai"
+    },
+    {
+      "url": "http://localhost:8787"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Account",
+      "description": "The authenticated user and session."
+    },
+    {
+      "name": "MicroVMs",
+      "description": "Create and manage microVMs."
+    },
+    {
+      "name": "Routes",
+      "description": "Expose VM ports over public subdomains."
+    },
+    {
+      "name": "SSH keys",
+      "description": "SSH keys used to log in to microVMs."
+    },
+    {
+      "name": "API keys",
+      "description": "API keys and their scopes."
+    },
+    {
+      "name": "Nodes",
+      "description": "Host nodes (admin only)."
+    },
+    {
+      "name": "Software catalog",
+      "description": "Software installable at VM creation (admin only)."
+    },
+    {
+      "name": "Billing",
+      "description": "Invoices, payments and admin billing actions."
+    }
+  ],
+  "components": {
+    "schemas": {
+      "ApiError": {
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string",
+            "description": "Machine-readable error code, when available."
+          }
+        }
+      },
+      "ApiSuccess": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "ApiVmState": {
+        "type": "string",
+        "enum": [
+          "active",
+          "paused",
+          "offline"
+        ],
+        "description": "Lifecycle state persisted on the microVM record."
+      },
+      "ApiVm": {
+        "type": "object",
+        "required": [
+          "id",
+          "user_id",
+          "machine_name",
+          "network_name",
+          "node_name",
+          "hypervisor_socket",
+          "ip_address",
+          "cpu_count",
+          "memory_size",
+          "disk_size_gb",
+          "state",
+          "created_at",
+          "updated_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "user_id": {
+            "type": "string"
+          },
+          "machine_name": {
+            "type": "string"
+          },
+          "network_name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "node_name": {
+            "type": "string"
+          },
+          "hypervisor_socket": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "ip_address": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Private network address (e.g. 192.168.2.2)."
+          },
+          "cpu_count": {
+            "type": "integer",
+            "description": "vCPU count."
+          },
+          "memory_size": {
+            "type": "integer",
+            "description": "Memory in MiB."
+          },
+          "disk_size_gb": {
+            "type": "integer",
+            "description": "Disk size in GiB."
+          },
+          "state": {
+            "$ref": "#/components/schemas/ApiVmState"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "DeviceNode": {
+        "type": "object",
+        "description": "Node in the hypervisor device tree.",
+        "properties": {
+          "id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "resources": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {}
+          },
+          "children": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "pci_bdf": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "VmInfo": {
+        "type": "object",
+        "required": [
+          "config",
+          "state"
+        ],
+        "description": "Live VM state as reported by the hypervisor.",
+        "properties": {
+          "config": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Cloud-hypervisor VM config."
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "Created",
+              "Running",
+              "Shutdown",
+              "Paused"
+            ]
+          },
+          "memory_actual_size": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Memory in bytes."
+          },
+          "device_tree": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": {
+              "$ref": "#/components/schemas/DeviceNode"
+            }
+          }
+        }
+      },
+      "ApiVmListResponse": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/ApiVm"
+        }
+      },
+      "ApiVmGetResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ApiVm"
+          },
+          {
+            "type": "object",
+            "required": [
+              "vm_info"
+            ],
+            "properties": {
+              "vm_info": {
+                "$ref": "#/components/schemas/VmInfo"
+              }
+            }
+          }
+        ]
+      },
+      "ApiVmCreateRequest": {
+        "type": "object",
+        "required": [
+          "cloudinit_user_data",
+          "public_key",
+          "cpu_count",
+          "memory_size",
+          "disk_size_gb"
+        ],
+        "properties": {
+          "cloudinit_user_data": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "cloud-init `runcmd` entries, de-duplicated with the selected software's commands."
+          },
+          "software_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Software catalog ids to install."
+          },
+          "public_key": {
+            "type": "string",
+            "description": "SSH public key injected into the VM."
+          },
+          "cpu_count": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 16
+          },
+          "memory_size": {
+            "type": "integer",
+            "minimum": 128,
+            "maximum": 16384,
+            "description": "Memory in MiB."
+          },
+          "disk_size_gb": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65,
+            "description": "Disk size in GiB."
+          },
+          "cloning": {
+            "type": "string",
+            "description": "Existing machine name to clone from."
+          }
+        }
+      },
+      "ProvisionedVm": {
+        "type": "object",
+        "required": [
+          "network_name",
+          "hypervisor_socket"
+        ],
+        "description": "What provisioning a microVM on a node reports back.",
+        "properties": {
+          "network_name": {
+            "type": "string"
+          },
+          "hypervisor_socket": {
+            "type": "string"
+          }
+        }
+      },
+      "ApiVmCreateResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ProvisionedVm"
+          },
+          {
+            "type": "object",
+            "required": [
+              "id",
+              "node_name"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "node_name": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "ApiVmCloneRequest": {
+        "type": "object",
+        "required": [
+          "new_name"
+        ],
+        "properties": {
+          "new_name": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_-]+$"
+          },
+          "public_key": {
+            "type": "string",
+            "description": "Defaults to the caller's saved SSH key."
+          }
+        }
+      },
+      "ApiVmCloneResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ApiVmCreateResponse"
+          },
+          {
+            "type": "object",
+            "required": [
+              "new_name"
+            ],
+            "properties": {
+              "new_name": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "ApiVmUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "cpu_count": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 16
+          },
+          "memory_size": {
+            "type": "integer",
+            "minimum": 128,
+            "maximum": 16384
+          },
+          "disk_size_gb": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65
+          }
+        }
+      },
+      "ApiVmSnapshotRequest": {
+        "type": "object",
+        "properties": {
+          "destination_url": {
+            "type": "string",
+            "description": "Object-storage URL to upload the snapshot to."
+          }
+        }
+      },
+      "ApiVmSnapshotResponse": {
+        "type": "object",
+        "required": [
+          "destination_url",
+          "resumed"
+        ],
+        "properties": {
+          "destination_url": {
+            "type": "string"
+          },
+          "resumed": {
+            "type": "boolean",
+            "description": "Whether the VM was resumed after snapshotting."
+          }
+        }
+      },
+      "ApiVmRestoreRequest": {
+        "type": "object",
+        "required": [
+          "source_url"
+        ],
+        "properties": {
+          "source_url": {
+            "type": "string"
+          },
+          "prefault": {
+            "type": "boolean"
+          },
+          "memory_restore_mode": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "new_name": {
+            "type": "string",
+            "description": "Restore into a new microVM with this name."
+          }
+        }
+      },
+      "ApiVmRestoreResponse": {
+        "type": "object",
+        "required": [
+          "source_url"
+        ],
+        "properties": {
+          "source_url": {
+            "type": "string"
+          },
+          "new_name": {
+            "type": "string",
+            "description": "Present when the restore created a new microVM."
+          }
+        }
+      },
+      "ApiNodeStatus": {
+        "type": "string",
+        "enum": [
+          "active",
+          "maintenance",
+          "offline"
+        ],
+        "description": "Lifecycle status persisted on the node."
+      },
+      "ApiNode": {
+        "type": "object",
+        "required": [
+          "name",
+          "url",
+          "vcpu_total",
+          "vcpu_available",
+          "memory_total",
+          "memory_available",
+          "disk_total",
+          "disk_available",
+          "specialization",
+          "status",
+          "created_at",
+          "updated_at"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "vcpu_total": {
+            "type": "integer"
+          },
+          "vcpu_available": {
+            "type": "integer"
+          },
+          "memory_total": {
+            "type": "integer",
+            "description": "Bytes."
+          },
+          "memory_available": {
+            "type": "integer",
+            "description": "Bytes."
+          },
+          "disk_total": {
+            "type": "integer",
+            "description": "Bytes."
+          },
+          "disk_available": {
+            "type": "integer",
+            "description": "Bytes."
+          },
+          "specialization": {
+            "type": "string",
+            "enum": [
+              "General",
+              "Coding"
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/ApiNodeStatus"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ApiNodeListResponse": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/ApiNode"
+        }
+      },
+      "ApiNodeCreateRequest": {
+        "type": "object",
+        "required": [
+          "name",
+          "url"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "specialization": {
+            "type": "string",
+            "enum": [
+              "General",
+              "Coding"
+            ]
+          }
+        }
+      },
+      "ApiNodeUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "specialization": {
+            "type": "string",
+            "enum": [
+              "General",
+              "Coding"
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/ApiNodeStatus"
+          }
+        }
+      },
+      "ApiNodeRefreshResponse": {
+        "type": "object",
+        "required": [
+          "message",
+          "node"
+        ],
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "node": {
+            "$ref": "#/components/schemas/ApiNode"
+          }
+        }
+      },
+      "ApiNodeHealthResponse": {
+        "type": "object",
+        "required": [
+          "http"
+        ],
+        "properties": {
+          "http": {
+            "type": "string",
+            "description": "`OK (<status>)` or `FAIL: <reason>`."
+          }
+        }
+      },
+      "ApiNodeReinitializeResponse": {
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "ApiSoftware": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "displayName",
+          "description",
+          "icon",
+          "installCommand",
+          "setupCommand",
+          "runAsUser",
+          "recommendedVcpu",
+          "recommendedMemory",
+          "recommendedDisk",
+          "category",
+          "createdAt",
+          "updatedAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "icon": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "installCommand": {
+            "type": "string"
+          },
+          "setupCommand": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "runAsUser": {
+            "type": "boolean"
+          },
+          "recommendedVcpu": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "recommendedMemory": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "recommendedDisk": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "category": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ApiSoftwareListResponse": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/ApiSoftware"
+        }
+      },
+      "ApiSoftwareCreateRequest": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "displayName",
+          "installCommand"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "icon": {
+            "type": "string"
+          },
+          "installCommand": {
+            "type": "string"
+          },
+          "setupCommand": {
+            "type": "string"
+          },
+          "runAsUser": {
+            "type": "boolean"
+          },
+          "recommendedVcpu": {
+            "type": "integer"
+          },
+          "recommendedMemory": {
+            "type": "integer"
+          },
+          "recommendedDisk": {
+            "type": "integer"
+          },
+          "category": {
+            "type": "string"
+          }
+        }
+      },
+      "ApiSoftwareUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "icon": {
+            "type": "string"
+          },
+          "installCommand": {
+            "type": "string"
+          },
+          "setupCommand": {
+            "type": "string"
+          },
+          "runAsUser": {
+            "type": "boolean"
+          },
+          "recommendedVcpu": {
+            "type": "integer"
+          },
+          "recommendedMemory": {
+            "type": "integer"
+          },
+          "recommendedDisk": {
+            "type": "integer"
+          },
+          "category": {
+            "type": "string"
+          }
+        }
+      },
+      "ApiSshKey": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "publicKey",
+          "fingerprint",
+          "type",
+          "createdAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "publicKey": {
+            "type": "string"
+          },
+          "fingerprint": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "type": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "`ed25519` for generated keys, `uploaded` otherwise."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ApiSshKeyListResponse": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/ApiSshKey"
+        }
+      },
+      "ApiSshKeyCreateRequest": {
+        "type": "object",
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "upload",
+              "generate"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "publicKey": {
+            "type": "string",
+            "description": "Required when `type` is `upload`."
+          }
+        }
+      },
+      "ApiSshKeyCreateResponse": {
+        "type": "object",
+        "required": [
+          "id",
+          "type",
+          "publicKey",
+          "fingerprint"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "uploaded",
+              "generated"
+            ]
+          },
+          "publicKey": {
+            "type": "string"
+          },
+          "fingerprint": {
+            "type": "string"
+          },
+          "privateKey": {
+            "type": "string",
+            "description": "Only returned for generated keys."
+          }
+        }
+      },
+      "ApiSshKeyUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "New label for the key. Use an empty string to clear it."
+          }
+        }
+      },
+      "ApiKey": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "start",
+          "prefix",
+          "enabled",
+          "expiresAt",
+          "createdAt",
+          "lastRequest",
+          "scopes"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "start": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "prefix": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "expiresAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "createdAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "lastRequest": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "scopes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "vms:read",
+                "vms:write",
+                "routes:read",
+                "routes:write",
+                "nodes:read",
+                "nodes:write",
+                "software:read",
+                "software:write",
+                "billing:read",
+                "billing:write",
+                "keys:read",
+                "keys:write",
+                "api-keys:read",
+                "api-keys:write"
+              ]
+            }
+          },
+          "via": {
+            "type": "string",
+            "description": "Set when the key was minted by sshoxy."
+          }
+        }
+      },
+      "ApiKeyListResponse": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/ApiKey"
+        }
+      },
+      "ApiKeyCreateRequest": {
+        "type": "object",
+        "required": [
+          "name",
+          "scopes"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "scopes": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "enum": [
+                "vms:read",
+                "vms:write",
+                "routes:read",
+                "routes:write",
+                "nodes:read",
+                "nodes:write",
+                "software:read",
+                "software:write",
+                "billing:read",
+                "billing:write",
+                "keys:read",
+                "keys:write",
+                "api-keys:read",
+                "api-keys:write"
+              ]
+            }
+          },
+          "expiresIn": {
+            "description": "Lifetime: `never`, `7d`, `30d`, `90d`, or a positive number of seconds.",
+            "oneOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "never",
+                  "7d",
+                  "30d",
+                  "90d"
+                ]
+              },
+              {
+                "type": "integer",
+                "minimum": 1
+              }
+            ]
+          }
+        }
+      },
+      "ApiKeyCreateResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ApiKey"
+          },
+          {
+            "type": "object",
+            "required": [
+              "key"
+            ],
+            "properties": {
+              "key": {
+                "type": "string",
+                "description": "Shown once. Store it securely."
+              }
+            }
+          }
+        ]
+      },
+      "SharedUser": {
+        "type": "object",
+        "required": [
+          "id",
+          "email",
+          "name"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "ApiRoute": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "microvm_id",
+          "privacy",
+          "port",
+          "user_ids",
+          "machine_name",
+          "machine_user_id",
+          "node_name",
+          "ip_address",
+          "owner_username",
+          "owner_email",
+          "created_at",
+          "updated_at",
+          "url",
+          "shared_users"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "microvm_id": {
+            "type": "string"
+          },
+          "privacy": {
+            "type": "string",
+            "enum": [
+              "private",
+              "public",
+              "shared"
+            ]
+          },
+          "port": {
+            "type": "integer"
+          },
+          "user_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "machine_name": {
+            "type": "string"
+          },
+          "machine_user_id": {
+            "type": "string"
+          },
+          "node_name": {
+            "type": "string"
+          },
+          "ip_address": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "owner_username": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "owner_email": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "url": {
+            "type": "string"
+          },
+          "shared_users": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SharedUser"
+            }
+          }
+        }
+      },
+      "ApiRouteListResponse": {
+        "type": "object",
+        "required": [
+          "owned",
+          "shared"
+        ],
+        "properties": {
+          "owned": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ApiRoute"
+            }
+          },
+          "shared": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ApiRoute"
+            }
+          }
+        }
+      },
+      "ApiRouteCreateRequest": {
+        "type": "object",
+        "required": [
+          "name",
+          "microvm_id",
+          "port",
+          "privacy"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$"
+          },
+          "microvm_id": {
+            "type": "string",
+            "description": "Id of the VM the route forwards to."
+          },
+          "port": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65535
+          },
+          "privacy": {
+            "type": "string",
+            "enum": [
+              "private",
+              "public",
+              "shared"
+            ]
+          },
+          "emails": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "email"
+            },
+            "description": "Required when `privacy` is `shared`."
+          }
+        }
+      },
+      "ApiRouteCreateResponse": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "microvm_id",
+          "privacy",
+          "port",
+          "url",
+          "shared_users"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "microvm_id": {
+            "type": "string"
+          },
+          "privacy": {
+            "type": "string",
+            "enum": [
+              "private",
+              "public",
+              "shared"
+            ]
+          },
+          "port": {
+            "type": "integer"
+          },
+          "url": {
+            "type": "string"
+          },
+          "shared_users": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SharedUser"
+            }
+          }
+        }
+      },
+      "ApiRouteUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "port": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65535
+          },
+          "privacy": {
+            "type": "string",
+            "enum": [
+              "private",
+              "public",
+              "shared"
+            ]
+          },
+          "emails": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "email"
+            }
+          }
+        }
+      },
+      "ApiBillingUser": {
+        "type": "object",
+        "required": [
+          "username",
+          "name",
+          "email"
+        ],
+        "properties": {
+          "username": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          }
+        }
+      },
+      "ApiBillingUsersResponse": {
+        "type": "object",
+        "required": [
+          "users"
+        ],
+        "properties": {
+          "users": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ApiBillingUser"
+            }
+          }
+        }
+      },
+      "ApiBillingGenerateResponse": {
+        "type": "object",
+        "required": [
+          "username",
+          "start",
+          "end",
+          "machinesChecked",
+          "billsCreated",
+          "emailsSent",
+          "bills"
+        ],
+        "properties": {
+          "username": {
+            "type": "string"
+          },
+          "start": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Window start (epoch ms)."
+          },
+          "end": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Window end (epoch ms)."
+          },
+          "machinesChecked": {
+            "type": "integer"
+          },
+          "billsCreated": {
+            "type": "integer"
+          },
+          "emailsSent": {
+            "type": "integer"
+          },
+          "bills": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "machines",
+                "total_usd_micro"
+              ],
+              "properties": {
+                "machines": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "total_usd_micro": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      },
+      "ApiBillingResetDodoResponse": {
+        "type": "object",
+        "required": [
+          "username",
+          "reset"
+        ],
+        "properties": {
+          "username": {
+            "type": "string"
+          },
+          "reset": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ApiMeResponse": {
+        "type": "object",
+        "required": [
+          "user",
+          "session"
+        ],
+        "properties": {
+          "user": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "The authenticated user."
+          },
+          "session": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "The active session."
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "apiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key"
+      },
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "API key"
+      },
+      "sessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "better-auth.session_token"
+      }
+    }
+  },
+  "security": [
+    {
+      "apiKey": []
+    },
+    {
+      "bearerAuth": []
+    },
+    {
+      "sessionCookie": []
+    }
+  ],
+  "paths": {
+    "/api/me": {
+      "get": {
+        "operationId": "getApiMe",
+        "tags": [
+          "Account"
+        ],
+        "summary": "Get the current user and session",
+        "responses": {
+          "200": {
+            "description": "The authenticated user and their session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiMeResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/vmm": {
+      "get": {
+        "operationId": "getApiV1Vmm",
+        "tags": [
+          "MicroVMs"
+        ],
+        "summary": "List microVMs",
+        "description": "List every microVM owned by the authenticated user.",
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "bearerAuth": []
+          },
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The user's microVMs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiVmListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/vmm/{machine_name}": {
+      "get": {
+        "operationId": "getApiV1VmmByMachineName",
+        "tags": [
+          "MicroVMs"
+        ],
+        "summary": "Get a microVM",
+        "parameters": [
+          {
+            "name": "machine_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Name of the microVM."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The microVM with live hypervisor info.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiVmGetResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "MicroVM not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "postApiV1VmmByMachineName",
+        "tags": [
+          "MicroVMs"
+        ],
+        "summary": "Create a microVM",
+        "parameters": [
+          {
+            "name": "machine_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Name of the microVM."
+          }
+        ],
+        "description": "Provisions a new microVM on a node with sufficient free capacity.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApiVmCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiVmCreateResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid size or over quota",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Overdue unpaid invoice",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Name taken or no node available",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "putApiV1VmmByMachineName",
+        "tags": [
+          "MicroVMs"
+        ],
+        "summary": "Resize a microVM",
+        "parameters": [
+          {
+            "name": "machine_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Name of the microVM."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApiVmUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiSuccess"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid size",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "MicroVM not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteApiV1VmmByMachineName",
+        "tags": [
+          "MicroVMs"
+        ],
+        "summary": "Delete a microVM",
+        "parameters": [
+          {
+            "name": "machine_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Name of the microVM."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiSuccess"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "MicroVM not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/vmm/{machine_name}/start": {
+      "put": {
+        "operationId": "putApiV1VmmByMachineNameStart",
+        "tags": [
+          "MicroVMs"
+        ],
+        "summary": "Start a microVM",
+        "parameters": [
+          {
+            "name": "machine_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Name of the microVM."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Started, or already active.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiSuccess"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Overdue unpaid invoice",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "MicroVM not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/vmm/{machine_name}/pause": {
+      "put": {
+        "operationId": "putApiV1VmmByMachineNamePause",
+        "tags": [
+          "MicroVMs"
+        ],
+        "summary": "Pause a microVM",
+        "parameters": [
+          {
+            "name": "machine_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Name of the microVM."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paused.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiSuccess"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "MicroVM is not active",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "MicroVM not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/vmm/{machine_name}/shutdown": {
+      "put": {
+        "operationId": "putApiV1VmmByMachineNameShutdown",
+        "tags": [
+          "MicroVMs"
+        ],
+        "summary": "Shut down a microVM",
+        "parameters": [
+          {
+            "name": "machine_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Name of the microVM."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Shut down.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiSuccess"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "MicroVM is not active",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "MicroVM not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/vmm/{machine_name}/restart": {
+      "put": {
+        "operationId": "putApiV1VmmByMachineNameRestart",
+        "tags": [
+          "MicroVMs"
+        ],
+        "summary": "Restart a microVM",
+        "parameters": [
+          {
+            "name": "machine_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Name of the microVM."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Restarted.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiSuccess"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "MicroVM is not active",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "MicroVM not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/vmm/{machine_name}/snapshot": {
+      "put": {
+        "operationId": "putApiV1VmmByMachineNameSnapshot",
+        "tags": [
+          "MicroVMs"
+        ],
+        "summary": "Snapshot a microVM",
+        "parameters": [
+          {
+            "name": "machine_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Name of the microVM."
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApiVmSnapshotRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Snapshot created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiVmSnapshotResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "MicroVM not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/vmm/{machine_name}/restore": {
+      "put": {
+        "operationId": "putApiV1VmmByMachineNameRestore",
+        "tags": [
+          "MicroVMs"
+        ],
+        "summary": "Restore a microVM from a snapshot",
+        "parameters": [
+          {
+            "name": "machine_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Name of the microVM."
+          }
+        ],
+        "description": "Restores in place, or creates a new microVM when `new_name` is set.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApiVmRestoreRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Restored in place.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiVmRestoreResponse"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Restored into a new microVM.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiVmRestoreResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid name",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "MicroVM not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Name already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/vmm/{machine_name}/clone": {
+      "post": {
+        "operationId": "postApiV1VmmByMachineNameClone",
+        "tags": [
+          "MicroVMs"
+        ],
+        "summary": "Clone a microVM",
+        "parameters": [
+          {
+            "name": "machine_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Name of the microVM."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApiVmCloneRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Clone created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiVmCloneResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid name or missing SSH key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Source microVM not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Name already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/nodes": {
+      "get": {
+        "operationId": "getApiV1Nodes",
+        "tags": [
+          "Nodes"
+        ],
+        "summary": "List nodes",
+        "responses": {
+          "200": {
+            "description": "All nodes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiNodeListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "postApiV1Nodes",
+        "tags": [
+          "Nodes"
+        ],
+        "summary": "Register a node",
+        "description": "Probes the node's /system endpoint and registers it with its control plane.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApiNodeCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Registered.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiNode"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing name or url, or probe failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Node unreachable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/nodes/{name}": {
+      "get": {
+        "operationId": "getApiV1NodesByName",
+        "tags": [
+          "Nodes"
+        ],
+        "summary": "Get a node",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Name of the node."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The node.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiNode"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Node not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "putApiV1NodesByName",
+        "tags": [
+          "Nodes"
+        ],
+        "summary": "Update a node",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApiNodeUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiNode"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Node not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "name",
+            "required": true
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "deleteApiV1NodesByName",
+        "tags": [
+          "Nodes"
+        ],
+        "summary": "Delete a node",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Name of the node."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted node.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiNode"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Node not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/nodes/{name}/health": {
+      "post": {
+        "operationId": "postApiV1NodesByNameHealth",
+        "tags": [
+          "Nodes"
+        ],
+        "summary": "Check node health",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Name of the node."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Per-check results.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiNodeHealthResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Node not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/nodes/{name}/refresh": {
+      "post": {
+        "operationId": "postApiV1NodesByNameRefresh",
+        "tags": [
+          "Nodes"
+        ],
+        "summary": "Refresh node resources",
+        "description": "Re-probes the node and recomputes available capacity from active microVM allocations.",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Name of the node."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Refreshed node.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiNodeRefreshResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Node not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Node unreachable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/nodes/{name}/reinitialize": {
+      "post": {
+        "operationId": "postApiV1NodesByNameReinitialize",
+        "tags": [
+          "Nodes"
+        ],
+        "summary": "Reinitialize a node",
+        "description": "Pushes the stored host info back to the node's control plane.",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Name of the node."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reinitialized.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiNodeReinitializeResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Node not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/software": {
+      "get": {
+        "operationId": "getApiV1Software",
+        "tags": [
+          "Software catalog"
+        ],
+        "summary": "List software",
+        "responses": {
+          "200": {
+            "description": "The software catalog.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiSoftwareListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "postApiV1Software",
+        "tags": [
+          "Software catalog"
+        ],
+        "summary": "Add software",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApiSoftwareCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiSoftware"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/software/{id}": {
+      "get": {
+        "operationId": "getApiV1SoftwareById",
+        "tags": [
+          "Software catalog"
+        ],
+        "summary": "Get software",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Id of the catalog entry."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The catalog entry.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiSoftware"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "putApiV1SoftwareById",
+        "tags": [
+          "Software catalog"
+        ],
+        "summary": "Update software",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Id of the catalog entry."
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApiSoftwareUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiSuccess"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteApiV1SoftwareById",
+        "tags": [
+          "Software catalog"
+        ],
+        "summary": "Delete software",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Id of the catalog entry."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiSuccess"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/keys": {
+      "get": {
+        "operationId": "getApiV1Keys",
+        "tags": [
+          "SSH keys"
+        ],
+        "summary": "List SSH keys",
+        "responses": {
+          "200": {
+            "description": "The user's SSH keys.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiSshKeyListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "postApiV1Keys",
+        "tags": [
+          "SSH keys"
+        ],
+        "summary": "Add an SSH key",
+        "description": "Upload an existing public key or generate a new ed25519 key pair. Generated private keys are returned once.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApiSshKeyCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Key created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiSshKeyCreateResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing key or invalid type",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/keys/{id}": {
+      "put": {
+        "operationId": "putApiV1KeysById",
+        "tags": [
+          "SSH keys"
+        ],
+        "summary": "Rename an SSH key",
+        "description": "Update the label of an SSH key. Send an empty string to clear it.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Id of the SSH key."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApiSshKeyUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiSuccess"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid name",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Key not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteApiV1KeysById",
+        "tags": [
+          "SSH keys"
+        ],
+        "summary": "Delete an SSH key",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Id of the SSH key."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiSuccess"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Key not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/api-keys": {
+      "get": {
+        "operationId": "getApiV1ApiKeys",
+        "tags": [
+          "API keys"
+        ],
+        "summary": "List API keys",
+        "responses": {
+          "200": {
+            "description": "The user's API keys.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "postApiV1ApiKeys",
+        "tags": [
+          "API keys"
+        ],
+        "summary": "Create an API key",
+        "description": "The plaintext key is returned only once.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApiKeyCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Key created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyCreateResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid name, scopes or expiry",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Requested a scope only node admins can grant",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/api-keys/{id}": {
+      "delete": {
+        "operationId": "deleteApiV1ApiKeysById",
+        "tags": [
+          "API keys"
+        ],
+        "summary": "Revoke an API key",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Id of the API key."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Revoked.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiSuccess"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Key not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/routes": {
+      "get": {
+        "operationId": "getApiV1Routes",
+        "tags": [
+          "Routes"
+        ],
+        "summary": "List routes",
+        "description": "Routes owned by the user plus routes shared with them.",
+        "responses": {
+          "200": {
+            "description": "Owned and shared routes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiRouteListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "postApiV1Routes",
+        "tags": [
+          "Routes"
+        ],
+        "summary": "Create a route",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApiRouteCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiRouteCreateResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid name, port or emails",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "MicroVM not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Route name already used",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/routes/{name}": {
+      "put": {
+        "operationId": "putApiV1RoutesByName",
+        "tags": [
+          "Routes"
+        ],
+        "summary": "Update a route",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Name of the route."
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApiRouteUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiSuccess"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid port, privacy or emails",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Route not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteApiV1RoutesByName",
+        "tags": [
+          "Routes"
+        ],
+        "summary": "Delete a route",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Name of the route."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiSuccess"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Route not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/billing/admin/users": {
+      "get": {
+        "operationId": "getApiV1BillingAdminUsers",
+        "tags": [
+          "Billing"
+        ],
+        "summary": "List billable users",
+        "responses": {
+          "200": {
+            "description": "Usernames and contact details.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiBillingUsersResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/billing/admin/generate/{username}": {
+      "post": {
+        "operationId": "postApiV1BillingAdminGenerateByUsername",
+        "tags": [
+          "Billing"
+        ],
+        "summary": "Generate an invoice",
+        "description": "Generates (and emails) an invoice for a user over an optional time window.",
+        "parameters": [
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Window start (YYYY-MM-DD)."
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Window end (YYYY-MM-DD)."
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "username",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Invoice generation summary.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiBillingGenerateResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid date window",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/billing/admin/reset-dodo/{username}": {
+      "post": {
+        "operationId": "postApiV1BillingAdminResetDodoByUsername",
+        "tags": [
+          "Billing"
+        ],
+        "summary": "Reset a user's Dodo data",
+        "parameters": [
+          {
+            "name": "username",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Username of the account to reset."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reset done.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiBillingResetDodoResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/billing/pay/{billId}": {
+      "post": {
+        "operationId": "postApiV1BillingPayByBillId",
+        "tags": [
+          "Billing"
+        ],
+        "summary": "Pay an invoice",
+        "description": "HTMX endpoint. Charges the saved mandate, or redirects to a Dodo checkout through the `HX-Redirect` response header (empty body). Failures return an HTML fragment targeting `#pay-error`.",
+        "parameters": [
+          {
+            "name": "billId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Id of the invoice to pay."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payment started (see the `HX-Redirect` header) or already settled."
+          },
+          "400": {
+            "description": "Zero-amount invoice",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Payment declined",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Invoice not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Payment provider error",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Payments not configured",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

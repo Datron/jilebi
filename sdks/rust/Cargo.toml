@@ -1,0 +1,21 @@
+[package]
+name = "jilebi-sdk"
+version = "0.6.2"
+authors = ["OpenAPI Generator team and contributors"]
+description = "Programmatic API for jilebi microVMs, routes, SSH keys, nodes and billing.  Authenticate with an API key (`X-API-Key` header or `Authorization: Bearer <key>`), or with a browser session cookie. API keys carry scopes — see the `POST /api/v1/api-keys` endpoint for the full list."
+license = "AGPL-3.0"
+edition = "2021"
+
+[dependencies]
+serde = { version = "^1.0", features = ["derive"] }
+serde_with = { version = "^3.8", default-features = false, features = ["base64", "std", "macros"] }
+serde_json = "^1.0"
+serde_repr = "^0.1"
+url = "^2.5"
+chrono = { version = "^0.4",  features = ["serde"] }
+reqwest = { version = "^0.13", default-features = false, features = ["json", "multipart", "query", "form"] }
+
+[features]
+default = ["native-tls"]
+native-tls = ["reqwest/native-tls"]
+rustls = ["reqwest/rustls"]

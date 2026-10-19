@@ -19,6 +19,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@master
         with:
@@ -52,6 +57,7 @@ jobs:
             version=`git tag -l --sort=-creatordate | head -n 1`
             echo "version=$version"
             cargo set-version --workspace $version
+            node sdks/scripts/set-version.mjs "$version"
       
       - name: Commit
         run: |
