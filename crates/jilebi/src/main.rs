@@ -141,6 +141,16 @@ fn cors_layer() -> Result<CorsLayer, String> {
     }
 }
 
+fn tls_paths() -> Result<Option<(PathBuf, PathBuf)>, String> {
+    let cert = dotenvy::var("TLS_CERT_PATH").unwrap_or_default();
+    let key = dotenvy::var("TLS_KEY_PATH").unwrap_or_default();
+    match (cert.trim().is_empty(), key.trim().is_empty()) {
+        (true, true) => Ok(None),
+        (false, false) => Ok(Some((PathBuf::from(cert), PathBuf::from(key)))),
+        _ => Err("Both TLS_CERT_PATH and TLS_KEY_PATH must be set to enable HTTPS".to_string()),
+    }
+}
+
 async fn serve_http(server: JilebiMcpServer) -> Result<(), String> {
     let addr = http_bind_addr()?;
     let mcp_path = mcp_path()?;
@@ -157,22 +167,51 @@ async fn serve_http(server: JilebiMcpServer) -> Result<(), String> {
         .nest_service(&mcp_path, mcp_service)
         .layer(cors_layer);
 
-    let listener = tokio::net::TcpListener::bind(addr)
-        .await
-        .map_err(|e| format!("Could not bind HTTP server on {addr}: {e}"))?;
-    tracing::info!("Jilebi HTTP server listening on {}", addr);
     tracing::info!(
         "Jilebi MCP streamable HTTP endpoint mounted at {}",
         mcp_path
     );
 
-    axum::serve(listener, app)
-        .with_graceful_shutdown(async {
+    if let Some((cert_path, key_path)) = tls_paths()? {
+        // axum-server's rustls TLS stack needs a process-level crypto provider.
+        let _ = rustls::crypto::ring::default_provider().install_default();
+        let tls_config =
+            axum_server::tls_rustls::RustlsConfig::from_pem_file(&cert_path, &key_path)
+                .await
+                .map_err(|e| {
+                    format!(
+                        "Could not load TLS cert/key from {} and {}: {e}",
+                        cert_path.display(),
+                        key_path.display()
+                    )
+                })?;
+        tracing::info!("Jilebi HTTPS server listening on {}", addr);
+        let handle = axum_server::Handle::new();
+        let shutdown_handle = handle.clone();
+        tokio::spawn(async move {
             tokio::signal::ctrl_c().await.ok();
-            tracing::info!("Shutting down Jilebi HTTP server");
-        })
-        .await
-        .map_err(|e| e.to_string())
+            tracing::info!("Shutting down Jilebi HTTPS server");
+            shutdown_handle.graceful_shutdown(Some(Duration::from_secs(5)));
+        });
+        axum_server::bind_rustls(addr, tls_config)
+            .handle(handle)
+            .serve(app.into_make_service())
+            .await
+            .map_err(|e| e.to_string())
+    } else {
+        let listener = tokio::net::TcpListener::bind(addr)
+            .await
+            .map_err(|e| format!("Could not bind HTTP server on {addr}: {e}"))?;
+        tracing::info!("Jilebi HTTP server listening on {}", addr);
+
+        axum::serve(listener, app)
+            .with_graceful_shutdown(async {
+                tokio::signal::ctrl_c().await.ok();
+                tracing::info!("Shutting down Jilebi HTTP server");
+            })
+            .await
+            .map_err(|e| e.to_string())
+    }
 }
 
 #[tokio::main]
