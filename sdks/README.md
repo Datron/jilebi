@@ -4,11 +4,15 @@ Client SDKs for the [jilebi API](https://jilebi.ai/api/openapi.json), generated
 with [OpenAPI Generator](https://openapi-generator.tech) from the vendored
 spec at [`sdks/openapi.json`](./openapi.json).
 
-| Language   | Generator         | Package            | Registry                |
-| ---------- | ----------------- | ------------------ | ----------------------- |
-| Rust       | `rust`            | `jilebi-sdk`       | [crates.io](https://crates.io) |
-| TypeScript | `typescript-fetch`| `@jilebi/sdk`      | [npm](https://www.npmjs.com) |
-| Python     | `python`          | `jilebi-sdk`       | [PyPI](https://pypi.org) |
+| Language   | Generator         | Package / module                        | Registry                       |
+| ---------- | ----------------- | --------------------------------------- | ------------------------------ |
+| Rust       | `rust`            | `jilebi-sdk`                            | [crates.io](https://crates.io) |
+| TypeScript | `typescript-fetch`| `@jilebi/sdk`                           | [npm](https://www.npmjs.com)   |
+| Python     | `python`          | `jilebi-sdk`                            | [PyPI](https://pypi.org)       |
+| Go         | `go`              | `github.com/Datron/jilebi/sdks/go`      | not published                  |
+
+> The Go SDK is generated for completeness but is **not published** — it is
+> consumed directly from this repository.
 
 ## Layout
 
@@ -19,7 +23,8 @@ sdks/
 │   └── fetch-spec.mjs    # refreshes openapi.json from jilebi.ai
 ├── rust/                 # cargo workspace member (crate jilebi-sdk)
 ├── typescript/           # npm package @jilebi/sdk
-└── python/               # PyPI package jilebi-sdk
+├── python/               # PyPI package jilebi-sdk
+└── go/                   # Go module github.com/Datron/jilebi/sdks/go (not published)
 ```
 
 The Rust crate is a member of the root cargo workspace (`sdks/rust`).
@@ -40,6 +45,7 @@ npm run sdk:generate
 npm run sdk:generate:rust
 npm run sdk:generate:typescript
 npm run sdk:generate:python
+npm run sdk:generate:go
 ```
 
 All generator options live in [`openapitools.json`](../openapitools.json) under
@@ -56,6 +62,9 @@ cd sdks/typescript && npm install && npm run build
 
 # Python
 cd sdks/python && python -m build
+
+# Go
+cd sdks/go && go build ./...
 ```
 
 ## Releasing
@@ -64,7 +73,8 @@ Releases are handled by
 [`.github/workflows/sdk_release.yaml`](../.github/workflows/sdk_release.yaml),
 which is triggered by a tag matching `sdk-v*` (for example `sdk-v1.0.0`) or by a
 manual `workflow_dispatch`. The version is taken from the tag and written into
-each package manifest before publishing.
+each package manifest before publishing. The Go SDK is intentionally left out of
+the release pipeline and is not published anywhere.
 
 Required repository secrets:
 

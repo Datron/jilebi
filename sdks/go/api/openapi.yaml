@@ -1,0 +1,3166 @@
+openapi: 3.1.0
+info:
+  description: |-
+    Programmatic API for jilebi microVMs, routes, SSH keys, nodes and billing.
+
+    Authenticate with an API key (`X-API-Key` header or `Authorization: Bearer <key>`), or with a browser session cookie. API keys carry scopes — see the `POST /api/v1/api-keys` endpoint for the full list.
+  license:
+    name: AGPL-3.0
+    url: https://www.gnu.org/licenses/agpl-3.0.html
+  title: jilebi API
+  version: 1.0.0
+servers:
+- url: https://jilebi.ai
+- url: http://localhost:8787
+security:
+- apiKey: []
+- bearerAuth: []
+- sessionCookie: []
+tags:
+- description: The authenticated user and session.
+  name: Account
+- description: Create and manage microVMs.
+  name: MicroVMs
+- description: Expose VM ports over public subdomains.
+  name: Routes
+- description: SSH keys used to log in to microVMs.
+  name: SSH keys
+- description: API keys and their scopes.
+  name: API keys
+- description: Host nodes (admin only).
+  name: Nodes
+- description: Software installable at VM creation (admin only).
+  name: Software catalog
+- description: "Invoices, payments and admin billing actions."
+  name: Billing
+paths:
+  /api/me:
+    get:
+      operationId: getApiMe
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMeResponse"
+          description: The authenticated user and their session.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Unauthorized
+      summary: Get the current user and session
+      tags:
+      - Account
+  /api/v1/vmm:
+    get:
+      description: List every microVM owned by the authenticated user.
+      operationId: getApiV1Vmm
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiVmListResponse"
+          description: The user's microVMs.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Unauthorized
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Internal server error
+      security:
+      - apiKey: []
+      - bearerAuth: []
+      - sessionCookie: []
+      summary: List microVMs
+      tags:
+      - MicroVMs
+  /api/v1/vmm/{machine_name}:
+    delete:
+      operationId: deleteApiV1VmmByMachineName
+      parameters:
+      - description: Name of the microVM.
+        explode: false
+        in: path
+        name: machine_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccess"
+          description: Deleted.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Unauthorized
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: MicroVM not found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Internal server error
+      summary: Delete a microVM
+      tags:
+      - MicroVMs
+    get:
+      operationId: getApiV1VmmByMachineName
+      parameters:
+      - description: Name of the microVM.
+        explode: false
+        in: path
+        name: machine_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiVmGetResponse"
+          description: The microVM with live hypervisor info.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Unauthorized
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: MicroVM not found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Internal server error
+      summary: Get a microVM
+      tags:
+      - MicroVMs
+    post:
+      description: Provisions a new microVM on a node with sufficient free capacity.
+      operationId: postApiV1VmmByMachineName
+      parameters:
+      - description: Name of the microVM.
+        explode: false
+        in: path
+        name: machine_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApiVmCreateRequest"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiVmCreateResponse"
+          description: Created.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Invalid size or over quota
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Unauthorized
+        "402":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Overdue unpaid invoice
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Name taken or no node available
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Internal server error
+      summary: Create a microVM
+      tags:
+      - MicroVMs
+    put:
+      operationId: putApiV1VmmByMachineName
+      parameters:
+      - description: Name of the microVM.
+        explode: false
+        in: path
+        name: machine_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApiVmUpdateRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccess"
+          description: Updated.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Invalid size
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Unauthorized
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: MicroVM not found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Internal server error
+      summary: Resize a microVM
+      tags:
+      - MicroVMs
+  /api/v1/vmm/{machine_name}/start:
+    put:
+      operationId: putApiV1VmmByMachineNameStart
+      parameters:
+      - description: Name of the microVM.
+        explode: false
+        in: path
+        name: machine_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccess"
+          description: "Started, or already active."
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Unauthorized
+        "402":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Overdue unpaid invoice
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: MicroVM not found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Internal server error
+      summary: Start a microVM
+      tags:
+      - MicroVMs
+  /api/v1/vmm/{machine_name}/pause:
+    put:
+      operationId: putApiV1VmmByMachineNamePause
+      parameters:
+      - description: Name of the microVM.
+        explode: false
+        in: path
+        name: machine_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccess"
+          description: Paused.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: MicroVM is not active
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Unauthorized
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: MicroVM not found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Internal server error
+      summary: Pause a microVM
+      tags:
+      - MicroVMs
+  /api/v1/vmm/{machine_name}/shutdown:
+    put:
+      operationId: putApiV1VmmByMachineNameShutdown
+      parameters:
+      - description: Name of the microVM.
+        explode: false
+        in: path
+        name: machine_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccess"
+          description: Shut down.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: MicroVM is not active
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Unauthorized
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: MicroVM not found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Internal server error
+      summary: Shut down a microVM
+      tags:
+      - MicroVMs
+  /api/v1/vmm/{machine_name}/restart:
+    put:
+      operationId: putApiV1VmmByMachineNameRestart
+      parameters:
+      - description: Name of the microVM.
+        explode: false
+        in: path
+        name: machine_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccess"
+          description: Restarted.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: MicroVM is not active
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Unauthorized
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: MicroVM not found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Internal server error
+      summary: Restart a microVM
+      tags:
+      - MicroVMs
+  /api/v1/vmm/{machine_name}/snapshot:
+    put:
+      operationId: putApiV1VmmByMachineNameSnapshot
+      parameters:
+      - description: Name of the microVM.
+        explode: false
+        in: path
+        name: machine_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApiVmSnapshotRequest"
+        required: false
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiVmSnapshotResponse"
+          description: Snapshot created.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Unauthorized
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: MicroVM not found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Internal server error
+      summary: Snapshot a microVM
+      tags:
+      - MicroVMs
+  /api/v1/vmm/{machine_name}/restore:
+    put:
+      description: "Restores in place, or creates a new microVM when `new_name` is\
+        \ set."
+      operationId: putApiV1VmmByMachineNameRestore
+      parameters:
+      - description: Name of the microVM.
+        explode: false
+        in: path
+        name: machine_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApiVmRestoreRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiVmRestoreResponse"
+          description: Restored in place.
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiVmRestoreResponse"
+          description: Restored into a new microVM.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Invalid name
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Unauthorized
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: MicroVM not found
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Name already exists
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Internal server error
+      summary: Restore a microVM from a snapshot
+      tags:
+      - MicroVMs
+  /api/v1/vmm/{machine_name}/clone:
+    post:
+      operationId: postApiV1VmmByMachineNameClone
+      parameters:
+      - description: Name of the microVM.
+        explode: false
+        in: path
+        name: machine_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApiVmCloneRequest"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiVmCloneResponse"
+          description: Clone created.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Invalid name or missing SSH key
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Unauthorized
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Source microVM not found
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Name already exists
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Internal server error
+      summary: Clone a microVM
+      tags:
+      - MicroVMs
+  /api/v1/nodes:
+    get:
+      operationId: getApiV1Nodes
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiNodeListResponse"
+          description: All nodes.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Forbidden
+      summary: List nodes
+      tags:
+      - Nodes
+    post:
+      description: Probes the node's /system endpoint and registers it with its control
+        plane.
+      operationId: postApiV1Nodes
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApiNodeCreateRequest"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiNode"
+          description: Registered.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: "Missing name or url, or probe failed"
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Forbidden
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Node unreachable
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Internal server error
+      summary: Register a node
+      tags:
+      - Nodes
+  /api/v1/nodes/{name}:
+    delete:
+      operationId: deleteApiV1NodesByName
+      parameters:
+      - description: Name of the node.
+        explode: false
+        in: path
+        name: name
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiNode"
+          description: Deleted node.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Node not found
+      summary: Delete a node
+      tags:
+      - Nodes
+    get:
+      operationId: getApiV1NodesByName
+      parameters:
+      - description: Name of the node.
+        explode: false
+        in: path
+        name: name
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiNode"
+          description: The node.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Node not found
+      summary: Get a node
+      tags:
+      - Nodes
+    put:
+      operationId: putApiV1NodesByName
+      parameters:
+      - explode: false
+        in: path
+        name: name
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApiNodeUpdateRequest"
+        required: false
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiNode"
+          description: Updated.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Node not found
+      summary: Update a node
+      tags:
+      - Nodes
+  /api/v1/nodes/{name}/health:
+    post:
+      operationId: postApiV1NodesByNameHealth
+      parameters:
+      - description: Name of the node.
+        explode: false
+        in: path
+        name: name
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiNodeHealthResponse"
+          description: Per-check results.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Node not found
+      summary: Check node health
+      tags:
+      - Nodes
+  /api/v1/nodes/{name}/refresh:
+    post:
+      description: Re-probes the node and recomputes available capacity from active
+        microVM allocations.
+      operationId: postApiV1NodesByNameRefresh
+      parameters:
+      - description: Name of the node.
+        explode: false
+        in: path
+        name: name
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiNodeRefreshResponse"
+          description: Refreshed node.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Node not found
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Node unreachable
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Internal server error
+      summary: Refresh node resources
+      tags:
+      - Nodes
+  /api/v1/nodes/{name}/reinitialize:
+    post:
+      description: Pushes the stored host info back to the node's control plane.
+      operationId: postApiV1NodesByNameReinitialize
+      parameters:
+      - description: Name of the node.
+        explode: false
+        in: path
+        name: name
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiNodeReinitializeResponse"
+          description: Reinitialized.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Node not found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Internal server error
+      summary: Reinitialize a node
+      tags:
+      - Nodes
+  /api/v1/software:
+    get:
+      operationId: getApiV1Software
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSoftwareListResponse"
+          description: The software catalog.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Internal server error
+      summary: List software
+      tags:
+      - Software catalog
+    post:
+      operationId: postApiV1Software
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApiSoftwareCreateRequest"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSoftware"
+          description: Created.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Internal server error
+      summary: Add software
+      tags:
+      - Software catalog
+  /api/v1/software/{id}:
+    delete:
+      operationId: deleteApiV1SoftwareById
+      parameters:
+      - description: Id of the catalog entry.
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccess"
+          description: Deleted.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Internal server error
+      summary: Delete software
+      tags:
+      - Software catalog
+    get:
+      operationId: getApiV1SoftwareById
+      parameters:
+      - description: Id of the catalog entry.
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSoftware"
+          description: The catalog entry.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Not found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Internal server error
+      summary: Get software
+      tags:
+      - Software catalog
+    put:
+      operationId: putApiV1SoftwareById
+      parameters:
+      - description: Id of the catalog entry.
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApiSoftwareUpdateRequest"
+        required: false
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccess"
+          description: Updated.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Internal server error
+      summary: Update software
+      tags:
+      - Software catalog
+  /api/v1/keys:
+    get:
+      operationId: getApiV1Keys
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSshKeyListResponse"
+          description: The user's SSH keys.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Unauthorized
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Internal server error
+      summary: List SSH keys
+      tags:
+      - SSH keys
+    post:
+      description: Upload an existing public key or generate a new ed25519 key pair.
+        Generated private keys are returned once.
+      operationId: postApiV1Keys
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApiSshKeyCreateRequest"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSshKeyCreateResponse"
+          description: Key created.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Missing key or invalid type
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Unauthorized
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Internal server error
+      summary: Add an SSH key
+      tags:
+      - SSH keys
+  /api/v1/keys/{id}:
+    delete:
+      operationId: deleteApiV1KeysById
+      parameters:
+      - description: Id of the SSH key.
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccess"
+          description: Deleted.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Unauthorized
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Key not found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Internal server error
+      summary: Delete an SSH key
+      tags:
+      - SSH keys
+    put:
+      description: Update the label of an SSH key. Send an empty string to clear it.
+      operationId: putApiV1KeysById
+      parameters:
+      - description: Id of the SSH key.
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApiSshKeyUpdateRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccess"
+          description: Updated.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Invalid name
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Unauthorized
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Key not found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Internal server error
+      summary: Rename an SSH key
+      tags:
+      - SSH keys
+  /api/v1/api-keys:
+    get:
+      operationId: getApiV1ApiKeys
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiKeyListResponse"
+          description: The user's API keys.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Unauthorized
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Internal server error
+      summary: List API keys
+      tags:
+      - API keys
+    post:
+      description: The plaintext key is returned only once.
+      operationId: postApiV1ApiKeys
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApiKeyCreateRequest"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiKeyCreateResponse"
+          description: Key created.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: "Invalid name, scopes or expiry"
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Requested a scope only node admins can grant
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Internal server error
+      summary: Create an API key
+      tags:
+      - API keys
+  /api/v1/api-keys/{id}:
+    delete:
+      operationId: deleteApiV1ApiKeysById
+      parameters:
+      - description: Id of the API key.
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccess"
+          description: Revoked.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Unauthorized
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Key not found
+      summary: Revoke an API key
+      tags:
+      - API keys
+  /api/v1/routes:
+    get:
+      description: Routes owned by the user plus routes shared with them.
+      operationId: getApiV1Routes
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiRouteListResponse"
+          description: Owned and shared routes.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Unauthorized
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Internal server error
+      summary: List routes
+      tags:
+      - Routes
+    post:
+      operationId: postApiV1Routes
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApiRouteCreateRequest"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiRouteCreateResponse"
+          description: Created.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: "Invalid name, port or emails"
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Unauthorized
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: MicroVM not found
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Route name already used
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Internal server error
+      summary: Create a route
+      tags:
+      - Routes
+  /api/v1/routes/{name}:
+    delete:
+      operationId: deleteApiV1RoutesByName
+      parameters:
+      - description: Name of the route.
+        explode: false
+        in: path
+        name: name
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccess"
+          description: Deleted.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Unauthorized
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Route not found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Internal server error
+      summary: Delete a route
+      tags:
+      - Routes
+    put:
+      operationId: putApiV1RoutesByName
+      parameters:
+      - description: Name of the route.
+        explode: false
+        in: path
+        name: name
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApiRouteUpdateRequest"
+        required: false
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiSuccess"
+          description: Updated.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: "Invalid port, privacy or emails"
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Unauthorized
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Route not found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Internal server error
+      summary: Update a route
+      tags:
+      - Routes
+  /api/v1/billing/admin/users:
+    get:
+      operationId: getApiV1BillingAdminUsers
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiBillingUsersResponse"
+          description: Usernames and contact details.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Forbidden
+      summary: List billable users
+      tags:
+      - Billing
+  /api/v1/billing/admin/generate/{username}:
+    post:
+      description: Generates (and emails) an invoice for a user over an optional time
+        window.
+      operationId: postApiV1BillingAdminGenerateByUsername
+      parameters:
+      - description: Window start (YYYY-MM-DD).
+        explode: true
+        in: query
+        name: start
+        required: false
+        schema:
+          format: date
+          type: string
+        style: form
+      - description: Window end (YYYY-MM-DD).
+        explode: true
+        in: query
+        name: end
+        required: false
+        schema:
+          format: date
+          type: string
+        style: form
+      - explode: false
+        in: path
+        name: username
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiBillingGenerateResponse"
+          description: Invoice generation summary.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Invalid date window
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Internal server error
+      summary: Generate an invoice
+      tags:
+      - Billing
+  /api/v1/billing/admin/reset-dodo/{username}:
+    post:
+      operationId: postApiV1BillingAdminResetDodoByUsername
+      parameters:
+      - description: Username of the account to reset.
+        explode: false
+        in: path
+        name: username
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiBillingResetDodoResponse"
+          description: Reset done.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: User not found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Internal server error
+      summary: Reset a user's Dodo data
+      tags:
+      - Billing
+  /api/v1/billing/pay/{billId}:
+    post:
+      description: "HTMX endpoint. Charges the saved mandate, or redirects to a Dodo\
+        \ checkout through the `HX-Redirect` response header (empty body). Failures\
+        \ return an HTML fragment targeting `#pay-error`."
+      operationId: postApiV1BillingPayByBillId
+      parameters:
+      - description: Id of the invoice to pay.
+        explode: false
+        in: path
+        name: billId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          description: Payment started (see the `HX-Redirect` header) or already settled.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Zero-amount invoice
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Unauthorized
+        "402":
+          content:
+            text/html:
+              schema:
+                type: string
+          description: Payment declined
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Invoice not found
+        "502":
+          content:
+            text/html:
+              schema:
+                type: string
+          description: Payment provider error
+        "503":
+          content:
+            text/html:
+              schema:
+                type: string
+          description: Payments not configured
+      summary: Pay an invoice
+      tags:
+      - Billing
+components:
+  schemas:
+    ApiError:
+      example:
+        error: error
+        code: code
+      properties:
+        error:
+          type: string
+        code:
+          description: "Machine-readable error code, when available."
+          type: string
+      required:
+      - error
+    ApiSuccess:
+      example:
+        success: true
+        message: message
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+    ApiVmState:
+      description: Lifecycle state persisted on the microVM record.
+      enum:
+      - active
+      - paused
+      - offline
+      type: string
+    ApiVm:
+      example:
+        id: id
+        user_id: user_id
+        machine_name: machine_name
+        network_name: network_name
+        node_name: node_name
+        hypervisor_socket: hypervisor_socket
+        ip_address: ip_address
+        cpu_count: 0
+        memory_size: 6
+        disk_size_gb: 1
+        state: active
+        created_at: 2000-01-23T04:56:07.000+00:00
+        updated_at: 2000-01-23T04:56:07.000+00:00
+      properties:
+        id:
+          type: string
+        user_id:
+          type: string
+        machine_name:
+          type: string
+        network_name:
+          nullable: true
+          type: string
+        node_name:
+          type: string
+        hypervisor_socket:
+          nullable: true
+          type: string
+        ip_address:
+          description: Private network address (e.g. 192.168.2.2).
+          nullable: true
+          type: string
+        cpu_count:
+          description: vCPU count.
+          type: integer
+        memory_size:
+          description: Memory in MiB.
+          type: integer
+        disk_size_gb:
+          description: Disk size in GiB.
+          type: integer
+        state:
+          $ref: "#/components/schemas/ApiVmState"
+        created_at:
+          format: date-time
+          type: string
+        updated_at:
+          format: date-time
+          type: string
+      required:
+      - cpu_count
+      - created_at
+      - disk_size_gb
+      - hypervisor_socket
+      - id
+      - ip_address
+      - machine_name
+      - memory_size
+      - network_name
+      - node_name
+      - state
+      - updated_at
+      - user_id
+    DeviceNode:
+      description: Node in the hypervisor device tree.
+      example:
+        id: id
+        resources:
+        - ""
+        - ""
+        children:
+        - children
+        - children
+        pci_bdf: pci_bdf
+      properties:
+        id:
+          nullable: true
+          type: string
+        resources:
+          items: {}
+          nullable: true
+          type: array
+          default: null
+        children:
+          items:
+            type: string
+          nullable: true
+          type: array
+          default: null
+        pci_bdf:
+          nullable: true
+          type: string
+    VmInfo:
+      description: Live VM state as reported by the hypervisor.
+      example:
+        config:
+          key: ""
+        state: Created
+        memory_actual_size: 5
+        device_tree:
+          key:
+            id: id
+            resources:
+            - ""
+            - ""
+            children:
+            - children
+            - children
+            pci_bdf: pci_bdf
+      properties:
+        config:
+          additionalProperties: true
+          description: Cloud-hypervisor VM config.
+          type: object
+        state:
+          enum:
+          - Created
+          - Running
+          - Shutdown
+          - Paused
+          type: string
+        memory_actual_size:
+          description: Memory in bytes.
+          nullable: true
+          type: integer
+        device_tree:
+          additionalProperties:
+            $ref: "#/components/schemas/DeviceNode"
+          nullable: true
+          type: object
+      required:
+      - config
+      - state
+    ApiVmListResponse:
+      items:
+        $ref: "#/components/schemas/ApiVm"
+      type: array
+      default: null
+    ApiVmGetResponse:
+      allOf:
+      - $ref: "#/components/schemas/ApiVm"
+      - properties:
+          vm_info:
+            $ref: "#/components/schemas/VmInfo"
+        required:
+        - vm_info
+      example:
+        id: id
+        user_id: user_id
+        machine_name: machine_name
+        network_name: network_name
+        node_name: node_name
+        hypervisor_socket: hypervisor_socket
+        ip_address: ip_address
+        cpu_count: 0
+        memory_size: 6
+        disk_size_gb: 1
+        state: active
+        created_at: 2000-01-23T04:56:07.000+00:00
+        updated_at: 2000-01-23T04:56:07.000+00:00
+        vm_info:
+          config:
+            key: ""
+          state: Created
+          memory_actual_size: 5
+          device_tree:
+            key:
+              id: id
+              resources:
+              - ""
+              - ""
+              children:
+              - children
+              - children
+              pci_bdf: pci_bdf
+    ApiVmCreateRequest:
+      example:
+        cloudinit_user_data:
+        - cloudinit_user_data
+        - cloudinit_user_data
+        software_ids:
+        - software_ids
+        - software_ids
+        public_key: public_key
+        cpu_count: 2
+        memory_size: 9926
+        disk_size_gb: 10
+        cloning: cloning
+      properties:
+        cloudinit_user_data:
+          description: "cloud-init `runcmd` entries, de-duplicated with the selected\
+            \ software's commands."
+          items:
+            type: string
+          type: array
+          default: null
+        software_ids:
+          description: Software catalog ids to install.
+          items:
+            type: string
+          type: array
+          default: null
+        public_key:
+          description: SSH public key injected into the VM.
+          type: string
+        cpu_count:
+          maximum: 16
+          minimum: 1
+          type: integer
+        memory_size:
+          description: Memory in MiB.
+          maximum: 16384
+          minimum: 128
+          type: integer
+        disk_size_gb:
+          description: Disk size in GiB.
+          maximum: 65
+          minimum: 1
+          type: integer
+        cloning:
+          description: Existing machine name to clone from.
+          type: string
+      required:
+      - cloudinit_user_data
+      - cpu_count
+      - disk_size_gb
+      - memory_size
+      - public_key
+    ProvisionedVm:
+      description: What provisioning a microVM on a node reports back.
+      properties:
+        network_name:
+          type: string
+        hypervisor_socket:
+          type: string
+      required:
+      - hypervisor_socket
+      - network_name
+    ApiVmCreateResponse:
+      allOf:
+      - $ref: "#/components/schemas/ProvisionedVm"
+      - properties:
+          id:
+            type: string
+          node_name:
+            type: string
+        required:
+        - id
+        - node_name
+      example:
+        network_name: network_name
+        hypervisor_socket: hypervisor_socket
+        id: id
+        node_name: node_name
+    ApiVmCloneRequest:
+      example:
+        new_name: new_name
+        public_key: public_key
+      properties:
+        new_name:
+          pattern: "^[a-zA-Z0-9_-]+$"
+          type: string
+        public_key:
+          description: Defaults to the caller's saved SSH key.
+          type: string
+      required:
+      - new_name
+    ApiVmCloneResponse:
+      allOf:
+      - $ref: "#/components/schemas/ApiVmCreateResponse"
+      - properties:
+          new_name:
+            type: string
+        required:
+        - new_name
+      example:
+        network_name: network_name
+        hypervisor_socket: hypervisor_socket
+        id: id
+        node_name: node_name
+        new_name: new_name
+    ApiVmUpdateRequest:
+      example:
+        cpu_count: 2
+        memory_size: 9926
+        disk_size_gb: 10
+      properties:
+        cpu_count:
+          maximum: 16
+          minimum: 1
+          type: integer
+        memory_size:
+          maximum: 16384
+          minimum: 128
+          type: integer
+        disk_size_gb:
+          maximum: 65
+          minimum: 1
+          type: integer
+    ApiVmSnapshotRequest:
+      example:
+        destination_url: destination_url
+      properties:
+        destination_url:
+          description: Object-storage URL to upload the snapshot to.
+          type: string
+    ApiVmSnapshotResponse:
+      example:
+        destination_url: destination_url
+        resumed: true
+      properties:
+        destination_url:
+          type: string
+        resumed:
+          description: Whether the VM was resumed after snapshotting.
+          type: boolean
+      required:
+      - destination_url
+      - resumed
+    ApiVmRestoreRequest:
+      example:
+        source_url: source_url
+        prefault: true
+        memory_restore_mode: memory_restore_mode
+        new_name: new_name
+      properties:
+        source_url:
+          type: string
+        prefault:
+          type: boolean
+        memory_restore_mode:
+          nullable: true
+          type: string
+        new_name:
+          description: Restore into a new microVM with this name.
+          type: string
+      required:
+      - source_url
+    ApiVmRestoreResponse:
+      example:
+        source_url: source_url
+        new_name: new_name
+      properties:
+        source_url:
+          type: string
+        new_name:
+          description: Present when the restore created a new microVM.
+          type: string
+      required:
+      - source_url
+    ApiNodeStatus:
+      description: Lifecycle status persisted on the node.
+      enum:
+      - active
+      - maintenance
+      - offline
+      type: string
+    ApiNode:
+      example:
+        name: name
+        url: url
+        vcpu_total: 0
+        vcpu_available: 6
+        memory_total: 1
+        memory_available: 5
+        disk_total: 5
+        disk_available: 2
+        specialization: General
+        status: active
+        created_at: 2000-01-23T04:56:07.000+00:00
+        updated_at: 2000-01-23T04:56:07.000+00:00
+      properties:
+        name:
+          type: string
+        url:
+          type: string
+        vcpu_total:
+          type: integer
+        vcpu_available:
+          type: integer
+        memory_total:
+          description: Bytes.
+          type: integer
+        memory_available:
+          description: Bytes.
+          type: integer
+        disk_total:
+          description: Bytes.
+          type: integer
+        disk_available:
+          description: Bytes.
+          type: integer
+        specialization:
+          enum:
+          - General
+          - Coding
+          type: string
+        status:
+          $ref: "#/components/schemas/ApiNodeStatus"
+        created_at:
+          format: date-time
+          type: string
+        updated_at:
+          format: date-time
+          type: string
+      required:
+      - created_at
+      - disk_available
+      - disk_total
+      - memory_available
+      - memory_total
+      - name
+      - specialization
+      - status
+      - updated_at
+      - url
+      - vcpu_available
+      - vcpu_total
+    ApiNodeListResponse:
+      items:
+        $ref: "#/components/schemas/ApiNode"
+      type: array
+      default: null
+    ApiNodeCreateRequest:
+      example:
+        name: name
+        url: url
+        specialization: General
+      properties:
+        name:
+          type: string
+        url:
+          type: string
+        specialization:
+          enum:
+          - General
+          - Coding
+          type: string
+      required:
+      - name
+      - url
+    ApiNodeUpdateRequest:
+      example:
+        specialization: General
+        status: active
+      properties:
+        specialization:
+          enum:
+          - General
+          - Coding
+          type: string
+        status:
+          $ref: "#/components/schemas/ApiNodeStatus"
+    ApiNodeRefreshResponse:
+      example:
+        message: message
+        node:
+          name: name
+          url: url
+          vcpu_total: 0
+          vcpu_available: 6
+          memory_total: 1
+          memory_available: 5
+          disk_total: 5
+          disk_available: 2
+          specialization: General
+          status: active
+          created_at: 2000-01-23T04:56:07.000+00:00
+          updated_at: 2000-01-23T04:56:07.000+00:00
+      properties:
+        message:
+          type: string
+        node:
+          $ref: "#/components/schemas/ApiNode"
+      required:
+      - message
+      - node
+    ApiNodeHealthResponse:
+      example:
+        http: http
+      properties:
+        http:
+          description: "`OK (<status>)` or `FAIL: <reason>`."
+          type: string
+      required:
+      - http
+    ApiNodeReinitializeResponse:
+      example:
+        message: message
+      properties:
+        message:
+          type: string
+      required:
+      - message
+    ApiSoftware:
+      example:
+        id: id
+        name: name
+        displayName: displayName
+        description: description
+        icon: icon
+        installCommand: installCommand
+        setupCommand: setupCommand
+        runAsUser: true
+        recommendedVcpu: 0
+        recommendedMemory: 6
+        recommendedDisk: 1
+        category: category
+        createdAt: 2000-01-23T04:56:07.000+00:00
+        updatedAt: 2000-01-23T04:56:07.000+00:00
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        displayName:
+          type: string
+        description:
+          nullable: true
+          type: string
+        icon:
+          nullable: true
+          type: string
+        installCommand:
+          type: string
+        setupCommand:
+          nullable: true
+          type: string
+        runAsUser:
+          type: boolean
+        recommendedVcpu:
+          nullable: true
+          type: integer
+        recommendedMemory:
+          nullable: true
+          type: integer
+        recommendedDisk:
+          nullable: true
+          type: integer
+        category:
+          nullable: true
+          type: string
+        createdAt:
+          format: date-time
+          type: string
+        updatedAt:
+          format: date-time
+          type: string
+      required:
+      - category
+      - createdAt
+      - description
+      - displayName
+      - icon
+      - id
+      - installCommand
+      - name
+      - recommendedDisk
+      - recommendedMemory
+      - recommendedVcpu
+      - runAsUser
+      - setupCommand
+      - updatedAt
+    ApiSoftwareListResponse:
+      items:
+        $ref: "#/components/schemas/ApiSoftware"
+      type: array
+      default: null
+    ApiSoftwareCreateRequest:
+      example:
+        id: id
+        name: name
+        displayName: displayName
+        description: description
+        icon: icon
+        installCommand: installCommand
+        setupCommand: setupCommand
+        runAsUser: true
+        recommendedVcpu: 0
+        recommendedMemory: 6
+        recommendedDisk: 1
+        category: category
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        displayName:
+          type: string
+        description:
+          type: string
+        icon:
+          type: string
+        installCommand:
+          type: string
+        setupCommand:
+          type: string
+        runAsUser:
+          type: boolean
+        recommendedVcpu:
+          type: integer
+        recommendedMemory:
+          type: integer
+        recommendedDisk:
+          type: integer
+        category:
+          type: string
+      required:
+      - displayName
+      - id
+      - installCommand
+      - name
+    ApiSoftwareUpdateRequest:
+      example:
+        name: name
+        displayName: displayName
+        description: description
+        icon: icon
+        installCommand: installCommand
+        setupCommand: setupCommand
+        runAsUser: true
+        recommendedVcpu: 0
+        recommendedMemory: 6
+        recommendedDisk: 1
+        category: category
+      properties:
+        name:
+          type: string
+        displayName:
+          type: string
+        description:
+          type: string
+        icon:
+          type: string
+        installCommand:
+          type: string
+        setupCommand:
+          type: string
+        runAsUser:
+          type: boolean
+        recommendedVcpu:
+          type: integer
+        recommendedMemory:
+          type: integer
+        recommendedDisk:
+          type: integer
+        category:
+          type: string
+    ApiSshKey:
+      example:
+        id: id
+        name: name
+        publicKey: publicKey
+        fingerprint: fingerprint
+        type: type
+        createdAt: 2000-01-23T04:56:07.000+00:00
+      properties:
+        id:
+          type: string
+        name:
+          nullable: true
+          type: string
+        publicKey:
+          type: string
+        fingerprint:
+          nullable: true
+          type: string
+        type:
+          description: "`ed25519` for generated keys, `uploaded` otherwise."
+          nullable: true
+          type: string
+        createdAt:
+          format: date-time
+          type: string
+      required:
+      - createdAt
+      - fingerprint
+      - id
+      - name
+      - publicKey
+      - type
+    ApiSshKeyListResponse:
+      items:
+        $ref: "#/components/schemas/ApiSshKey"
+      type: array
+      default: null
+    ApiSshKeyCreateRequest:
+      example:
+        type: upload
+        name: name
+        publicKey: publicKey
+      properties:
+        type:
+          enum:
+          - upload
+          - generate
+          type: string
+        name:
+          type: string
+        publicKey:
+          description: Required when `type` is `upload`.
+          type: string
+      required:
+      - type
+    ApiSshKeyCreateResponse:
+      example:
+        id: id
+        type: uploaded
+        publicKey: publicKey
+        fingerprint: fingerprint
+        privateKey: privateKey
+      properties:
+        id:
+          type: string
+        type:
+          enum:
+          - uploaded
+          - generated
+          type: string
+        publicKey:
+          type: string
+        fingerprint:
+          type: string
+        privateKey:
+          description: Only returned for generated keys.
+          type: string
+      required:
+      - fingerprint
+      - id
+      - publicKey
+      - type
+    ApiSshKeyUpdateRequest:
+      example:
+        name: name
+      properties:
+        name:
+          description: New label for the key. Use an empty string to clear it.
+          type: string
+    ApiKey:
+      example:
+        id: id
+        name: name
+        start: start
+        prefix: prefix
+        enabled: true
+        expiresAt: 2000-01-23T04:56:07.000+00:00
+        createdAt: 2000-01-23T04:56:07.000+00:00
+        lastRequest: 2000-01-23T04:56:07.000+00:00
+        scopes:
+        - vms:read
+        - vms:read
+        via: via
+      properties:
+        id:
+          type: string
+        name:
+          nullable: true
+          type: string
+        start:
+          nullable: true
+          type: string
+        prefix:
+          nullable: true
+          type: string
+        enabled:
+          type: boolean
+        expiresAt:
+          format: date-time
+          nullable: true
+          type: string
+        createdAt:
+          format: date-time
+          nullable: true
+          type: string
+        lastRequest:
+          format: date-time
+          nullable: true
+          type: string
+        scopes:
+          items:
+            enum:
+            - vms:read
+            - vms:write
+            - routes:read
+            - routes:write
+            - nodes:read
+            - nodes:write
+            - software:read
+            - software:write
+            - billing:read
+            - billing:write
+            - keys:read
+            - keys:write
+            - api-keys:read
+            - api-keys:write
+            type: string
+          type: array
+          default: null
+        via:
+          description: Set when the key was minted by sshoxy.
+          type: string
+      required:
+      - createdAt
+      - enabled
+      - expiresAt
+      - id
+      - lastRequest
+      - name
+      - prefix
+      - scopes
+      - start
+    ApiKeyListResponse:
+      items:
+        $ref: "#/components/schemas/ApiKey"
+      type: array
+      default: null
+    ApiKeyCreateRequest:
+      example:
+        name: name
+        scopes:
+        - vms:read
+        - vms:read
+        expiresIn: never
+      properties:
+        name:
+          maxLength: 64
+          type: string
+        scopes:
+          items:
+            enum:
+            - vms:read
+            - vms:write
+            - routes:read
+            - routes:write
+            - nodes:read
+            - nodes:write
+            - software:read
+            - software:write
+            - billing:read
+            - billing:write
+            - keys:read
+            - keys:write
+            - api-keys:read
+            - api-keys:write
+            type: string
+          minItems: 1
+          type: array
+          default: null
+        expiresIn:
+          $ref: "#/components/schemas/ApiKeyCreateRequest_expiresIn"
+      required:
+      - name
+      - scopes
+    ApiKeyCreateResponse:
+      allOf:
+      - $ref: "#/components/schemas/ApiKey"
+      - properties:
+          key:
+            description: Shown once. Store it securely.
+            type: string
+        required:
+        - key
+      example:
+        id: id
+        name: name
+        start: start
+        prefix: prefix
+        enabled: true
+        expiresAt: 2000-01-23T04:56:07.000+00:00
+        createdAt: 2000-01-23T04:56:07.000+00:00
+        lastRequest: 2000-01-23T04:56:07.000+00:00
+        scopes:
+        - vms:read
+        - vms:read
+        via: via
+        key: key
+    SharedUser:
+      example:
+        id: id
+        email: email
+        name: name
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        name:
+          type: string
+      required:
+      - email
+      - id
+      - name
+    ApiRoute:
+      example:
+        id: id
+        name: name
+        microvm_id: microvm_id
+        privacy: private
+        port: 0
+        user_ids:
+        - user_ids
+        - user_ids
+        machine_name: machine_name
+        machine_user_id: machine_user_id
+        node_name: node_name
+        ip_address: ip_address
+        owner_username: owner_username
+        owner_email: owner_email
+        created_at: 2000-01-23T04:56:07.000+00:00
+        updated_at: 2000-01-23T04:56:07.000+00:00
+        url: url
+        shared_users:
+        - id: id
+          email: email
+          name: name
+        - id: id
+          email: email
+          name: name
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        microvm_id:
+          type: string
+        privacy:
+          enum:
+          - private
+          - public
+          - shared
+          type: string
+        port:
+          type: integer
+        user_ids:
+          items:
+            type: string
+          type: array
+          default: null
+        machine_name:
+          type: string
+        machine_user_id:
+          type: string
+        node_name:
+          type: string
+        ip_address:
+          nullable: true
+          type: string
+        owner_username:
+          nullable: true
+          type: string
+        owner_email:
+          type: string
+        created_at:
+          format: date-time
+          type: string
+        updated_at:
+          format: date-time
+          type: string
+        url:
+          type: string
+        shared_users:
+          items:
+            $ref: "#/components/schemas/SharedUser"
+          type: array
+          default: null
+      required:
+      - created_at
+      - id
+      - ip_address
+      - machine_name
+      - machine_user_id
+      - microvm_id
+      - name
+      - node_name
+      - owner_email
+      - owner_username
+      - port
+      - privacy
+      - shared_users
+      - updated_at
+      - url
+      - user_ids
+    ApiRouteListResponse:
+      example:
+        owned:
+        - id: id
+          name: name
+          microvm_id: microvm_id
+          privacy: private
+          port: 0
+          user_ids:
+          - user_ids
+          - user_ids
+          machine_name: machine_name
+          machine_user_id: machine_user_id
+          node_name: node_name
+          ip_address: ip_address
+          owner_username: owner_username
+          owner_email: owner_email
+          created_at: 2000-01-23T04:56:07.000+00:00
+          updated_at: 2000-01-23T04:56:07.000+00:00
+          url: url
+          shared_users:
+          - id: id
+            email: email
+            name: name
+          - id: id
+            email: email
+            name: name
+        - id: id
+          name: name
+          microvm_id: microvm_id
+          privacy: private
+          port: 0
+          user_ids:
+          - user_ids
+          - user_ids
+          machine_name: machine_name
+          machine_user_id: machine_user_id
+          node_name: node_name
+          ip_address: ip_address
+          owner_username: owner_username
+          owner_email: owner_email
+          created_at: 2000-01-23T04:56:07.000+00:00
+          updated_at: 2000-01-23T04:56:07.000+00:00
+          url: url
+          shared_users:
+          - id: id
+            email: email
+            name: name
+          - id: id
+            email: email
+            name: name
+        shared:
+        - id: id
+          name: name
+          microvm_id: microvm_id
+          privacy: private
+          port: 0
+          user_ids:
+          - user_ids
+          - user_ids
+          machine_name: machine_name
+          machine_user_id: machine_user_id
+          node_name: node_name
+          ip_address: ip_address
+          owner_username: owner_username
+          owner_email: owner_email
+          created_at: 2000-01-23T04:56:07.000+00:00
+          updated_at: 2000-01-23T04:56:07.000+00:00
+          url: url
+          shared_users:
+          - id: id
+            email: email
+            name: name
+          - id: id
+            email: email
+            name: name
+        - id: id
+          name: name
+          microvm_id: microvm_id
+          privacy: private
+          port: 0
+          user_ids:
+          - user_ids
+          - user_ids
+          machine_name: machine_name
+          machine_user_id: machine_user_id
+          node_name: node_name
+          ip_address: ip_address
+          owner_username: owner_username
+          owner_email: owner_email
+          created_at: 2000-01-23T04:56:07.000+00:00
+          updated_at: 2000-01-23T04:56:07.000+00:00
+          url: url
+          shared_users:
+          - id: id
+            email: email
+            name: name
+          - id: id
+            email: email
+            name: name
+      properties:
+        owned:
+          items:
+            $ref: "#/components/schemas/ApiRoute"
+          type: array
+          default: null
+        shared:
+          items:
+            $ref: "#/components/schemas/ApiRoute"
+          type: array
+          default: null
+      required:
+      - owned
+      - shared
+    ApiRouteCreateRequest:
+      example:
+        name: name
+        microvm_id: microvm_id
+        port: 5249
+        privacy: private
+        emails:
+        - emails
+        - emails
+      properties:
+        name:
+          pattern: "^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$"
+          type: string
+        microvm_id:
+          description: Id of the VM the route forwards to.
+          type: string
+        port:
+          maximum: 65535
+          minimum: 1
+          type: integer
+        privacy:
+          enum:
+          - private
+          - public
+          - shared
+          type: string
+        emails:
+          description: Required when `privacy` is `shared`.
+          items:
+            format: email
+            type: string
+          type: array
+          default: null
+      required:
+      - microvm_id
+      - name
+      - port
+      - privacy
+    ApiRouteCreateResponse:
+      example:
+        id: id
+        name: name
+        microvm_id: microvm_id
+        privacy: private
+        port: 0
+        url: url
+        shared_users:
+        - id: id
+          email: email
+          name: name
+        - id: id
+          email: email
+          name: name
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        microvm_id:
+          type: string
+        privacy:
+          enum:
+          - private
+          - public
+          - shared
+          type: string
+        port:
+          type: integer
+        url:
+          type: string
+        shared_users:
+          items:
+            $ref: "#/components/schemas/SharedUser"
+          type: array
+          default: null
+      required:
+      - id
+      - microvm_id
+      - name
+      - port
+      - privacy
+      - shared_users
+      - url
+    ApiRouteUpdateRequest:
+      example:
+        port: 5249
+        privacy: private
+        emails:
+        - emails
+        - emails
+      properties:
+        port:
+          maximum: 65535
+          minimum: 1
+          type: integer
+        privacy:
+          enum:
+          - private
+          - public
+          - shared
+          type: string
+        emails:
+          items:
+            format: email
+            type: string
+          type: array
+          default: null
+    ApiBillingUser:
+      example:
+        username: username
+        name: name
+        email: email
+      properties:
+        username:
+          nullable: true
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+      required:
+      - email
+      - name
+      - username
+    ApiBillingUsersResponse:
+      example:
+        users:
+        - username: username
+          name: name
+          email: email
+        - username: username
+          name: name
+          email: email
+      properties:
+        users:
+          items:
+            $ref: "#/components/schemas/ApiBillingUser"
+          type: array
+          default: null
+      required:
+      - users
+    ApiBillingGenerateResponse:
+      example:
+        username: username
+        start: 0
+        end: 6
+        machinesChecked: 1
+        billsCreated: 5
+        emailsSent: 5
+        bills:
+        - machines:
+          - machines
+          - machines
+          total_usd_micro: 2
+        - machines:
+          - machines
+          - machines
+          total_usd_micro: 2
+      properties:
+        username:
+          type: string
+        start:
+          description: Window start (epoch ms).
+          nullable: true
+          type: integer
+        end:
+          description: Window end (epoch ms).
+          nullable: true
+          type: integer
+        machinesChecked:
+          type: integer
+        billsCreated:
+          type: integer
+        emailsSent:
+          type: integer
+        bills:
+          items:
+            $ref: "#/components/schemas/ApiBillingGenerateResponse_bills_inner"
+          type: array
+          default: null
+      required:
+      - bills
+      - billsCreated
+      - emailsSent
+      - end
+      - machinesChecked
+      - start
+      - username
+    ApiBillingResetDodoResponse:
+      example:
+        username: username
+        reset: true
+      properties:
+        username:
+          type: string
+        reset:
+          type: boolean
+      required:
+      - reset
+      - username
+    ApiMeResponse:
+      example:
+        user:
+          key: ""
+        session:
+          key: ""
+      properties:
+        user:
+          additionalProperties: true
+          description: The authenticated user.
+          type: object
+        session:
+          additionalProperties: true
+          description: The active session.
+          type: object
+      required:
+      - session
+      - user
+    ApiKeyCreateRequest_expiresIn:
+      description: "Lifetime: `never`, `7d`, `30d`, `90d`, or a positive number of\
+        \ seconds."
+      oneOf:
+      - enum:
+        - never
+        - 7d
+        - 30d
+        - 90d
+        type: string
+      - minimum: 1
+        type: integer
+    ApiBillingGenerateResponse_bills_inner:
+      example:
+        machines:
+        - machines
+        - machines
+        total_usd_micro: 2
+      properties:
+        machines:
+          items:
+            type: string
+          type: array
+          default: null
+        total_usd_micro:
+          type: integer
+      required:
+      - machines
+      - total_usd_micro
+  securitySchemes:
+    apiKey:
+      in: header
+      name: X-API-Key
+      type: apiKey
+    bearerAuth:
+      bearerFormat: API key
+      scheme: bearer
+      type: http
+    sessionCookie:
+      in: cookie
+      name: better-auth.session_token
+      type: apiKey

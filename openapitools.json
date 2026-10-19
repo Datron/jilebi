@@ -43,6 +43,21 @@
 					"packageVersion": "1.0.0",
 					"library": "urllib3"
 				}
+			},
+			"go": {
+				"generatorName": "go",
+				"inputSpec": "sdks/openapi.json",
+				"output": "sdks/go",
+				"gitHost": "github.com",
+				"gitUserId": "Datron",
+				"gitRepoId": "jilebi/sdks/go",
+				"additionalProperties": {
+					"packageName": "jilebi",
+					"packageVersion": "1.0.0",
+					"isGoSubmodule": false,
+					"hideGenerationTimestamp": true,
+					"enumClassPrefix": true
+				}
 			}
 		}
 	}
