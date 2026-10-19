@@ -1,0 +1,49 @@
+{
+	"$schema": "./node_modules/@openapitools/openapi-generator-cli/config.schema.json",
+	"spaces": 2,
+	"generator-cli": {
+		"version": "7.26.0",
+		"generators": {
+			"rust": {
+				"generatorName": "rust",
+				"inputSpec": "sdks/openapi.json",
+				"output": "sdks/rust",
+				"gitUserId": "Datron",
+				"gitRepoId": "jilebi",
+				"additionalProperties": {
+					"packageName": "jilebi-sdk",
+					"packageVersion": "1.0.0",
+					"library": "reqwest",
+					"supportAsync": true
+				}
+			},
+			"typescript": {
+				"generatorName": "typescript-fetch",
+				"inputSpec": "sdks/openapi.json",
+				"output": "sdks/typescript",
+				"gitUserId": "Datron",
+				"gitRepoId": "jilebi",
+				"additionalProperties": {
+					"npmName": "@jilebi/sdk",
+					"npmVersion": "1.0.0",
+					"supportsES6": true,
+					"withInterfaces": true,
+					"licenseName": "AGPL-3.0"
+				}
+			},
+			"python": {
+				"generatorName": "python",
+				"inputSpec": "sdks/openapi.json",
+				"output": "sdks/python",
+				"gitUserId": "Datron",
+				"gitRepoId": "jilebi",
+				"additionalProperties": {
+					"packageName": "jilebi_sdk",
+					"projectName": "jilebi-sdk",
+					"packageVersion": "1.0.0",
+					"library": "urllib3"
+				}
+			}
+		}
+	}
+}

@@ -5,6 +5,7 @@ members = [
 	"crates/jilebi_types",
 	"crates/plugin-runtime",
 	"crates/store",
+	"sdks/rust",
 ]
 package.version = "0.6.2"
 
