@@ -19,7 +19,7 @@ from setuptools import setup, find_packages  # noqa: H301
 # prerequisite: setuptools
 # http://pypi.python.org/pypi/setuptools
 NAME = "jilebi-sdk"
-VERSION = "1.0.0"
+VERSION = "0.6.2"
 PYTHON_REQUIRES = ">= 3.10"
 REQUIRES = [
     "urllib3 >= 2.7.0, < 3.0.0",

@@ -1,6 +1,6 @@
 [project]
 name = "jilebi_sdk"
-version = "1.0.0"
+version = "0.6.2"
 description = "jilebi API"
 authors = [
   {name = "OpenAPI Generator Community",email = "team@openapitools.org"},

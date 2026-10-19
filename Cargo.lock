@@ -3288,7 +3288,7 @@ dependencies = [
 
 [[package]]
 name = "jilebi-sdk"
-version = "1.0.0"
+version = "0.6.2"
 dependencies = [
  "chrono",
  "reqwest 0.13.3",

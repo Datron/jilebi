@@ -1,20 +1,24 @@
 name: Release SDKs
 
-# Publishes the generated SDKs to crates.io, npm and PyPI.
+# Publishes the SDKs to crates.io, npm and PyPI.
 #
-# Trigger it by pushing a tag such as `sdk-v1.0.0`, or run it manually with a
-# version. The version is written into every package manifest before publishing,
-# so the tag (not the vendored files) is the source of truth.
+# The SDK version is taken from the MCP server release tag (the semver tags
+# created by `.github/workflows/generate_versions.yaml`), so pushing one of
+# those tags releases the server *and* every SDK at the same version:
+#
+#   git tag 0.7.0 && git push origin 0.7.0   # (normally done by cog bump)
+#
+# The Go SDK is generated but intentionally not published.
 
 on:
   push:
     tags:
-      - "sdk-v*"
+      - "[0-9]*"
   workflow_dispatch:
     inputs:
       version:
-        description: "SDK version to publish (e.g. 1.0.0)"
-        required: true
+        description: "Version to publish (defaults to the latest tag)"
+        required: false
         type: string
 
 concurrency:
@@ -31,14 +35,21 @@ jobs:
     outputs:
       version: ${{ steps.resolve.outputs.version }}
     steps:
-      - name: Resolve version from tag or input
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve version from the MCP server tag
         id: resolve
         shell: bash
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          if [ -n "${{ github.event.inputs.version }}" ]; then
             version="${{ github.event.inputs.version }}"
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            version="$(git tag -l --sort=-creatordate | head -n 1)"
           else
-            version="${GITHUB_REF_NAME#sdk-v}"
+            version="${GITHUB_REF_NAME}"
           fi
           version="${version#v}"
           if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+([-+][0-9A-Za-z.-]+)?$ ]]; then
@@ -58,15 +69,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: 1.95.0
 
-      - name: Set crate version
-        run: |
-          sed -i -E "s/^version = \".*\"/version = \"$VERSION\"/" sdks/rust/Cargo.toml
-          grep -E "^version" sdks/rust/Cargo.toml
+      - name: Set SDK version
+        run: node sdks/scripts/set-version.mjs "$VERSION"
 
       - name: Package crate
         run: cargo package -p jilebi-sdk --allow-dirty
@@ -90,9 +104,8 @@ jobs:
           node-version: 22
           registry-url: "https://registry.npmjs.org"
 
-      - name: Set package version
-        working-directory: sdks/typescript
-        run: npm pkg set version="$VERSION"
+      - name: Set SDK version
+        run: node sdks/scripts/set-version.mjs "$VERSION"
 
       - name: Install dependencies
         working-directory: sdks/typescript
@@ -118,39 +131,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
       - name: Install Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      - name: Set package version
-        working-directory: sdks/python
-        run: |
-          python - <<'PY'
-          import os
-          import pathlib
-          import re
-
-          version = os.environ["VERSION"]
-          root = pathlib.Path(".")
-
-          pyproject = root / "pyproject.toml"
-          pyproject.write_text(
-              re.sub(r'(?m)^version = ".*"', f'version = "{version}"', pyproject.read_text())
-          )
-
-          setup_py = root / "setup.py"
-          setup_py.write_text(
-              re.sub(r'(?m)^VERSION = ".*"', f'VERSION = "{version}"', setup_py.read_text())
-          )
-
-          init_py = root / "jilebi_sdk" / "__init__.py"
-          init_py.write_text(
-              re.sub(r'(?m)^__version__ = ".*"', f'__version__ = "{version}"', init_py.read_text())
-          )
-
-          print(f"Set jilebi-sdk to {version}")
-          PY
+      - name: Set SDK version
+        run: node sdks/scripts/set-version.mjs "$VERSION"
 
       - name: Build distribution
         working-directory: sdks/python
