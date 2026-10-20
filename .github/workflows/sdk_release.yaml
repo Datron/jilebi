@@ -143,6 +143,9 @@ jobs:
     name: Publish Python package
     needs: version
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # OIDC token used by PyPI trusted publishing
     env:
       VERSION: ${{ needs.version.outputs.version }}
     steps:
@@ -168,8 +171,10 @@ jobs:
           python -m pip install --upgrade build
           python -m build
 
-      - name: Publish to PyPI
+      # No password: PyPA's action exchanges the GitHub OIDC token for a
+      # short-lived PyPI upload token. The trusted publisher must be configured
+      # on PyPI for the jilebi-sdk project (see sdks/README.md).
+      - name: Publish to PyPI (trusted publishing)
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: sdks/python/dist
-          password: ${{ secrets.PYPI_API_TOKEN }}

@@ -104,23 +104,22 @@ Required repository secrets:
 | Secret                 | Used for                       |
 | ---------------------- | ------------------------------ |
 | `CARGO_REGISTRY_TOKEN` | `cargo publish` to crates.io   |
-| `PYPI_API_TOKEN`       | upload to PyPI                 |
 
-npm uses **trusted publishing (OIDC)** — no `NPM_TOKEN` secret. The workflow
-grants `id-token: write` and the trusted publisher must be registered for
-`@jilebi/sdk` on npmjs.com:
+npm and PyPI use **trusted publishing (OIDC)** — no `NPM_TOKEN` or
+`PYPI_API_TOKEN` secrets. Both publish jobs grant `id-token: write`, and a
+trusted publisher must be registered for each package:
 
-| Field | Value |
-| --- | --- |
-| Organization or user | `Datron` |
-| Repository | `jilebi` |
-| Workflow filename | `sdk_release.yaml` |
-| Environment | *(leave blank)* |
-| Allowed actions | **Allow `npm publish`** (new configs default to `npm stage publish` only) |
+| | npm (`@jilebi/sdk`) | PyPI (`jilebi-sdk`) |
+| --- | --- | --- |
+| Owner / user | `Datron` | `Datron` |
+| Repository | `jilebi` | `jilebi` |
+| Workflow filename | `sdk_release.yaml` | `sdk_release.yaml` |
+| Environment | *(blank)* | *(blank)* |
+| Extra | Allow **`npm publish`** (new configs default to `npm stage publish` only) | Pending publisher is fine before the first upload |
 
-A newly created trusted publisher must complete its first successful publish
-within 2 days or it expires. Provenance attestations are generated
-automatically; no `--provenance` flag is needed.
+A newly created npm trusted publisher must complete its first successful
+publish within 2 days or it expires. npm provenance attestations and PyPI
+PEP 740 attestations are generated automatically.
 
 ```bash
 # Normal flow: bump the MCP server version, which tags and releases the SDKs
