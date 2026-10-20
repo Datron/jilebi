@@ -1,0 +1,39 @@
+name: Resolve SDK version
+description: >-
+  Resolve the SDK version from the triggering MCP server tag, an explicit
+  workflow_dispatch input, or the latest tag. The calling job must check out
+  the repository with fetch-depth: 0 so the tag list is available.
+
+outputs:
+  version:
+    description: The resolved semver version.
+    value: ${{ steps.resolve.outputs.version }}
+
+runs:
+  using: composite
+  steps:
+    - name: Resolve version
+      id: resolve
+      shell: bash
+      env:
+        INPUT_VERSION: ${{ github.event.inputs.version }}
+        EVENT_NAME: ${{ github.event_name }}
+        REF_NAME: ${{ github.ref_name }}
+      run: |
+        if [ -n "$INPUT_VERSION" ]; then
+          version="$INPUT_VERSION"
+        elif [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+          version="$(git tag -l --sort=-creatordate | head -n 1)"
+        else
+          version="$REF_NAME"
+        fi
+
+        version="${version#v}"
+
+        if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+([-+][0-9A-Za-z.-]+)?$ ]]; then
+          echo "::error::'$version' is not a valid semver version"
+          exit 1
+        fi
+
+        echo "version=$version" >> "$GITHUB_OUTPUT"
+        echo "Publishing SDK version $version"

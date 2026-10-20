@@ -8,6 +8,9 @@ name: Release SDKs
 #
 #   git tag 0.7.0 && git push origin 0.7.0   # (normally done by cog bump)
 #
+# The three publish jobs are independent and run in parallel; each one resolves
+# the version itself via `.github/actions/resolve-sdk-version`.
+#
 # The Go SDK is generated but intentionally not published.
 
 on:
@@ -29,45 +32,18 @@ permissions:
   contents: read
 
 jobs:
-  version:
-    name: Resolve version
+  rust:
+    name: Publish Rust crate
     runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.resolve.outputs.version }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Resolve version from the MCP server tag
-        id: resolve
-        shell: bash
-        run: |
-          if [ -n "${{ github.event.inputs.version }}" ]; then
-            version="${{ github.event.inputs.version }}"
-          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            version="$(git tag -l --sort=-creatordate | head -n 1)"
-          else
-            version="${GITHUB_REF_NAME}"
-          fi
-          version="${version#v}"
-          if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+([-+][0-9A-Za-z.-]+)?$ ]]; then
-            echo "::error::'$version' is not a valid semver version"
-            exit 1
-          fi
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-          echo "Publishing SDK version $version"
-
-  rust:
-    name: Publish Rust crate
-    needs: version
-    runs-on: ubuntu-latest
-    env:
-      VERSION: ${{ needs.version.outputs.version }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Resolve version
+        id: version
+        uses: ./.github/actions/resolve-sdk-version
 
       - name: Install Node.js
         uses: actions/setup-node@v6
@@ -80,6 +56,8 @@ jobs:
           toolchain: 1.95.0
 
       - name: Set SDK version
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
         run: node sdks/scripts/set-version.mjs "$VERSION"
 
       - name: Package crate
@@ -90,16 +68,19 @@ jobs:
 
   typescript:
     name: Publish npm package
-    needs: version
     runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write # OIDC token used by npm trusted publishing
-    env:
-      VERSION: ${{ needs.version.outputs.version }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve version
+        id: version
+        uses: ./.github/actions/resolve-sdk-version
 
       - name: Install Node.js
         uses: actions/setup-node@v6
@@ -121,6 +102,8 @@ jobs:
           fi
 
       - name: Set SDK version
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
         run: node sdks/scripts/set-version.mjs "$VERSION"
 
       - name: Install dependencies
@@ -141,16 +124,19 @@ jobs:
 
   python:
     name: Publish Python package
-    needs: version
     runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write # OIDC token used by PyPI trusted publishing
-    env:
-      VERSION: ${{ needs.version.outputs.version }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve version
+        id: version
+        uses: ./.github/actions/resolve-sdk-version
 
       - name: Install Node.js
         uses: actions/setup-node@v6
@@ -163,6 +149,8 @@ jobs:
           python-version: "3.12"
 
       - name: Set SDK version
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
         run: node sdks/scripts/set-version.mjs "$VERSION"
 
       - name: Build distribution

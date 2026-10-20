@@ -94,7 +94,8 @@ Releases are handled by
 It runs whenever an MCP server release tag (a `[0-9]*` semver tag) is pushed —
 the same tag that `cog bump` produces — and stamps the SDKs with that version
 before publishing. It can also be dispatched manually, in which case the latest
-tag (or a `version` input) is used.
+tag (or a `version` input) is used. The Rust, TypeScript and Python jobs are
+independent, so they all start at once and only resolve the shared version.
 
 The Go SDK is intentionally left out of the release pipeline and is not
 published anywhere.
