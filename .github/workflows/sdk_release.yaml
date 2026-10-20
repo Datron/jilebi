@@ -8,6 +8,9 @@ name: Release SDKs
 #
 #   git tag 0.7.0 && git push origin 0.7.0   # (normally done by cog bump)
 #
+# The three publish jobs are independent and run in parallel; each one resolves
+# the version itself via `.github/actions/resolve-sdk-version`.
+#
 # The Go SDK is generated but intentionally not published.
 
 on:
@@ -29,48 +32,21 @@ permissions:
   contents: read
 
 jobs:
-  version:
-    name: Resolve version
+  rust:
+    name: Publish Rust crate
     runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.resolve.outputs.version }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Resolve version from the MCP server tag
-        id: resolve
-        shell: bash
-        run: |
-          if [ -n "${{ github.event.inputs.version }}" ]; then
-            version="${{ github.event.inputs.version }}"
-          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            version="$(git tag -l --sort=-creatordate | head -n 1)"
-          else
-            version="${GITHUB_REF_NAME}"
-          fi
-          version="${version#v}"
-          if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+([-+][0-9A-Za-z.-]+)?$ ]]; then
-            echo "::error::'$version' is not a valid semver version"
-            exit 1
-          fi
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-          echo "Publishing SDK version $version"
-
-  rust:
-    name: Publish Rust crate
-    needs: version
-    runs-on: ubuntu-latest
-    env:
-      VERSION: ${{ needs.version.outputs.version }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Resolve version
+        id: version
+        uses: ./.github/actions/resolve-sdk-version
 
       - name: Install Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22
 
@@ -80,6 +56,8 @@ jobs:
           toolchain: 1.95.0
 
       - name: Set SDK version
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
         run: node sdks/scripts/set-version.mjs "$VERSION"
 
       - name: Package crate
@@ -90,21 +68,42 @@ jobs:
 
   typescript:
     name: Publish npm package
-    needs: version
     runs-on: ubuntu-latest
-    env:
-      VERSION: ${{ needs.version.outputs.version }}
+    permissions:
+      contents: read
+      id-token: write # OIDC token used by npm trusted publishing
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve version
+        id: version
+        uses: ./.github/actions/resolve-sdk-version
 
       - name: Install Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: 22
+          # Node 24 bundles npm >= 11.5.1, which is required for OIDC
+          # trusted publishing.
+          node-version: 24
           registry-url: "https://registry.npmjs.org"
+          package-manager-cache: false # never use caching in release builds
+
+      - name: Verify npm supports trusted publishing
+        shell: bash
+        run: |
+          version="$(npm --version)"
+          echo "npm $version"
+          if [ "$(printf '%s\n11.5.1\n' "$version" | sort -V | head -n 1)" != "11.5.1" ]; then
+            echo "::error::npm $version is too old; trusted publishing requires >= 11.5.1"
+            exit 1
+          fi
 
       - name: Set SDK version
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
         run: node sdks/scripts/set-version.mjs "$VERSION"
 
       - name: Install dependencies
@@ -115,24 +114,32 @@ jobs:
         working-directory: sdks/typescript
         run: npm run build
 
-      - name: Publish to npm
+      # No NODE_AUTH_TOKEN: npm detects the GitHub OIDC environment and
+      # exchanges it for a short-lived publish credential. Provenance is
+      # generated automatically. The trusted publisher must be configured on
+      # npmjs.com for @jilebi/sdk (see sdks/README.md).
+      - name: Publish to npm (trusted publishing)
         working-directory: sdks/typescript
         run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   python:
     name: Publish Python package
-    needs: version
     runs-on: ubuntu-latest
-    env:
-      VERSION: ${{ needs.version.outputs.version }}
+    permissions:
+      contents: read
+      id-token: write # OIDC token used by PyPI trusted publishing
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve version
+        id: version
+        uses: ./.github/actions/resolve-sdk-version
 
       - name: Install Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22
 
@@ -142,6 +149,8 @@ jobs:
           python-version: "3.12"
 
       - name: Set SDK version
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
         run: node sdks/scripts/set-version.mjs "$VERSION"
 
       - name: Build distribution
@@ -150,8 +159,10 @@ jobs:
           python -m pip install --upgrade build
           python -m build
 
-      - name: Publish to PyPI
+      # No password: PyPA's action exchanges the GitHub OIDC token for a
+      # short-lived PyPI upload token. The trusted publisher must be configured
+      # on PyPI for the jilebi-sdk project (see sdks/README.md).
+      - name: Publish to PyPI (trusted publishing)
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: sdks/python/dist
-          password: ${{ secrets.PYPI_API_TOKEN }}

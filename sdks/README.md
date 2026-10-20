@@ -94,7 +94,8 @@ Releases are handled by
 It runs whenever an MCP server release tag (a `[0-9]*` semver tag) is pushed —
 the same tag that `cog bump` produces — and stamps the SDKs with that version
 before publishing. It can also be dispatched manually, in which case the latest
-tag (or a `version` input) is used.
+tag (or a `version` input) is used. The Rust, TypeScript and Python jobs are
+independent, so they all start at once and only resolve the shared version.
 
 The Go SDK is intentionally left out of the release pipeline and is not
 published anywhere.
@@ -104,8 +105,22 @@ Required repository secrets:
 | Secret                 | Used for                       |
 | ---------------------- | ------------------------------ |
 | `CARGO_REGISTRY_TOKEN` | `cargo publish` to crates.io   |
-| `NPM_TOKEN`            | `npm publish` to npmjs.com     |
-| `PYPI_API_TOKEN`       | upload to PyPI                 |
+
+npm and PyPI use **trusted publishing (OIDC)** — no `NPM_TOKEN` or
+`PYPI_API_TOKEN` secrets. Both publish jobs grant `id-token: write`, and a
+trusted publisher must be registered for each package:
+
+| | npm (`@jilebi/sdk`) | PyPI (`jilebi-sdk`) |
+| --- | --- | --- |
+| Owner / user | `Datron` | `Datron` |
+| Repository | `jilebi` | `jilebi` |
+| Workflow filename | `sdk_release.yaml` | `sdk_release.yaml` |
+| Environment | *(blank)* | *(blank)* |
+| Extra | Allow **`npm publish`** (new configs default to `npm stage publish` only) | Pending publisher is fine before the first upload |
+
+A newly created npm trusted publisher must complete its first successful
+publish within 2 days or it expires. npm provenance attestations and PyPI
+PEP 740 attestations are generated automatically.
 
 ```bash
 # Normal flow: bump the MCP server version, which tags and releases the SDKs
