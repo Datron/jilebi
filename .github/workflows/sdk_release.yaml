@@ -92,6 +92,9 @@ jobs:
     name: Publish npm package
     needs: version
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # OIDC token used by npm trusted publishing
     env:
       VERSION: ${{ needs.version.outputs.version }}
     steps:
@@ -101,8 +104,20 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          # Node 24 bundles npm >= 11.5.1, which is required for OIDC
+          # trusted publishing.
+          node-version: 24
           registry-url: "https://registry.npmjs.org"
+
+      - name: Verify npm supports trusted publishing
+        shell: bash
+        run: |
+          version="$(npm --version)"
+          echo "npm $version"
+          if [ "$(printf '%s\n11.5.1\n' "$version" | sort -V | head -n 1)" != "11.5.1" ]; then
+            echo "::error::npm $version is too old; trusted publishing requires >= 11.5.1"
+            exit 1
+          fi
 
       - name: Set SDK version
         run: node sdks/scripts/set-version.mjs "$VERSION"
@@ -115,11 +130,13 @@ jobs:
         working-directory: sdks/typescript
         run: npm run build
 
-      - name: Publish to npm
+      # No NODE_AUTH_TOKEN: npm detects the GitHub OIDC environment and
+      # exchanges it for a short-lived publish credential. Provenance is
+      # generated automatically. The trusted publisher must be configured on
+      # npmjs.com for @jilebi/sdk (see sdks/README.md).
+      - name: Publish to npm (trusted publishing)
         working-directory: sdks/typescript
         run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   python:
     name: Publish Python package

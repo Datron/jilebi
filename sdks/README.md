@@ -104,8 +104,23 @@ Required repository secrets:
 | Secret                 | Used for                       |
 | ---------------------- | ------------------------------ |
 | `CARGO_REGISTRY_TOKEN` | `cargo publish` to crates.io   |
-| `NPM_TOKEN`            | `npm publish` to npmjs.com     |
 | `PYPI_API_TOKEN`       | upload to PyPI                 |
+
+npm uses **trusted publishing (OIDC)** — no `NPM_TOKEN` secret. The workflow
+grants `id-token: write` and the trusted publisher must be registered for
+`@jilebi/sdk` on npmjs.com:
+
+| Field | Value |
+| --- | --- |
+| Organization or user | `Datron` |
+| Repository | `jilebi` |
+| Workflow filename | `sdk_release.yaml` |
+| Environment | *(leave blank)* |
+| Allowed actions | **Allow `npm publish`** (new configs default to `npm stage publish` only) |
+
+A newly created trusted publisher must complete its first successful publish
+within 2 days or it expires. Provenance attestations are generated
+automatically; no `--provenance` flag is needed.
 
 ```bash
 # Normal flow: bump the MCP server version, which tags and releases the SDKs
