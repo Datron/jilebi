@@ -54,6 +54,11 @@ import {
     ApiVmGetResponseToJSON,
 } from '../models/ApiVmGetResponse';
 import {
+    type ApiVmMetricsResponse,
+    ApiVmMetricsResponseFromJSON,
+    ApiVmMetricsResponseToJSON,
+} from '../models/ApiVmMetricsResponse';
+import {
     type ApiVmRestoreRequest,
     ApiVmRestoreRequestFromJSON,
     ApiVmRestoreRequestToJSON,
@@ -63,6 +68,11 @@ import {
     ApiVmRestoreResponseFromJSON,
     ApiVmRestoreResponseToJSON,
 } from '../models/ApiVmRestoreResponse';
+import {
+    type ApiVmSleepResponse,
+    ApiVmSleepResponseFromJSON,
+    ApiVmSleepResponseToJSON,
+} from '../models/ApiVmSleepResponse';
 import {
     type ApiVmSnapshotRequest,
     ApiVmSnapshotRequestFromJSON,
@@ -78,6 +88,16 @@ import {
     ApiVmUpdateRequestFromJSON,
     ApiVmUpdateRequestToJSON,
 } from '../models/ApiVmUpdateRequest';
+import {
+    type ApiVmWakeRequest,
+    ApiVmWakeRequestFromJSON,
+    ApiVmWakeRequestToJSON,
+} from '../models/ApiVmWakeRequest';
+import {
+    type ApiVmWakeResponse,
+    ApiVmWakeResponseFromJSON,
+    ApiVmWakeResponseToJSON,
+} from '../models/ApiVmWakeResponse';
 
 export interface DeleteApiV1VmmByMachineNameRequest {
     /**
@@ -91,6 +111,21 @@ export interface GetApiV1VmmByMachineNameRequest {
      * Name of the microVM.
      */
     machineName: string;
+}
+
+export interface GetApiV1VmmByMachineNameMetricsRequest {
+    /**
+     * Name of the microVM.
+     */
+    machineName: string;
+    /**
+     * Time window to query.
+     */
+    range?: GetApiV1VmmByMachineNameMetricsRangeEnum;
+    /**
+     * Sampling resolution in seconds. Defaults to a window-appropriate step (max ~500 points).
+     */
+    step?: number;
 }
 
 export interface PostApiV1VmmByMachineNameRequest {
@@ -158,6 +193,13 @@ export interface PutApiV1VmmByMachineNameShutdownRequest {
     machineName: string;
 }
 
+export interface PutApiV1VmmByMachineNameSleepRequest {
+    /**
+     * Name of the microVM.
+     */
+    machineName: string;
+}
+
 export interface PutApiV1VmmByMachineNameSnapshotRequest {
     /**
      * Name of the microVM.
@@ -174,6 +216,17 @@ export interface PutApiV1VmmByMachineNameStartRequest {
      * Name of the microVM.
      */
     machineName: string;
+}
+
+export interface PutApiV1VmmByMachineNameWakeRequest {
+    /**
+     * Name of the microVM.
+     */
+    machineName: string;
+    /**
+     * 
+     */
+    apiVmWakeRequest?: ApiVmWakeRequest;
 }
 
 /**
@@ -250,6 +303,34 @@ export interface MicroVMsApiInterface {
      * Get a microVM
      */
     getApiV1VmmByMachineName(requestParameters: GetApiV1VmmByMachineNameRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiVmGetResponse>;
+
+    /**
+     * Creates request options for getApiV1VmmByMachineNameMetrics without sending the request
+     * @param {string} machineName Name of the microVM.
+     * @param {'1h' | '6h' | '24h' | '7d'} [range] Time window to query.
+     * @param {number} [step] Sampling resolution in seconds. Defaults to a window-appropriate step (max ~500 points).
+     * @throws {RequiredError}
+     * @memberof MicroVMsApiInterface
+     */
+    getApiV1VmmByMachineNameMetricsRequestOpts(requestParameters: GetApiV1VmmByMachineNameMetricsRequest): Promise<runtime.RequestOpts>;
+
+    /**
+     * Returns CPU, memory, network and disk time series for the microVM. Each series includes its points plus current, average and max values.
+     * @summary Get microVM usage metrics
+     * @param {string} machineName Name of the microVM.
+     * @param {'1h' | '6h' | '24h' | '7d'} [range] Time window to query.
+     * @param {number} [step] Sampling resolution in seconds. Defaults to a window-appropriate step (max ~500 points).
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof MicroVMsApiInterface
+     */
+    getApiV1VmmByMachineNameMetricsRaw(requestParameters: GetApiV1VmmByMachineNameMetricsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiVmMetricsResponse>>;
+
+    /**
+     * Returns CPU, memory, network and disk time series for the microVM. Each series includes its points plus current, average and max values.
+     * Get microVM usage metrics
+     */
+    getApiV1VmmByMachineNameMetrics(requestParameters: GetApiV1VmmByMachineNameMetricsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiVmMetricsResponse>;
 
     /**
      * Creates request options for postApiV1VmmByMachineName without sending the request
@@ -423,6 +504,30 @@ export interface MicroVMsApiInterface {
     putApiV1VmmByMachineNameShutdown(requestParameters: PutApiV1VmmByMachineNameShutdownRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiSuccess>;
 
     /**
+     * Creates request options for putApiV1VmmByMachineNameSleep without sending the request
+     * @param {string} machineName Name of the microVM.
+     * @throws {RequiredError}
+     * @memberof MicroVMsApiInterface
+     */
+    putApiV1VmmByMachineNameSleepRequestOpts(requestParameters: PutApiV1VmmByMachineNameSleepRequest): Promise<runtime.RequestOpts>;
+
+    /**
+     * Pauses the VM, snapshots it to a rolling slot, then evicts the hypervisor process to free host memory. Wakes in place from the snapshot.
+     * @summary Sleep a microVM
+     * @param {string} machineName Name of the microVM.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof MicroVMsApiInterface
+     */
+    putApiV1VmmByMachineNameSleepRaw(requestParameters: PutApiV1VmmByMachineNameSleepRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiVmSleepResponse>>;
+
+    /**
+     * Pauses the VM, snapshots it to a rolling slot, then evicts the hypervisor process to free host memory. Wakes in place from the snapshot.
+     * Sleep a microVM
+     */
+    putApiV1VmmByMachineNameSleep(requestParameters: PutApiV1VmmByMachineNameSleepRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiVmSleepResponse>;
+
+    /**
      * Creates request options for putApiV1VmmByMachineNameSnapshot without sending the request
      * @param {string} machineName Name of the microVM.
      * @param {ApiVmSnapshotRequest} [apiVmSnapshotRequest] 
@@ -469,6 +574,32 @@ export interface MicroVMsApiInterface {
      * Start a microVM
      */
     putApiV1VmmByMachineNameStart(requestParameters: PutApiV1VmmByMachineNameStartRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiSuccess>;
+
+    /**
+     * Creates request options for putApiV1VmmByMachineNameWake without sending the request
+     * @param {string} machineName Name of the microVM.
+     * @param {ApiVmWakeRequest} [apiVmWakeRequest] 
+     * @throws {RequiredError}
+     * @memberof MicroVMsApiInterface
+     */
+    putApiV1VmmByMachineNameWakeRequestOpts(requestParameters: PutApiV1VmmByMachineNameWakeRequest): Promise<runtime.RequestOpts>;
+
+    /**
+     * Resumes a live-paused VM in place or restores a slept VM from its snapshot. When no usable snapshot exists, boots the existing disk fresh (RAM state is lost, disk contents are preserved).
+     * @summary Wake a microVM
+     * @param {string} machineName Name of the microVM.
+     * @param {ApiVmWakeRequest} [apiVmWakeRequest] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof MicroVMsApiInterface
+     */
+    putApiV1VmmByMachineNameWakeRaw(requestParameters: PutApiV1VmmByMachineNameWakeRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiVmWakeResponse>>;
+
+    /**
+     * Resumes a live-paused VM in place or restores a slept VM from its snapshot. When no usable snapshot exists, boots the existing disk fresh (RAM state is lost, disk contents are preserved).
+     * Wake a microVM
+     */
+    putApiV1VmmByMachineNameWake(requestParameters: PutApiV1VmmByMachineNameWakeRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiVmWakeResponse>;
 
 }
 
@@ -639,6 +770,73 @@ export class MicroVMsApi extends runtime.BaseAPI implements MicroVMsApiInterface
      */
     async getApiV1VmmByMachineName(requestParameters: GetApiV1VmmByMachineNameRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiVmGetResponse> {
         const response = await this.getApiV1VmmByMachineNameRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for getApiV1VmmByMachineNameMetrics without sending the request
+     */
+    async getApiV1VmmByMachineNameMetricsRequestOpts(requestParameters: GetApiV1VmmByMachineNameMetricsRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['machineName'] == null) {
+            throw new runtime.RequiredError(
+                'machineName',
+                'Required parameter "machineName" was null or undefined when calling getApiV1VmmByMachineNameMetrics().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        if (requestParameters['range'] != null) {
+            queryParameters['range'] = requestParameters['range'];
+        }
+
+        if (requestParameters['step'] != null) {
+            queryParameters['step'] = requestParameters['step'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["X-API-Key"] = await this.configuration.apiKey("X-API-Key"); // apiKey authentication
+        }
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearerAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/vmm/{machine_name}/metrics`;
+        urlPath = urlPath.replace('{machine_name}', encodeURIComponent(String(requestParameters['machineName'])));
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Returns CPU, memory, network and disk time series for the microVM. Each series includes its points plus current, average and max values.
+     * Get microVM usage metrics
+     */
+    async getApiV1VmmByMachineNameMetricsRaw(requestParameters: GetApiV1VmmByMachineNameMetricsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiVmMetricsResponse>> {
+        const requestOptions = await this.getApiV1VmmByMachineNameMetricsRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => ApiVmMetricsResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Returns CPU, memory, network and disk time series for the microVM. Each series includes its points plus current, average and max values.
+     * Get microVM usage metrics
+     */
+    async getApiV1VmmByMachineNameMetrics(requestParameters: GetApiV1VmmByMachineNameMetricsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiVmMetricsResponse> {
+        const response = await this.getApiV1VmmByMachineNameMetricsRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
@@ -1086,6 +1284,65 @@ export class MicroVMsApi extends runtime.BaseAPI implements MicroVMsApiInterface
     }
 
     /**
+     * Creates request options for putApiV1VmmByMachineNameSleep without sending the request
+     */
+    async putApiV1VmmByMachineNameSleepRequestOpts(requestParameters: PutApiV1VmmByMachineNameSleepRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['machineName'] == null) {
+            throw new runtime.RequiredError(
+                'machineName',
+                'Required parameter "machineName" was null or undefined when calling putApiV1VmmByMachineNameSleep().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["X-API-Key"] = await this.configuration.apiKey("X-API-Key"); // apiKey authentication
+        }
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearerAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/vmm/{machine_name}/sleep`;
+        urlPath = urlPath.replace('{machine_name}', encodeURIComponent(String(requestParameters['machineName'])));
+
+        return {
+            path: urlPath,
+            method: 'PUT',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Pauses the VM, snapshots it to a rolling slot, then evicts the hypervisor process to free host memory. Wakes in place from the snapshot.
+     * Sleep a microVM
+     */
+    async putApiV1VmmByMachineNameSleepRaw(requestParameters: PutApiV1VmmByMachineNameSleepRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiVmSleepResponse>> {
+        const requestOptions = await this.putApiV1VmmByMachineNameSleepRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => ApiVmSleepResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Pauses the VM, snapshots it to a rolling slot, then evicts the hypervisor process to free host memory. Wakes in place from the snapshot.
+     * Sleep a microVM
+     */
+    async putApiV1VmmByMachineNameSleep(requestParameters: PutApiV1VmmByMachineNameSleepRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiVmSleepResponse> {
+        const response = await this.putApiV1VmmByMachineNameSleepRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
      * Creates request options for putApiV1VmmByMachineNameSnapshot without sending the request
      */
     async putApiV1VmmByMachineNameSnapshotRequestOpts(requestParameters: PutApiV1VmmByMachineNameSnapshotRequest): Promise<runtime.RequestOpts> {
@@ -1202,4 +1459,77 @@ export class MicroVMsApi extends runtime.BaseAPI implements MicroVMsApiInterface
         return await response.value();
     }
 
+    /**
+     * Creates request options for putApiV1VmmByMachineNameWake without sending the request
+     */
+    async putApiV1VmmByMachineNameWakeRequestOpts(requestParameters: PutApiV1VmmByMachineNameWakeRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['machineName'] == null) {
+            throw new runtime.RequiredError(
+                'machineName',
+                'Required parameter "machineName" was null or undefined when calling putApiV1VmmByMachineNameWake().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["X-API-Key"] = await this.configuration.apiKey("X-API-Key"); // apiKey authentication
+        }
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearerAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/vmm/{machine_name}/wake`;
+        urlPath = urlPath.replace('{machine_name}', encodeURIComponent(String(requestParameters['machineName'])));
+
+        return {
+            path: urlPath,
+            method: 'PUT',
+            headers: headerParameters,
+            query: queryParameters,
+            body: ApiVmWakeRequestToJSON(requestParameters['apiVmWakeRequest']),
+        };
+    }
+
+    /**
+     * Resumes a live-paused VM in place or restores a slept VM from its snapshot. When no usable snapshot exists, boots the existing disk fresh (RAM state is lost, disk contents are preserved).
+     * Wake a microVM
+     */
+    async putApiV1VmmByMachineNameWakeRaw(requestParameters: PutApiV1VmmByMachineNameWakeRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiVmWakeResponse>> {
+        const requestOptions = await this.putApiV1VmmByMachineNameWakeRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => ApiVmWakeResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Resumes a live-paused VM in place or restores a slept VM from its snapshot. When no usable snapshot exists, boots the existing disk fresh (RAM state is lost, disk contents are preserved).
+     * Wake a microVM
+     */
+    async putApiV1VmmByMachineNameWake(requestParameters: PutApiV1VmmByMachineNameWakeRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiVmWakeResponse> {
+        const response = await this.putApiV1VmmByMachineNameWakeRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
 }
+
+/**
+ * @export
+ */
+export const GetApiV1VmmByMachineNameMetricsRangeEnum = {
+    _1h: '1h',
+    _6h: '6h',
+    _24h: '24h',
+    _7d: '7d',
+} as const;
+export type GetApiV1VmmByMachineNameMetricsRangeEnum = typeof GetApiV1VmmByMachineNameMetricsRangeEnum[keyof typeof GetApiV1VmmByMachineNameMetricsRangeEnum];

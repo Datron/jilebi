@@ -361,7 +361,6 @@ class SoftwareCatalogApi:
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "List[ApiSoftware]",
             '401': "ApiError",
-            '403': "ApiError",
             '500': "ApiError",
         }
         response_data = self.api_client.call_api(
@@ -426,7 +425,6 @@ class SoftwareCatalogApi:
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "List[ApiSoftware]",
             '401': "ApiError",
-            '403': "ApiError",
             '500': "ApiError",
         }
         response_data = self.api_client.call_api(
@@ -491,7 +489,6 @@ class SoftwareCatalogApi:
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "List[ApiSoftware]",
             '401': "ApiError",
-            '403': "ApiError",
             '500': "ApiError",
         }
         response_data = self.api_client.call_api(
@@ -619,7 +616,6 @@ class SoftwareCatalogApi:
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "ApiSoftware",
             '401': "ApiError",
-            '403': "ApiError",
             '404': "ApiError",
             '500': "ApiError",
         }
@@ -689,7 +685,6 @@ class SoftwareCatalogApi:
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "ApiSoftware",
             '401': "ApiError",
-            '403': "ApiError",
             '404': "ApiError",
             '500': "ApiError",
         }
@@ -759,7 +754,6 @@ class SoftwareCatalogApi:
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "ApiSoftware",
             '401': "ApiError",
-            '403': "ApiError",
             '404': "ApiError",
             '500': "ApiError",
         }

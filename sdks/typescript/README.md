@@ -69,6 +69,7 @@ All URIs are relative to *https://jilebi.ai*
 *MicroVMsApi* | [**deleteApiV1VmmByMachineName**](docs/MicroVMsApi.md#deleteapiv1vmmbymachinename) | **DELETE** /api/v1/vmm/{machine_name} | Delete a microVM
 *MicroVMsApi* | [**getApiV1Vmm**](docs/MicroVMsApi.md#getapiv1vmm) | **GET** /api/v1/vmm | List microVMs
 *MicroVMsApi* | [**getApiV1VmmByMachineName**](docs/MicroVMsApi.md#getapiv1vmmbymachinename) | **GET** /api/v1/vmm/{machine_name} | Get a microVM
+*MicroVMsApi* | [**getApiV1VmmByMachineNameMetrics**](docs/MicroVMsApi.md#getapiv1vmmbymachinenamemetrics) | **GET** /api/v1/vmm/{machine_name}/metrics | Get microVM usage metrics
 *MicroVMsApi* | [**postApiV1VmmByMachineName**](docs/MicroVMsApi.md#postapiv1vmmbymachinename) | **POST** /api/v1/vmm/{machine_name} | Create a microVM
 *MicroVMsApi* | [**postApiV1VmmByMachineNameClone**](docs/MicroVMsApi.md#postapiv1vmmbymachinenameclone) | **POST** /api/v1/vmm/{machine_name}/clone | Clone a microVM
 *MicroVMsApi* | [**putApiV1VmmByMachineName**](docs/MicroVMsApi.md#putapiv1vmmbymachinename) | **PUT** /api/v1/vmm/{machine_name} | Resize a microVM
@@ -76,13 +77,18 @@ All URIs are relative to *https://jilebi.ai*
 *MicroVMsApi* | [**putApiV1VmmByMachineNameRestart**](docs/MicroVMsApi.md#putapiv1vmmbymachinenamerestart) | **PUT** /api/v1/vmm/{machine_name}/restart | Restart a microVM
 *MicroVMsApi* | [**putApiV1VmmByMachineNameRestore**](docs/MicroVMsApi.md#putapiv1vmmbymachinenamerestore) | **PUT** /api/v1/vmm/{machine_name}/restore | Restore a microVM from a snapshot
 *MicroVMsApi* | [**putApiV1VmmByMachineNameShutdown**](docs/MicroVMsApi.md#putapiv1vmmbymachinenameshutdown) | **PUT** /api/v1/vmm/{machine_name}/shutdown | Shut down a microVM
+*MicroVMsApi* | [**putApiV1VmmByMachineNameSleep**](docs/MicroVMsApi.md#putapiv1vmmbymachinenamesleep) | **PUT** /api/v1/vmm/{machine_name}/sleep | Sleep a microVM
 *MicroVMsApi* | [**putApiV1VmmByMachineNameSnapshot**](docs/MicroVMsApi.md#putapiv1vmmbymachinenamesnapshot) | **PUT** /api/v1/vmm/{machine_name}/snapshot | Snapshot a microVM
 *MicroVMsApi* | [**putApiV1VmmByMachineNameStart**](docs/MicroVMsApi.md#putapiv1vmmbymachinenamestart) | **PUT** /api/v1/vmm/{machine_name}/start | Start a microVM
+*MicroVMsApi* | [**putApiV1VmmByMachineNameWake**](docs/MicroVMsApi.md#putapiv1vmmbymachinenamewake) | **PUT** /api/v1/vmm/{machine_name}/wake | Wake a microVM
 *NodesApi* | [**deleteApiV1NodesByName**](docs/NodesApi.md#deleteapiv1nodesbyname) | **DELETE** /api/v1/nodes/{name} | Delete a node
 *NodesApi* | [**getApiV1Nodes**](docs/NodesApi.md#getapiv1nodes) | **GET** /api/v1/nodes | List nodes
 *NodesApi* | [**getApiV1NodesByName**](docs/NodesApi.md#getapiv1nodesbyname) | **GET** /api/v1/nodes/{name} | Get a node
+*NodesApi* | [**getApiV1NodesByNameMaintenance**](docs/NodesApi.md#getapiv1nodesbynamemaintenance) | **GET** /api/v1/nodes/{name}/maintenance | Get node maintenance state
 *NodesApi* | [**postApiV1Nodes**](docs/NodesApi.md#postapiv1nodes) | **POST** /api/v1/nodes | Register a node
 *NodesApi* | [**postApiV1NodesByNameHealth**](docs/NodesApi.md#postapiv1nodesbynamehealth) | **POST** /api/v1/nodes/{name}/health | Check node health
+*NodesApi* | [**postApiV1NodesByNameMaintenanceRestore**](docs/NodesApi.md#postapiv1nodesbynamemaintenancerestore) | **POST** /api/v1/nodes/{name}/maintenance/restore | Restore every VM on a node
+*NodesApi* | [**postApiV1NodesByNameMaintenanceSnapshot**](docs/NodesApi.md#postapiv1nodesbynamemaintenancesnapshot) | **POST** /api/v1/nodes/{name}/maintenance/snapshot | Snapshot every VM on a node
 *NodesApi* | [**postApiV1NodesByNameRefresh**](docs/NodesApi.md#postapiv1nodesbynamerefresh) | **POST** /api/v1/nodes/{name}/refresh | Refresh node resources
 *NodesApi* | [**postApiV1NodesByNameReinitialize**](docs/NodesApi.md#postapiv1nodesbynamereinitialize) | **POST** /api/v1/nodes/{name}/reinitialize | Reinitialize a node
 *NodesApi* | [**putApiV1NodesByName**](docs/NodesApi.md#putapiv1nodesbyname) | **PUT** /api/v1/nodes/{name} | Update a node
@@ -117,6 +123,9 @@ All URIs are relative to *https://jilebi.ai*
 - [ApiNode](docs/ApiNode.md)
 - [ApiNodeCreateRequest](docs/ApiNodeCreateRequest.md)
 - [ApiNodeHealthResponse](docs/ApiNodeHealthResponse.md)
+- [ApiNodeMaintenanceEntry](docs/ApiNodeMaintenanceEntry.md)
+- [ApiNodeMaintenanceRunResponse](docs/ApiNodeMaintenanceRunResponse.md)
+- [ApiNodeMaintenanceStatus](docs/ApiNodeMaintenanceStatus.md)
 - [ApiNodeRefreshResponse](docs/ApiNodeRefreshResponse.md)
 - [ApiNodeReinitializeResponse](docs/ApiNodeReinitializeResponse.md)
 - [ApiNodeStatus](docs/ApiNodeStatus.md)
@@ -140,12 +149,23 @@ All URIs are relative to *https://jilebi.ai*
 - [ApiVmCreateRequest](docs/ApiVmCreateRequest.md)
 - [ApiVmCreateResponse](docs/ApiVmCreateResponse.md)
 - [ApiVmGetResponse](docs/ApiVmGetResponse.md)
+- [ApiVmMetricPoint](docs/ApiVmMetricPoint.md)
+- [ApiVmMetricsResponse](docs/ApiVmMetricsResponse.md)
+- [ApiVmMetricsResponseConfigured](docs/ApiVmMetricsResponseConfigured.md)
+- [ApiVmMetricsResponseCpu](docs/ApiVmMetricsResponseCpu.md)
+- [ApiVmMetricsResponseDisk](docs/ApiVmMetricsResponseDisk.md)
+- [ApiVmMetricsResponseMemory](docs/ApiVmMetricsResponseMemory.md)
+- [ApiVmMetricsResponseNetwork](docs/ApiVmMetricsResponseNetwork.md)
+- [ApiVmMetricsSeries](docs/ApiVmMetricsSeries.md)
 - [ApiVmRestoreRequest](docs/ApiVmRestoreRequest.md)
 - [ApiVmRestoreResponse](docs/ApiVmRestoreResponse.md)
+- [ApiVmSleepResponse](docs/ApiVmSleepResponse.md)
 - [ApiVmSnapshotRequest](docs/ApiVmSnapshotRequest.md)
 - [ApiVmSnapshotResponse](docs/ApiVmSnapshotResponse.md)
 - [ApiVmState](docs/ApiVmState.md)
 - [ApiVmUpdateRequest](docs/ApiVmUpdateRequest.md)
+- [ApiVmWakeRequest](docs/ApiVmWakeRequest.md)
+- [ApiVmWakeResponse](docs/ApiVmWakeResponse.md)
 - [DeviceNode](docs/DeviceNode.md)
 - [ProvisionedVm](docs/ProvisionedVm.md)
 - [SharedUser](docs/SharedUser.md)

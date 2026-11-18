@@ -7,8 +7,11 @@ Method | HTTP request | Description
 [**DeleteApiV1NodesByName**](NodesAPI.md#DeleteApiV1NodesByName) | **Delete** /api/v1/nodes/{name} | Delete a node
 [**GetApiV1Nodes**](NodesAPI.md#GetApiV1Nodes) | **Get** /api/v1/nodes | List nodes
 [**GetApiV1NodesByName**](NodesAPI.md#GetApiV1NodesByName) | **Get** /api/v1/nodes/{name} | Get a node
+[**GetApiV1NodesByNameMaintenance**](NodesAPI.md#GetApiV1NodesByNameMaintenance) | **Get** /api/v1/nodes/{name}/maintenance | Get node maintenance state
 [**PostApiV1Nodes**](NodesAPI.md#PostApiV1Nodes) | **Post** /api/v1/nodes | Register a node
 [**PostApiV1NodesByNameHealth**](NodesAPI.md#PostApiV1NodesByNameHealth) | **Post** /api/v1/nodes/{name}/health | Check node health
+[**PostApiV1NodesByNameMaintenanceRestore**](NodesAPI.md#PostApiV1NodesByNameMaintenanceRestore) | **Post** /api/v1/nodes/{name}/maintenance/restore | Restore every VM on a node
+[**PostApiV1NodesByNameMaintenanceSnapshot**](NodesAPI.md#PostApiV1NodesByNameMaintenanceSnapshot) | **Post** /api/v1/nodes/{name}/maintenance/snapshot | Snapshot every VM on a node
 [**PostApiV1NodesByNameRefresh**](NodesAPI.md#PostApiV1NodesByNameRefresh) | **Post** /api/v1/nodes/{name}/refresh | Refresh node resources
 [**PostApiV1NodesByNameReinitialize**](NodesAPI.md#PostApiV1NodesByNameReinitialize) | **Post** /api/v1/nodes/{name}/reinitialize | Reinitialize a node
 [**PutApiV1NodesByName**](NodesAPI.md#PutApiV1NodesByName) | **Put** /api/v1/nodes/{name} | Update a node
@@ -210,6 +213,76 @@ Name | Type | Description  | Notes
 [[Back to README]](../README.md)
 
 
+## GetApiV1NodesByNameMaintenance
+
+> ApiNodeMaintenanceStatus GetApiV1NodesByNameMaintenance(ctx, name).Execute()
+
+Get node maintenance state
+
+
+
+### Example
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"os"
+	openapiclient "github.com/Datron/jilebi/sdks/go"
+)
+
+func main() {
+	name := "name_example" // string | Name of the node.
+
+	configuration := openapiclient.NewConfiguration()
+	apiClient := openapiclient.NewAPIClient(configuration)
+	resp, r, err := apiClient.NodesAPI.GetApiV1NodesByNameMaintenance(context.Background(), name).Execute()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error when calling `NodesAPI.GetApiV1NodesByNameMaintenance``: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+	}
+	// response from `GetApiV1NodesByNameMaintenance`: ApiNodeMaintenanceStatus
+	fmt.Fprintf(os.Stdout, "Response from `NodesAPI.GetApiV1NodesByNameMaintenance`: %v\n", resp)
+}
+```
+
+### Path Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+**ctx** | **context.Context** | context for authentication, logging, cancellation, deadlines, tracing, etc.
+**name** | **string** | Name of the node. | 
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiGetApiV1NodesByNameMaintenanceRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+
+
+### Return type
+
+[**ApiNodeMaintenanceStatus**](ApiNodeMaintenanceStatus.md)
+
+### Authorization
+
+[apiKey](../README.md#apiKey), [sessionCookie](../README.md#sessionCookie), [bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
+
+
 ## PostApiV1Nodes
 
 > ApiNode PostApiV1Nodes(ctx).ApiNodeCreateRequest(apiNodeCreateRequest).Execute()
@@ -329,6 +402,146 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**ApiNodeHealthResponse**](ApiNodeHealthResponse.md)
+
+### Authorization
+
+[apiKey](../README.md#apiKey), [sessionCookie](../README.md#sessionCookie), [bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
+
+
+## PostApiV1NodesByNameMaintenanceRestore
+
+> ApiNodeMaintenanceRunResponse PostApiV1NodesByNameMaintenanceRestore(ctx, name).Execute()
+
+Restore every VM on a node
+
+
+
+### Example
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"os"
+	openapiclient "github.com/Datron/jilebi/sdks/go"
+)
+
+func main() {
+	name := "name_example" // string | Name of the node.
+
+	configuration := openapiclient.NewConfiguration()
+	apiClient := openapiclient.NewAPIClient(configuration)
+	resp, r, err := apiClient.NodesAPI.PostApiV1NodesByNameMaintenanceRestore(context.Background(), name).Execute()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error when calling `NodesAPI.PostApiV1NodesByNameMaintenanceRestore``: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+	}
+	// response from `PostApiV1NodesByNameMaintenanceRestore`: ApiNodeMaintenanceRunResponse
+	fmt.Fprintf(os.Stdout, "Response from `NodesAPI.PostApiV1NodesByNameMaintenanceRestore`: %v\n", resp)
+}
+```
+
+### Path Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+**ctx** | **context.Context** | context for authentication, logging, cancellation, deadlines, tracing, etc.
+**name** | **string** | Name of the node. | 
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiPostApiV1NodesByNameMaintenanceRestoreRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+
+
+### Return type
+
+[**ApiNodeMaintenanceRunResponse**](ApiNodeMaintenanceRunResponse.md)
+
+### Authorization
+
+[apiKey](../README.md#apiKey), [sessionCookie](../README.md#sessionCookie), [bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
+
+
+## PostApiV1NodesByNameMaintenanceSnapshot
+
+> ApiNodeMaintenanceRunResponse PostApiV1NodesByNameMaintenanceSnapshot(ctx, name).Execute()
+
+Snapshot every VM on a node
+
+
+
+### Example
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"os"
+	openapiclient "github.com/Datron/jilebi/sdks/go"
+)
+
+func main() {
+	name := "name_example" // string | Name of the node.
+
+	configuration := openapiclient.NewConfiguration()
+	apiClient := openapiclient.NewAPIClient(configuration)
+	resp, r, err := apiClient.NodesAPI.PostApiV1NodesByNameMaintenanceSnapshot(context.Background(), name).Execute()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error when calling `NodesAPI.PostApiV1NodesByNameMaintenanceSnapshot``: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+	}
+	// response from `PostApiV1NodesByNameMaintenanceSnapshot`: ApiNodeMaintenanceRunResponse
+	fmt.Fprintf(os.Stdout, "Response from `NodesAPI.PostApiV1NodesByNameMaintenanceSnapshot`: %v\n", resp)
+}
+```
+
+### Path Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+**ctx** | **context.Context** | context for authentication, logging, cancellation, deadlines, tracing, etc.
+**name** | **string** | Name of the node. | 
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiPostApiV1NodesByNameMaintenanceSnapshotRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+
+
+### Return type
+
+[**ApiNodeMaintenanceRunResponse**](ApiNodeMaintenanceRunResponse.md)
 
 ### Authorization
 

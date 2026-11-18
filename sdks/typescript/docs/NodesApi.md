@@ -7,8 +7,11 @@ All URIs are relative to *https://jilebi.ai*
 | [**deleteApiV1NodesByName**](NodesApi.md#deleteapiv1nodesbyname) | **DELETE** /api/v1/nodes/{name} | Delete a node |
 | [**getApiV1Nodes**](NodesApi.md#getapiv1nodes) | **GET** /api/v1/nodes | List nodes |
 | [**getApiV1NodesByName**](NodesApi.md#getapiv1nodesbyname) | **GET** /api/v1/nodes/{name} | Get a node |
+| [**getApiV1NodesByNameMaintenance**](NodesApi.md#getapiv1nodesbynamemaintenance) | **GET** /api/v1/nodes/{name}/maintenance | Get node maintenance state |
 | [**postApiV1Nodes**](NodesApi.md#postapiv1nodes) | **POST** /api/v1/nodes | Register a node |
 | [**postApiV1NodesByNameHealth**](NodesApi.md#postapiv1nodesbynamehealth) | **POST** /api/v1/nodes/{name}/health | Check node health |
+| [**postApiV1NodesByNameMaintenanceRestore**](NodesApi.md#postapiv1nodesbynamemaintenancerestore) | **POST** /api/v1/nodes/{name}/maintenance/restore | Restore every VM on a node |
+| [**postApiV1NodesByNameMaintenanceSnapshot**](NodesApi.md#postapiv1nodesbynamemaintenancesnapshot) | **POST** /api/v1/nodes/{name}/maintenance/snapshot | Snapshot every VM on a node |
 | [**postApiV1NodesByNameRefresh**](NodesApi.md#postapiv1nodesbynamerefresh) | **POST** /api/v1/nodes/{name}/refresh | Refresh node resources |
 | [**postApiV1NodesByNameReinitialize**](NodesApi.md#postapiv1nodesbynamereinitialize) | **POST** /api/v1/nodes/{name}/reinitialize | Reinitialize a node |
 | [**putApiV1NodesByName**](NodesApi.md#putapiv1nodesbyname) | **PUT** /api/v1/nodes/{name} | Update a node |
@@ -234,6 +237,85 @@ example().catch(console.error);
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 
 
+## getApiV1NodesByNameMaintenance
+
+> ApiNodeMaintenanceStatus getApiV1NodesByNameMaintenance(name)
+
+Get node maintenance state
+
+Progress of the node\&#39;s snapshot/restore run, if one is pending.
+
+### Example
+
+```ts
+import {
+  Configuration,
+  NodesApi,
+} from '@jilebi/sdk';
+import type { GetApiV1NodesByNameMaintenanceRequest } from '@jilebi/sdk';
+
+async function example() {
+  console.log("🚀 Testing @jilebi/sdk SDK...");
+  const config = new Configuration({ 
+    // To configure API key authorization: apiKey
+    apiKey: "YOUR API KEY",
+    // To configure API key authorization: sessionCookie
+    apiKey: "YOUR API KEY",
+    // Configure HTTP bearer authorization: bearerAuth
+    accessToken: "YOUR BEARER TOKEN",
+  });
+  const api = new NodesApi(config);
+
+  const body = {
+    // string | Name of the node.
+    name: name_example,
+  } satisfies GetApiV1NodesByNameMaintenanceRequest;
+
+  try {
+    const data = await api.getApiV1NodesByNameMaintenance(body);
+    console.log(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// Run the test
+example().catch(console.error);
+```
+
+### Parameters
+
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **name** | `string` | Name of the node. | [Defaults to `undefined`] |
+
+### Return type
+
+[**ApiNodeMaintenanceStatus**](ApiNodeMaintenanceStatus.md)
+
+### Authorization
+
+[apiKey](../README.md#apiKey), [sessionCookie](../README.md#sessionCookie), [bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: `application/json`
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **200** | Maintenance state. |  -  |
+| **401** | Unauthorized |  -  |
+| **403** | Forbidden |  -  |
+| **404** | Node not found |  -  |
+| **500** | Internal server error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
+
 ## postApiV1Nodes
 
 > ApiNode postApiV1Nodes(apiNodeCreateRequest)
@@ -386,6 +468,166 @@ example().catch(console.error);
 | **401** | Unauthorized |  -  |
 | **403** | Forbidden |  -  |
 | **404** | Node not found |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
+
+## postApiV1NodesByNameMaintenanceRestore
+
+> ApiNodeMaintenanceRunResponse postApiV1NodesByNameMaintenanceRestore(name)
+
+Restore every VM on a node
+
+Wakes every VM snapshotted by the maintenance snapshot back to its previous state, re-adds its app routes and returns the node to service. Safe to retry: VMs already restored are skipped and failures stay pending. Works in the background; poll the maintenance endpoint for progress.
+
+### Example
+
+```ts
+import {
+  Configuration,
+  NodesApi,
+} from '@jilebi/sdk';
+import type { PostApiV1NodesByNameMaintenanceRestoreRequest } from '@jilebi/sdk';
+
+async function example() {
+  console.log("🚀 Testing @jilebi/sdk SDK...");
+  const config = new Configuration({ 
+    // To configure API key authorization: apiKey
+    apiKey: "YOUR API KEY",
+    // To configure API key authorization: sessionCookie
+    apiKey: "YOUR API KEY",
+    // Configure HTTP bearer authorization: bearerAuth
+    accessToken: "YOUR BEARER TOKEN",
+  });
+  const api = new NodesApi(config);
+
+  const body = {
+    // string | Name of the node.
+    name: name_example,
+  } satisfies PostApiV1NodesByNameMaintenanceRestoreRequest;
+
+  try {
+    const data = await api.postApiV1NodesByNameMaintenanceRestore(body);
+    console.log(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// Run the test
+example().catch(console.error);
+```
+
+### Parameters
+
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **name** | `string` | Name of the node. | [Defaults to `undefined`] |
+
+### Return type
+
+[**ApiNodeMaintenanceRunResponse**](ApiNodeMaintenanceRunResponse.md)
+
+### Authorization
+
+[apiKey](../README.md#apiKey), [sessionCookie](../README.md#sessionCookie), [bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: `application/json`
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **200** | Restore started. |  -  |
+| **401** | Unauthorized |  -  |
+| **403** | Forbidden |  -  |
+| **404** | Node not found |  -  |
+| **409** | A run is already in progress |  -  |
+| **500** | Internal server error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
+
+## postApiV1NodesByNameMaintenanceSnapshot
+
+> ApiNodeMaintenanceRunResponse postApiV1NodesByNameMaintenanceSnapshot(name)
+
+Snapshot every VM on a node
+
+Takes the node out of service and sleeps every VM on it (pause + snapshot + process evict), releasing their capacity. Run this before rebooting the node, then call restore. Works in the background; poll the maintenance endpoint for progress.
+
+### Example
+
+```ts
+import {
+  Configuration,
+  NodesApi,
+} from '@jilebi/sdk';
+import type { PostApiV1NodesByNameMaintenanceSnapshotRequest } from '@jilebi/sdk';
+
+async function example() {
+  console.log("🚀 Testing @jilebi/sdk SDK...");
+  const config = new Configuration({ 
+    // To configure API key authorization: apiKey
+    apiKey: "YOUR API KEY",
+    // To configure API key authorization: sessionCookie
+    apiKey: "YOUR API KEY",
+    // Configure HTTP bearer authorization: bearerAuth
+    accessToken: "YOUR BEARER TOKEN",
+  });
+  const api = new NodesApi(config);
+
+  const body = {
+    // string | Name of the node.
+    name: name_example,
+  } satisfies PostApiV1NodesByNameMaintenanceSnapshotRequest;
+
+  try {
+    const data = await api.postApiV1NodesByNameMaintenanceSnapshot(body);
+    console.log(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// Run the test
+example().catch(console.error);
+```
+
+### Parameters
+
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **name** | `string` | Name of the node. | [Defaults to `undefined`] |
+
+### Return type
+
+[**ApiNodeMaintenanceRunResponse**](ApiNodeMaintenanceRunResponse.md)
+
+### Authorization
+
+[apiKey](../README.md#apiKey), [sessionCookie](../README.md#sessionCookie), [bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: `application/json`
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **200** | Run started. |  -  |
+| **401** | Unauthorized |  -  |
+| **403** | Forbidden |  -  |
+| **404** | Node not found |  -  |
+| **409** | A run is already in progress, or a restore is pending |  -  |
+| **500** | Internal server error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 

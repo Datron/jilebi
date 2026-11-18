@@ -44,6 +44,17 @@ pub enum GetApiV1NodesByNameError {
     UnknownValue(serde_json::Value),
 }
 
+/// struct for typed errors of method [`get_api_v1_nodes_by_name_maintenance`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum GetApiV1NodesByNameMaintenanceError {
+    Status401(models::ApiError),
+    Status403(models::ApiError),
+    Status404(models::ApiError),
+    Status500(models::ApiError),
+    UnknownValue(serde_json::Value),
+}
+
 /// struct for typed errors of method [`post_api_v1_nodes`]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
@@ -63,6 +74,30 @@ pub enum PostApiV1NodesByNameHealthError {
     Status401(models::ApiError),
     Status403(models::ApiError),
     Status404(models::ApiError),
+    UnknownValue(serde_json::Value),
+}
+
+/// struct for typed errors of method [`post_api_v1_nodes_by_name_maintenance_restore`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum PostApiV1NodesByNameMaintenanceRestoreError {
+    Status401(models::ApiError),
+    Status403(models::ApiError),
+    Status404(models::ApiError),
+    Status409(models::ApiError),
+    Status500(models::ApiError),
+    UnknownValue(serde_json::Value),
+}
+
+/// struct for typed errors of method [`post_api_v1_nodes_by_name_maintenance_snapshot`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum PostApiV1NodesByNameMaintenanceSnapshotError {
+    Status401(models::ApiError),
+    Status403(models::ApiError),
+    Status404(models::ApiError),
+    Status409(models::ApiError),
+    Status500(models::ApiError),
     UnknownValue(serde_json::Value),
 }
 
@@ -239,6 +274,54 @@ pub async fn get_api_v1_nodes_by_name(configuration: &configuration::Configurati
     }
 }
 
+/// Progress of the node's snapshot/restore run, if one is pending.
+pub async fn get_api_v1_nodes_by_name_maintenance(configuration: &configuration::Configuration, name: &str) -> Result<models::ApiNodeMaintenanceStatus, Error<GetApiV1NodesByNameMaintenanceError>> {
+    // add a prefix to parameters to efficiently prevent name collisions
+    let p_path_name = name;
+
+    let uri_str = format!("{}/api/v1/nodes/{name}/maintenance", configuration.base_path, name=crate::apis::urlencode(p_path_name));
+    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+
+    if let Some(ref user_agent) = configuration.user_agent {
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    if let Some(ref apikey) = configuration.api_key {
+        let key = apikey.key.clone();
+        let value = match apikey.prefix {
+            Some(ref prefix) => format!("{} {}", prefix, key),
+            None => key,
+        };
+        req_builder = req_builder.header("X-API-Key", value);
+    };
+    if let Some(ref token) = configuration.bearer_access_token {
+        req_builder = req_builder.bearer_auth(token.to_owned());
+    };
+
+    let req = req_builder.build()?;
+    let resp = configuration.client.execute(req).await?;
+
+    let status = resp.status();
+    let content_type = resp
+        .headers()
+        .get("content-type")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("application/octet-stream");
+    let content_type = super::ContentType::from(content_type);
+
+    if !status.is_client_error() && !status.is_server_error() {
+        let content = resp.text().await?;
+        match content_type {
+            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
+            ContentType::Text => return Err(Error::from(serde_json::Error::custom("Received `text/plain` content type response that cannot be converted to `models::ApiNodeMaintenanceStatus`"))),
+            ContentType::Unsupported(unknown_type) => return Err(Error::from(serde_json::Error::custom(format!("Received `{unknown_type}` content type response that cannot be converted to `models::ApiNodeMaintenanceStatus`")))),
+        }
+    } else {
+        let content = resp.text().await?;
+        let entity: Option<GetApiV1NodesByNameMaintenanceError> = serde_json::from_str(&content).ok();
+        Err(Error::ResponseError(ResponseContent { status, content, entity }))
+    }
+}
+
 /// Probes the node's /system endpoint and registers it with its control plane.
 pub async fn post_api_v1_nodes(configuration: &configuration::Configuration, api_node_create_request: models::ApiNodeCreateRequest) -> Result<models::ApiNode, Error<PostApiV1NodesError>> {
     // add a prefix to parameters to efficiently prevent name collisions
@@ -331,6 +414,102 @@ pub async fn post_api_v1_nodes_by_name_health(configuration: &configuration::Con
     } else {
         let content = resp.text().await?;
         let entity: Option<PostApiV1NodesByNameHealthError> = serde_json::from_str(&content).ok();
+        Err(Error::ResponseError(ResponseContent { status, content, entity }))
+    }
+}
+
+/// Wakes every VM snapshotted by the maintenance snapshot back to its previous state, re-adds its app routes and returns the node to service. Safe to retry: VMs already restored are skipped and failures stay pending. Works in the background; poll the maintenance endpoint for progress.
+pub async fn post_api_v1_nodes_by_name_maintenance_restore(configuration: &configuration::Configuration, name: &str) -> Result<models::ApiNodeMaintenanceRunResponse, Error<PostApiV1NodesByNameMaintenanceRestoreError>> {
+    // add a prefix to parameters to efficiently prevent name collisions
+    let p_path_name = name;
+
+    let uri_str = format!("{}/api/v1/nodes/{name}/maintenance/restore", configuration.base_path, name=crate::apis::urlencode(p_path_name));
+    let mut req_builder = configuration.client.request(reqwest::Method::POST, &uri_str);
+
+    if let Some(ref user_agent) = configuration.user_agent {
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    if let Some(ref apikey) = configuration.api_key {
+        let key = apikey.key.clone();
+        let value = match apikey.prefix {
+            Some(ref prefix) => format!("{} {}", prefix, key),
+            None => key,
+        };
+        req_builder = req_builder.header("X-API-Key", value);
+    };
+    if let Some(ref token) = configuration.bearer_access_token {
+        req_builder = req_builder.bearer_auth(token.to_owned());
+    };
+
+    let req = req_builder.build()?;
+    let resp = configuration.client.execute(req).await?;
+
+    let status = resp.status();
+    let content_type = resp
+        .headers()
+        .get("content-type")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("application/octet-stream");
+    let content_type = super::ContentType::from(content_type);
+
+    if !status.is_client_error() && !status.is_server_error() {
+        let content = resp.text().await?;
+        match content_type {
+            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
+            ContentType::Text => return Err(Error::from(serde_json::Error::custom("Received `text/plain` content type response that cannot be converted to `models::ApiNodeMaintenanceRunResponse`"))),
+            ContentType::Unsupported(unknown_type) => return Err(Error::from(serde_json::Error::custom(format!("Received `{unknown_type}` content type response that cannot be converted to `models::ApiNodeMaintenanceRunResponse`")))),
+        }
+    } else {
+        let content = resp.text().await?;
+        let entity: Option<PostApiV1NodesByNameMaintenanceRestoreError> = serde_json::from_str(&content).ok();
+        Err(Error::ResponseError(ResponseContent { status, content, entity }))
+    }
+}
+
+/// Takes the node out of service and sleeps every VM on it (pause + snapshot + process evict), releasing their capacity. Run this before rebooting the node, then call restore. Works in the background; poll the maintenance endpoint for progress.
+pub async fn post_api_v1_nodes_by_name_maintenance_snapshot(configuration: &configuration::Configuration, name: &str) -> Result<models::ApiNodeMaintenanceRunResponse, Error<PostApiV1NodesByNameMaintenanceSnapshotError>> {
+    // add a prefix to parameters to efficiently prevent name collisions
+    let p_path_name = name;
+
+    let uri_str = format!("{}/api/v1/nodes/{name}/maintenance/snapshot", configuration.base_path, name=crate::apis::urlencode(p_path_name));
+    let mut req_builder = configuration.client.request(reqwest::Method::POST, &uri_str);
+
+    if let Some(ref user_agent) = configuration.user_agent {
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    if let Some(ref apikey) = configuration.api_key {
+        let key = apikey.key.clone();
+        let value = match apikey.prefix {
+            Some(ref prefix) => format!("{} {}", prefix, key),
+            None => key,
+        };
+        req_builder = req_builder.header("X-API-Key", value);
+    };
+    if let Some(ref token) = configuration.bearer_access_token {
+        req_builder = req_builder.bearer_auth(token.to_owned());
+    };
+
+    let req = req_builder.build()?;
+    let resp = configuration.client.execute(req).await?;
+
+    let status = resp.status();
+    let content_type = resp
+        .headers()
+        .get("content-type")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("application/octet-stream");
+    let content_type = super::ContentType::from(content_type);
+
+    if !status.is_client_error() && !status.is_server_error() {
+        let content = resp.text().await?;
+        match content_type {
+            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
+            ContentType::Text => return Err(Error::from(serde_json::Error::custom("Received `text/plain` content type response that cannot be converted to `models::ApiNodeMaintenanceRunResponse`"))),
+            ContentType::Unsupported(unknown_type) => return Err(Error::from(serde_json::Error::custom(format!("Received `{unknown_type}` content type response that cannot be converted to `models::ApiNodeMaintenanceRunResponse`")))),
+        }
+    } else {
+        let content = resp.text().await?;
+        let entity: Option<PostApiV1NodesByNameMaintenanceSnapshotError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent { status, content, entity }))
     }
 }

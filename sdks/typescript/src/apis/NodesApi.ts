@@ -34,6 +34,16 @@ import {
     ApiNodeHealthResponseToJSON,
 } from '../models/ApiNodeHealthResponse';
 import {
+    type ApiNodeMaintenanceRunResponse,
+    ApiNodeMaintenanceRunResponseFromJSON,
+    ApiNodeMaintenanceRunResponseToJSON,
+} from '../models/ApiNodeMaintenanceRunResponse';
+import {
+    type ApiNodeMaintenanceStatus,
+    ApiNodeMaintenanceStatusFromJSON,
+    ApiNodeMaintenanceStatusToJSON,
+} from '../models/ApiNodeMaintenanceStatus';
+import {
     type ApiNodeRefreshResponse,
     ApiNodeRefreshResponseFromJSON,
     ApiNodeRefreshResponseToJSON,
@@ -63,6 +73,13 @@ export interface GetApiV1NodesByNameRequest {
     name: string;
 }
 
+export interface GetApiV1NodesByNameMaintenanceRequest {
+    /**
+     * Name of the node.
+     */
+    name: string;
+}
+
 export interface PostApiV1NodesRequest {
     /**
      * 
@@ -71,6 +88,20 @@ export interface PostApiV1NodesRequest {
 }
 
 export interface PostApiV1NodesByNameHealthRequest {
+    /**
+     * Name of the node.
+     */
+    name: string;
+}
+
+export interface PostApiV1NodesByNameMaintenanceRestoreRequest {
+    /**
+     * Name of the node.
+     */
+    name: string;
+}
+
+export interface PostApiV1NodesByNameMaintenanceSnapshotRequest {
     /**
      * Name of the node.
      */
@@ -177,6 +208,30 @@ export interface NodesApiInterface {
     getApiV1NodesByName(requestParameters: GetApiV1NodesByNameRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiNode>;
 
     /**
+     * Creates request options for getApiV1NodesByNameMaintenance without sending the request
+     * @param {string} name Name of the node.
+     * @throws {RequiredError}
+     * @memberof NodesApiInterface
+     */
+    getApiV1NodesByNameMaintenanceRequestOpts(requestParameters: GetApiV1NodesByNameMaintenanceRequest): Promise<runtime.RequestOpts>;
+
+    /**
+     * Progress of the node\'s snapshot/restore run, if one is pending.
+     * @summary Get node maintenance state
+     * @param {string} name Name of the node.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof NodesApiInterface
+     */
+    getApiV1NodesByNameMaintenanceRaw(requestParameters: GetApiV1NodesByNameMaintenanceRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiNodeMaintenanceStatus>>;
+
+    /**
+     * Progress of the node\'s snapshot/restore run, if one is pending.
+     * Get node maintenance state
+     */
+    getApiV1NodesByNameMaintenance(requestParameters: GetApiV1NodesByNameMaintenanceRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiNodeMaintenanceStatus>;
+
+    /**
      * Creates request options for postApiV1Nodes without sending the request
      * @param {ApiNodeCreateRequest} apiNodeCreateRequest 
      * @throws {RequiredError}
@@ -222,6 +277,54 @@ export interface NodesApiInterface {
      * Check node health
      */
     postApiV1NodesByNameHealth(requestParameters: PostApiV1NodesByNameHealthRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiNodeHealthResponse>;
+
+    /**
+     * Creates request options for postApiV1NodesByNameMaintenanceRestore without sending the request
+     * @param {string} name Name of the node.
+     * @throws {RequiredError}
+     * @memberof NodesApiInterface
+     */
+    postApiV1NodesByNameMaintenanceRestoreRequestOpts(requestParameters: PostApiV1NodesByNameMaintenanceRestoreRequest): Promise<runtime.RequestOpts>;
+
+    /**
+     * Wakes every VM snapshotted by the maintenance snapshot back to its previous state, re-adds its app routes and returns the node to service. Safe to retry: VMs already restored are skipped and failures stay pending. Works in the background; poll the maintenance endpoint for progress.
+     * @summary Restore every VM on a node
+     * @param {string} name Name of the node.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof NodesApiInterface
+     */
+    postApiV1NodesByNameMaintenanceRestoreRaw(requestParameters: PostApiV1NodesByNameMaintenanceRestoreRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiNodeMaintenanceRunResponse>>;
+
+    /**
+     * Wakes every VM snapshotted by the maintenance snapshot back to its previous state, re-adds its app routes and returns the node to service. Safe to retry: VMs already restored are skipped and failures stay pending. Works in the background; poll the maintenance endpoint for progress.
+     * Restore every VM on a node
+     */
+    postApiV1NodesByNameMaintenanceRestore(requestParameters: PostApiV1NodesByNameMaintenanceRestoreRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiNodeMaintenanceRunResponse>;
+
+    /**
+     * Creates request options for postApiV1NodesByNameMaintenanceSnapshot without sending the request
+     * @param {string} name Name of the node.
+     * @throws {RequiredError}
+     * @memberof NodesApiInterface
+     */
+    postApiV1NodesByNameMaintenanceSnapshotRequestOpts(requestParameters: PostApiV1NodesByNameMaintenanceSnapshotRequest): Promise<runtime.RequestOpts>;
+
+    /**
+     * Takes the node out of service and sleeps every VM on it (pause + snapshot + process evict), releasing their capacity. Run this before rebooting the node, then call restore. Works in the background; poll the maintenance endpoint for progress.
+     * @summary Snapshot every VM on a node
+     * @param {string} name Name of the node.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof NodesApiInterface
+     */
+    postApiV1NodesByNameMaintenanceSnapshotRaw(requestParameters: PostApiV1NodesByNameMaintenanceSnapshotRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiNodeMaintenanceRunResponse>>;
+
+    /**
+     * Takes the node out of service and sleeps every VM on it (pause + snapshot + process evict), releasing their capacity. Run this before rebooting the node, then call restore. Works in the background; poll the maintenance endpoint for progress.
+     * Snapshot every VM on a node
+     */
+    postApiV1NodesByNameMaintenanceSnapshot(requestParameters: PostApiV1NodesByNameMaintenanceSnapshotRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiNodeMaintenanceRunResponse>;
 
     /**
      * Creates request options for postApiV1NodesByNameRefresh without sending the request
@@ -467,6 +570,65 @@ export class NodesApi extends runtime.BaseAPI implements NodesApiInterface {
     }
 
     /**
+     * Creates request options for getApiV1NodesByNameMaintenance without sending the request
+     */
+    async getApiV1NodesByNameMaintenanceRequestOpts(requestParameters: GetApiV1NodesByNameMaintenanceRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['name'] == null) {
+            throw new runtime.RequiredError(
+                'name',
+                'Required parameter "name" was null or undefined when calling getApiV1NodesByNameMaintenance().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["X-API-Key"] = await this.configuration.apiKey("X-API-Key"); // apiKey authentication
+        }
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearerAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/nodes/{name}/maintenance`;
+        urlPath = urlPath.replace('{name}', encodeURIComponent(String(requestParameters['name'])));
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Progress of the node\'s snapshot/restore run, if one is pending.
+     * Get node maintenance state
+     */
+    async getApiV1NodesByNameMaintenanceRaw(requestParameters: GetApiV1NodesByNameMaintenanceRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiNodeMaintenanceStatus>> {
+        const requestOptions = await this.getApiV1NodesByNameMaintenanceRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => ApiNodeMaintenanceStatusFromJSON(jsonValue));
+    }
+
+    /**
+     * Progress of the node\'s snapshot/restore run, if one is pending.
+     * Get node maintenance state
+     */
+    async getApiV1NodesByNameMaintenance(requestParameters: GetApiV1NodesByNameMaintenanceRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiNodeMaintenanceStatus> {
+        const response = await this.getApiV1NodesByNameMaintenanceRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
      * Creates request options for postApiV1Nodes without sending the request
      */
     async postApiV1NodesRequestOpts(requestParameters: PostApiV1NodesRequest): Promise<runtime.RequestOpts> {
@@ -581,6 +743,124 @@ export class NodesApi extends runtime.BaseAPI implements NodesApiInterface {
      */
     async postApiV1NodesByNameHealth(requestParameters: PostApiV1NodesByNameHealthRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiNodeHealthResponse> {
         const response = await this.postApiV1NodesByNameHealthRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for postApiV1NodesByNameMaintenanceRestore without sending the request
+     */
+    async postApiV1NodesByNameMaintenanceRestoreRequestOpts(requestParameters: PostApiV1NodesByNameMaintenanceRestoreRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['name'] == null) {
+            throw new runtime.RequiredError(
+                'name',
+                'Required parameter "name" was null or undefined when calling postApiV1NodesByNameMaintenanceRestore().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["X-API-Key"] = await this.configuration.apiKey("X-API-Key"); // apiKey authentication
+        }
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearerAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/nodes/{name}/maintenance/restore`;
+        urlPath = urlPath.replace('{name}', encodeURIComponent(String(requestParameters['name'])));
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Wakes every VM snapshotted by the maintenance snapshot back to its previous state, re-adds its app routes and returns the node to service. Safe to retry: VMs already restored are skipped and failures stay pending. Works in the background; poll the maintenance endpoint for progress.
+     * Restore every VM on a node
+     */
+    async postApiV1NodesByNameMaintenanceRestoreRaw(requestParameters: PostApiV1NodesByNameMaintenanceRestoreRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiNodeMaintenanceRunResponse>> {
+        const requestOptions = await this.postApiV1NodesByNameMaintenanceRestoreRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => ApiNodeMaintenanceRunResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Wakes every VM snapshotted by the maintenance snapshot back to its previous state, re-adds its app routes and returns the node to service. Safe to retry: VMs already restored are skipped and failures stay pending. Works in the background; poll the maintenance endpoint for progress.
+     * Restore every VM on a node
+     */
+    async postApiV1NodesByNameMaintenanceRestore(requestParameters: PostApiV1NodesByNameMaintenanceRestoreRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiNodeMaintenanceRunResponse> {
+        const response = await this.postApiV1NodesByNameMaintenanceRestoreRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for postApiV1NodesByNameMaintenanceSnapshot without sending the request
+     */
+    async postApiV1NodesByNameMaintenanceSnapshotRequestOpts(requestParameters: PostApiV1NodesByNameMaintenanceSnapshotRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['name'] == null) {
+            throw new runtime.RequiredError(
+                'name',
+                'Required parameter "name" was null or undefined when calling postApiV1NodesByNameMaintenanceSnapshot().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["X-API-Key"] = await this.configuration.apiKey("X-API-Key"); // apiKey authentication
+        }
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearerAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/nodes/{name}/maintenance/snapshot`;
+        urlPath = urlPath.replace('{name}', encodeURIComponent(String(requestParameters['name'])));
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Takes the node out of service and sleeps every VM on it (pause + snapshot + process evict), releasing their capacity. Run this before rebooting the node, then call restore. Works in the background; poll the maintenance endpoint for progress.
+     * Snapshot every VM on a node
+     */
+    async postApiV1NodesByNameMaintenanceSnapshotRaw(requestParameters: PostApiV1NodesByNameMaintenanceSnapshotRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApiNodeMaintenanceRunResponse>> {
+        const requestOptions = await this.postApiV1NodesByNameMaintenanceSnapshotRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => ApiNodeMaintenanceRunResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Takes the node out of service and sleeps every VM on it (pause + snapshot + process evict), releasing their capacity. Run this before rebooting the node, then call restore. Works in the background; poll the maintenance endpoint for progress.
+     * Snapshot every VM on a node
+     */
+    async postApiV1NodesByNameMaintenanceSnapshot(requestParameters: PostApiV1NodesByNameMaintenanceSnapshotRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApiNodeMaintenanceRunResponse> {
+        const response = await this.postApiV1NodesByNameMaintenanceSnapshotRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

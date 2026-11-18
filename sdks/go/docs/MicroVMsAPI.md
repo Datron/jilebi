@@ -7,6 +7,7 @@ Method | HTTP request | Description
 [**DeleteApiV1VmmByMachineName**](MicroVMsAPI.md#DeleteApiV1VmmByMachineName) | **Delete** /api/v1/vmm/{machine_name} | Delete a microVM
 [**GetApiV1Vmm**](MicroVMsAPI.md#GetApiV1Vmm) | **Get** /api/v1/vmm | List microVMs
 [**GetApiV1VmmByMachineName**](MicroVMsAPI.md#GetApiV1VmmByMachineName) | **Get** /api/v1/vmm/{machine_name} | Get a microVM
+[**GetApiV1VmmByMachineNameMetrics**](MicroVMsAPI.md#GetApiV1VmmByMachineNameMetrics) | **Get** /api/v1/vmm/{machine_name}/metrics | Get microVM usage metrics
 [**PostApiV1VmmByMachineName**](MicroVMsAPI.md#PostApiV1VmmByMachineName) | **Post** /api/v1/vmm/{machine_name} | Create a microVM
 [**PostApiV1VmmByMachineNameClone**](MicroVMsAPI.md#PostApiV1VmmByMachineNameClone) | **Post** /api/v1/vmm/{machine_name}/clone | Clone a microVM
 [**PutApiV1VmmByMachineName**](MicroVMsAPI.md#PutApiV1VmmByMachineName) | **Put** /api/v1/vmm/{machine_name} | Resize a microVM
@@ -14,8 +15,10 @@ Method | HTTP request | Description
 [**PutApiV1VmmByMachineNameRestart**](MicroVMsAPI.md#PutApiV1VmmByMachineNameRestart) | **Put** /api/v1/vmm/{machine_name}/restart | Restart a microVM
 [**PutApiV1VmmByMachineNameRestore**](MicroVMsAPI.md#PutApiV1VmmByMachineNameRestore) | **Put** /api/v1/vmm/{machine_name}/restore | Restore a microVM from a snapshot
 [**PutApiV1VmmByMachineNameShutdown**](MicroVMsAPI.md#PutApiV1VmmByMachineNameShutdown) | **Put** /api/v1/vmm/{machine_name}/shutdown | Shut down a microVM
+[**PutApiV1VmmByMachineNameSleep**](MicroVMsAPI.md#PutApiV1VmmByMachineNameSleep) | **Put** /api/v1/vmm/{machine_name}/sleep | Sleep a microVM
 [**PutApiV1VmmByMachineNameSnapshot**](MicroVMsAPI.md#PutApiV1VmmByMachineNameSnapshot) | **Put** /api/v1/vmm/{machine_name}/snapshot | Snapshot a microVM
 [**PutApiV1VmmByMachineNameStart**](MicroVMsAPI.md#PutApiV1VmmByMachineNameStart) | **Put** /api/v1/vmm/{machine_name}/start | Start a microVM
+[**PutApiV1VmmByMachineNameWake**](MicroVMsAPI.md#PutApiV1VmmByMachineNameWake) | **Put** /api/v1/vmm/{machine_name}/wake | Wake a microVM
 
 
 
@@ -201,6 +204,80 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**ApiVmGetResponse**](ApiVmGetResponse.md)
+
+### Authorization
+
+[apiKey](../README.md#apiKey), [sessionCookie](../README.md#sessionCookie), [bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
+
+
+## GetApiV1VmmByMachineNameMetrics
+
+> ApiVmMetricsResponse GetApiV1VmmByMachineNameMetrics(ctx, machineName).Range_(range_).Step(step).Execute()
+
+Get microVM usage metrics
+
+
+
+### Example
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"os"
+	openapiclient "github.com/Datron/jilebi/sdks/go"
+)
+
+func main() {
+	machineName := "machineName_example" // string | Name of the microVM.
+	range_ := "range__example" // string | Time window to query. (optional) (default to "1h")
+	step := int32(56) // int32 | Sampling resolution in seconds. Defaults to a window-appropriate step (max ~500 points). (optional)
+
+	configuration := openapiclient.NewConfiguration()
+	apiClient := openapiclient.NewAPIClient(configuration)
+	resp, r, err := apiClient.MicroVMsAPI.GetApiV1VmmByMachineNameMetrics(context.Background(), machineName).Range_(range_).Step(step).Execute()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error when calling `MicroVMsAPI.GetApiV1VmmByMachineNameMetrics``: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+	}
+	// response from `GetApiV1VmmByMachineNameMetrics`: ApiVmMetricsResponse
+	fmt.Fprintf(os.Stdout, "Response from `MicroVMsAPI.GetApiV1VmmByMachineNameMetrics`: %v\n", resp)
+}
+```
+
+### Path Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+**ctx** | **context.Context** | context for authentication, logging, cancellation, deadlines, tracing, etc.
+**machineName** | **string** | Name of the microVM. | 
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiGetApiV1VmmByMachineNameMetricsRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+
+ **range_** | **string** | Time window to query. | [default to &quot;1h&quot;]
+ **step** | **int32** | Sampling resolution in seconds. Defaults to a window-appropriate step (max ~500 points). | 
+
+### Return type
+
+[**ApiVmMetricsResponse**](ApiVmMetricsResponse.md)
 
 ### Authorization
 
@@ -704,6 +781,76 @@ Name | Type | Description  | Notes
 [[Back to README]](../README.md)
 
 
+## PutApiV1VmmByMachineNameSleep
+
+> ApiVmSleepResponse PutApiV1VmmByMachineNameSleep(ctx, machineName).Execute()
+
+Sleep a microVM
+
+
+
+### Example
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"os"
+	openapiclient "github.com/Datron/jilebi/sdks/go"
+)
+
+func main() {
+	machineName := "machineName_example" // string | Name of the microVM.
+
+	configuration := openapiclient.NewConfiguration()
+	apiClient := openapiclient.NewAPIClient(configuration)
+	resp, r, err := apiClient.MicroVMsAPI.PutApiV1VmmByMachineNameSleep(context.Background(), machineName).Execute()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error when calling `MicroVMsAPI.PutApiV1VmmByMachineNameSleep``: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+	}
+	// response from `PutApiV1VmmByMachineNameSleep`: ApiVmSleepResponse
+	fmt.Fprintf(os.Stdout, "Response from `MicroVMsAPI.PutApiV1VmmByMachineNameSleep`: %v\n", resp)
+}
+```
+
+### Path Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+**ctx** | **context.Context** | context for authentication, logging, cancellation, deadlines, tracing, etc.
+**machineName** | **string** | Name of the microVM. | 
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiPutApiV1VmmByMachineNameSleepRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+
+
+### Return type
+
+[**ApiVmSleepResponse**](ApiVmSleepResponse.md)
+
+### Authorization
+
+[apiKey](../README.md#apiKey), [sessionCookie](../README.md#sessionCookie), [bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
+
+
 ## PutApiV1VmmByMachineNameSnapshot
 
 > ApiVmSnapshotResponse PutApiV1VmmByMachineNameSnapshot(ctx, machineName).ApiVmSnapshotRequest(apiVmSnapshotRequest).Execute()
@@ -835,6 +982,78 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
 - **Content-Type**: Not defined
+- **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
+
+
+## PutApiV1VmmByMachineNameWake
+
+> ApiVmWakeResponse PutApiV1VmmByMachineNameWake(ctx, machineName).ApiVmWakeRequest(apiVmWakeRequest).Execute()
+
+Wake a microVM
+
+
+
+### Example
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"os"
+	openapiclient "github.com/Datron/jilebi/sdks/go"
+)
+
+func main() {
+	machineName := "machineName_example" // string | Name of the microVM.
+	apiVmWakeRequest := *openapiclient.NewApiVmWakeRequest() // ApiVmWakeRequest |  (optional)
+
+	configuration := openapiclient.NewConfiguration()
+	apiClient := openapiclient.NewAPIClient(configuration)
+	resp, r, err := apiClient.MicroVMsAPI.PutApiV1VmmByMachineNameWake(context.Background(), machineName).ApiVmWakeRequest(apiVmWakeRequest).Execute()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error when calling `MicroVMsAPI.PutApiV1VmmByMachineNameWake``: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+	}
+	// response from `PutApiV1VmmByMachineNameWake`: ApiVmWakeResponse
+	fmt.Fprintf(os.Stdout, "Response from `MicroVMsAPI.PutApiV1VmmByMachineNameWake`: %v\n", resp)
+}
+```
+
+### Path Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+**ctx** | **context.Context** | context for authentication, logging, cancellation, deadlines, tracing, etc.
+**machineName** | **string** | Name of the microVM. | 
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiPutApiV1VmmByMachineNameWakeRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+
+ **apiVmWakeRequest** | [**ApiVmWakeRequest**](ApiVmWakeRequest.md) |  | 
+
+### Return type
+
+[**ApiVmWakeResponse**](ApiVmWakeResponse.md)
+
+### Authorization
+
+[apiKey](../README.md#apiKey), [sessionCookie](../README.md#sessionCookie), [bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+- **Content-Type**: application/json
 - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)

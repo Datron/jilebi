@@ -49,6 +49,9 @@ __all__ = [
     "ApiNode",
     "ApiNodeCreateRequest",
     "ApiNodeHealthResponse",
+    "ApiNodeMaintenanceEntry",
+    "ApiNodeMaintenanceRunResponse",
+    "ApiNodeMaintenanceStatus",
     "ApiNodeRefreshResponse",
     "ApiNodeReinitializeResponse",
     "ApiNodeStatus",
@@ -72,12 +75,23 @@ __all__ = [
     "ApiVmCreateRequest",
     "ApiVmCreateResponse",
     "ApiVmGetResponse",
+    "ApiVmMetricPoint",
+    "ApiVmMetricsResponse",
+    "ApiVmMetricsResponseConfigured",
+    "ApiVmMetricsResponseCpu",
+    "ApiVmMetricsResponseDisk",
+    "ApiVmMetricsResponseMemory",
+    "ApiVmMetricsResponseNetwork",
+    "ApiVmMetricsSeries",
     "ApiVmRestoreRequest",
     "ApiVmRestoreResponse",
+    "ApiVmSleepResponse",
     "ApiVmSnapshotRequest",
     "ApiVmSnapshotResponse",
     "ApiVmState",
     "ApiVmUpdateRequest",
+    "ApiVmWakeRequest",
+    "ApiVmWakeResponse",
     "DeviceNode",
     "ProvisionedVm",
     "SharedUser",
@@ -120,6 +134,9 @@ from jilebi_sdk.models.api_me_response import ApiMeResponse as ApiMeResponse
 from jilebi_sdk.models.api_node import ApiNode as ApiNode
 from jilebi_sdk.models.api_node_create_request import ApiNodeCreateRequest as ApiNodeCreateRequest
 from jilebi_sdk.models.api_node_health_response import ApiNodeHealthResponse as ApiNodeHealthResponse
+from jilebi_sdk.models.api_node_maintenance_entry import ApiNodeMaintenanceEntry as ApiNodeMaintenanceEntry
+from jilebi_sdk.models.api_node_maintenance_run_response import ApiNodeMaintenanceRunResponse as ApiNodeMaintenanceRunResponse
+from jilebi_sdk.models.api_node_maintenance_status import ApiNodeMaintenanceStatus as ApiNodeMaintenanceStatus
 from jilebi_sdk.models.api_node_refresh_response import ApiNodeRefreshResponse as ApiNodeRefreshResponse
 from jilebi_sdk.models.api_node_reinitialize_response import ApiNodeReinitializeResponse as ApiNodeReinitializeResponse
 from jilebi_sdk.models.api_node_status import ApiNodeStatus as ApiNodeStatus
@@ -143,12 +160,23 @@ from jilebi_sdk.models.api_vm_clone_response import ApiVmCloneResponse as ApiVmC
 from jilebi_sdk.models.api_vm_create_request import ApiVmCreateRequest as ApiVmCreateRequest
 from jilebi_sdk.models.api_vm_create_response import ApiVmCreateResponse as ApiVmCreateResponse
 from jilebi_sdk.models.api_vm_get_response import ApiVmGetResponse as ApiVmGetResponse
+from jilebi_sdk.models.api_vm_metric_point import ApiVmMetricPoint as ApiVmMetricPoint
+from jilebi_sdk.models.api_vm_metrics_response import ApiVmMetricsResponse as ApiVmMetricsResponse
+from jilebi_sdk.models.api_vm_metrics_response_configured import ApiVmMetricsResponseConfigured as ApiVmMetricsResponseConfigured
+from jilebi_sdk.models.api_vm_metrics_response_cpu import ApiVmMetricsResponseCpu as ApiVmMetricsResponseCpu
+from jilebi_sdk.models.api_vm_metrics_response_disk import ApiVmMetricsResponseDisk as ApiVmMetricsResponseDisk
+from jilebi_sdk.models.api_vm_metrics_response_memory import ApiVmMetricsResponseMemory as ApiVmMetricsResponseMemory
+from jilebi_sdk.models.api_vm_metrics_response_network import ApiVmMetricsResponseNetwork as ApiVmMetricsResponseNetwork
+from jilebi_sdk.models.api_vm_metrics_series import ApiVmMetricsSeries as ApiVmMetricsSeries
 from jilebi_sdk.models.api_vm_restore_request import ApiVmRestoreRequest as ApiVmRestoreRequest
 from jilebi_sdk.models.api_vm_restore_response import ApiVmRestoreResponse as ApiVmRestoreResponse
+from jilebi_sdk.models.api_vm_sleep_response import ApiVmSleepResponse as ApiVmSleepResponse
 from jilebi_sdk.models.api_vm_snapshot_request import ApiVmSnapshotRequest as ApiVmSnapshotRequest
 from jilebi_sdk.models.api_vm_snapshot_response import ApiVmSnapshotResponse as ApiVmSnapshotResponse
 from jilebi_sdk.models.api_vm_state import ApiVmState as ApiVmState
 from jilebi_sdk.models.api_vm_update_request import ApiVmUpdateRequest as ApiVmUpdateRequest
+from jilebi_sdk.models.api_vm_wake_request import ApiVmWakeRequest as ApiVmWakeRequest
+from jilebi_sdk.models.api_vm_wake_response import ApiVmWakeResponse as ApiVmWakeResponse
 from jilebi_sdk.models.device_node import DeviceNode as DeviceNode
 from jilebi_sdk.models.provisioned_vm import ProvisionedVm as ProvisionedVm
 from jilebi_sdk.models.shared_user import SharedUser as SharedUser

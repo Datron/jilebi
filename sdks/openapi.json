@@ -44,7 +44,7 @@
     },
     {
       "name": "Software catalog",
-      "description": "Software installable at VM creation (admin only)."
+      "description": "Software installable at VM creation; mutations are admin only."
     },
     {
       "name": "Billing",
@@ -260,6 +260,194 @@
           }
         ]
       },
+      "ApiVmMetricPoint": {
+        "type": "object",
+        "required": [
+          "t",
+          "v"
+        ],
+        "properties": {
+          "t": {
+            "type": "number",
+            "description": "Unix epoch seconds (may include fractional seconds)."
+          },
+          "v": {
+            "type": "number"
+          }
+        }
+      },
+      "ApiVmMetricsSeries": {
+        "type": "object",
+        "required": [
+          "points",
+          "current",
+          "average",
+          "max"
+        ],
+        "properties": {
+          "points": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ApiVmMetricPoint"
+            }
+          },
+          "current": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Last sample in the window."
+          },
+          "average": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "max": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        }
+      },
+      "ApiVmMetricsResponse": {
+        "type": "object",
+        "required": [
+          "machine_name",
+          "node_name",
+          "range",
+          "start",
+          "end",
+          "step_seconds",
+          "available",
+          "configured",
+          "cpu",
+          "memory",
+          "network",
+          "disk"
+        ],
+        "properties": {
+          "machine_name": {
+            "type": "string"
+          },
+          "node_name": {
+            "type": "string"
+          },
+          "range": {
+            "type": "string",
+            "enum": [
+              "1h",
+              "6h",
+              "24h",
+              "7d"
+            ]
+          },
+          "start": {
+            "type": "integer",
+            "description": "Window start, Unix epoch seconds."
+          },
+          "end": {
+            "type": "integer",
+            "description": "Window end, Unix epoch seconds."
+          },
+          "step_seconds": {
+            "type": "integer"
+          },
+          "available": {
+            "type": "boolean",
+            "description": "True when at least one metrics query succeeded."
+          },
+          "error": {
+            "type": "string",
+            "description": "Why metrics could not be read."
+          },
+          "configured": {
+            "type": "object",
+            "required": [
+              "cpu_count",
+              "memory_mb",
+              "disk_gb"
+            ],
+            "properties": {
+              "cpu_count": {
+                "type": "integer"
+              },
+              "memory_mb": {
+                "type": "integer"
+              },
+              "disk_gb": {
+                "type": "integer"
+              }
+            }
+          },
+          "cpu": {
+            "type": "object",
+            "required": [
+              "usage_ratio"
+            ],
+            "properties": {
+              "usage_ratio": {
+                "$ref": "#/components/schemas/ApiVmMetricsSeries"
+              }
+            }
+          },
+          "memory": {
+            "type": "object",
+            "required": [
+              "used_mb",
+              "configured_mb"
+            ],
+            "properties": {
+              "used_mb": {
+                "$ref": "#/components/schemas/ApiVmMetricsSeries"
+              },
+              "configured_mb": {
+                "$ref": "#/components/schemas/ApiVmMetricsSeries"
+              }
+            }
+          },
+          "network": {
+            "type": "object",
+            "required": [
+              "rx_bps",
+              "tx_bps"
+            ],
+            "properties": {
+              "rx_bps": {
+                "$ref": "#/components/schemas/ApiVmMetricsSeries"
+              },
+              "tx_bps": {
+                "$ref": "#/components/schemas/ApiVmMetricsSeries"
+              }
+            }
+          },
+          "disk": {
+            "type": "object",
+            "required": [
+              "used_gb",
+              "configured_gb",
+              "read_gbps",
+              "write_gbps"
+            ],
+            "properties": {
+              "used_gb": {
+                "$ref": "#/components/schemas/ApiVmMetricsSeries"
+              },
+              "configured_gb": {
+                "$ref": "#/components/schemas/ApiVmMetricsSeries"
+              },
+              "read_gbps": {
+                "$ref": "#/components/schemas/ApiVmMetricsSeries"
+              },
+              "write_gbps": {
+                "$ref": "#/components/schemas/ApiVmMetricsSeries"
+              }
+            }
+          }
+        }
+      },
       "ApiVmCreateRequest": {
         "type": "object",
         "required": [
@@ -467,6 +655,99 @@
           }
         }
       },
+      "ApiVmSleepResponse": {
+        "type": "object",
+        "required": [
+          "destination_url",
+          "already_sleeping"
+        ],
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "destination_url": {
+            "type": "string",
+            "description": "Snapshot slot URL the VM was saved to."
+          },
+          "already_sleeping": {
+            "type": "boolean",
+            "description": "True when the VM was already evicted."
+          },
+          "pause_ms": {
+            "type": "integer",
+            "description": "Time spent pausing the vCPUs."
+          },
+          "snapshot_ms": {
+            "type": "integer",
+            "description": "Time spent writing the snapshot."
+          },
+          "total_ms": {
+            "type": "integer",
+            "description": "Total time for the sleep operation."
+          },
+          "deduped": {
+            "type": "boolean",
+            "description": "True when an identical sleep was already running and this call was a no-op."
+          },
+          "state_changed": {
+            "type": "boolean",
+            "description": "True when this call actually put the VM to sleep. Callers release node capacity only when this is true."
+          }
+        }
+      },
+      "ApiVmWakeRequest": {
+        "type": "object",
+        "properties": {
+          "ip_address": {
+            "type": "string",
+            "description": "Guest IP; only needed to recreate the tap device if it is missing."
+          }
+        }
+      },
+      "ApiVmWakeResponse": {
+        "type": "object",
+        "required": [
+          "already_running",
+          "resumed_in_place",
+          "cold_booted"
+        ],
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "source_url": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Snapshot restored from, when not resumed in place."
+          },
+          "already_running": {
+            "type": "boolean",
+            "description": "True when the VM was already running."
+          },
+          "resumed_in_place": {
+            "type": "boolean",
+            "description": "True when a live-paused VM was resumed."
+          },
+          "cold_booted": {
+            "type": "boolean",
+            "description": "True when no snapshot was usable and the existing disk was booted fresh (RAM state lost)."
+          },
+          "took_ms": {
+            "type": "integer",
+            "description": "Time taken to bring the VM back."
+          },
+          "deduped": {
+            "type": "boolean",
+            "description": "True when an identical wake was already running and this call was a no-op."
+          },
+          "state_changed": {
+            "type": "boolean",
+            "description": "True when this call actually moved the VM to running. Callers reserve node capacity only when this is true."
+          }
+        }
+      },
       "ApiNodeStatus": {
         "type": "string",
         "enum": [
@@ -621,6 +902,121 @@
             "type": "string"
           }
         }
+      },
+      "ApiNodeMaintenanceEntry": {
+        "type": "object",
+        "required": [
+          "username",
+          "machine_name",
+          "prev_state",
+          "state",
+          "restored"
+        ],
+        "properties": {
+          "username": {
+            "type": "string"
+          },
+          "machine_name": {
+            "type": "string"
+          },
+          "ip_address": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "prev_state": {
+            "type": "string",
+            "enum": [
+              "active",
+              "paused"
+            ],
+            "description": "State the VM had before the run, and is restored to."
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "ok",
+              "failed"
+            ],
+            "description": "Snapshot progress."
+          },
+          "restored": {
+            "type": "boolean",
+            "description": "True once the VM has been woken back."
+          },
+          "destination_url": {
+            "type": "string",
+            "description": "Snapshot slot the VM was saved to."
+          },
+          "error": {
+            "type": "string"
+          }
+        }
+      },
+      "ApiNodeMaintenanceStatus": {
+        "type": "object",
+        "required": [
+          "node",
+          "phase",
+          "running",
+          "routes_pending",
+          "entries"
+        ],
+        "properties": {
+          "node": {
+            "type": "string"
+          },
+          "phase": {
+            "type": "string",
+            "enum": [
+              "idle",
+              "snapshot",
+              "restore"
+            ]
+          },
+          "running": {
+            "type": "boolean",
+            "description": "True while the run is working in the background."
+          },
+          "started_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "routes_pending": {
+            "type": "boolean",
+            "description": "True when every VM is back but some app routes still need replaying."
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ApiNodeMaintenanceEntry"
+            }
+          }
+        }
+      },
+      "ApiNodeMaintenanceRunResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ApiNodeMaintenanceStatus"
+          },
+          {
+            "type": "object",
+            "required": [
+              "message"
+            ],
+            "properties": {
+              "message": {
+                "type": "string",
+                "description": "Human summary of the run."
+              }
+            }
+          }
+        ]
       },
       "ApiSoftware": {
         "type": "object",
@@ -1852,6 +2248,96 @@
         }
       }
     },
+    "/api/v1/vmm/{machine_name}/metrics": {
+      "get": {
+        "operationId": "getApiV1VmmByMachineNameMetrics",
+        "tags": [
+          "MicroVMs"
+        ],
+        "summary": "Get microVM usage metrics",
+        "description": "Returns CPU, memory, network and disk time series for the microVM. Each series includes its points plus current, average and max values.",
+        "parameters": [
+          {
+            "name": "machine_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Name of the microVM."
+          },
+          {
+            "name": "range",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1h",
+                "6h",
+                "24h",
+                "7d"
+              ],
+              "default": "1h"
+            },
+            "description": "Time window to query."
+          },
+          {
+            "name": "step",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 10,
+              "maximum": 3600
+            },
+            "description": "Sampling resolution in seconds. Defaults to a window-appropriate step (max ~500 points)."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Usage time series for the microVM.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiVmMetricsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "MicroVM not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/vmm/{machine_name}/start": {
       "put": {
         "operationId": "putApiV1VmmByMachineNameStart",
@@ -1877,6 +2363,162 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ApiSuccess"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Overdue unpaid invoice",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "MicroVM not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/vmm/{machine_name}/sleep": {
+      "put": {
+        "operationId": "putApiV1VmmByMachineNameSleep",
+        "tags": [
+          "MicroVMs"
+        ],
+        "summary": "Sleep a microVM",
+        "description": "Pauses the VM, snapshots it to a rolling slot, then evicts the hypervisor process to free host memory. Wakes in place from the snapshot.",
+        "parameters": [
+          {
+            "name": "machine_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Name of the microVM."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Slept (or already sleeping).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiVmSleepResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "MicroVM is not active",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "MicroVM not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/vmm/{machine_name}/wake": {
+      "put": {
+        "operationId": "putApiV1VmmByMachineNameWake",
+        "tags": [
+          "MicroVMs"
+        ],
+        "summary": "Wake a microVM",
+        "description": "Resumes a live-paused VM in place or restores a slept VM from its snapshot. When no usable snapshot exists, boots the existing disk fresh (RAM state is lost, disk contents are preserved).",
+        "parameters": [
+          {
+            "name": "machine_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Name of the microVM."
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApiVmWakeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Woken (or already active).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiVmWakeResponse"
                 }
               }
             }
@@ -2937,6 +3579,245 @@
         }
       }
     },
+    "/api/v1/nodes/{name}/maintenance": {
+      "get": {
+        "operationId": "getApiV1NodesByNameMaintenance",
+        "tags": [
+          "Nodes"
+        ],
+        "summary": "Get node maintenance state",
+        "description": "Progress of the node's snapshot/restore run, if one is pending.",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Name of the node."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Maintenance state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiNodeMaintenanceStatus"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Node not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/nodes/{name}/maintenance/snapshot": {
+      "post": {
+        "operationId": "postApiV1NodesByNameMaintenanceSnapshot",
+        "tags": [
+          "Nodes"
+        ],
+        "summary": "Snapshot every VM on a node",
+        "description": "Takes the node out of service and sleeps every VM on it (pause + snapshot + process evict), releasing their capacity. Run this before rebooting the node, then call restore. Works in the background; poll the maintenance endpoint for progress.",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Name of the node."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Run started.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiNodeMaintenanceRunResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Node not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "A run is already in progress, or a restore is pending",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/nodes/{name}/maintenance/restore": {
+      "post": {
+        "operationId": "postApiV1NodesByNameMaintenanceRestore",
+        "tags": [
+          "Nodes"
+        ],
+        "summary": "Restore every VM on a node",
+        "description": "Wakes every VM snapshotted by the maintenance snapshot back to its previous state, re-adds its app routes and returns the node to service. Safe to retry: VMs already restored are skipped and failures stay pending. Works in the background; poll the maintenance endpoint for progress.",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Name of the node."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Restore started.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiNodeMaintenanceRunResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Node not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "A run is already in progress",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/software": {
       "get": {
         "operationId": "getApiV1Software",
@@ -2957,16 +3838,6 @@
           },
           "401": {
             "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
             "content": {
               "application/json": {
                 "schema": {
@@ -3078,16 +3949,6 @@
           },
           "401": {
             "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
             "content": {
               "application/json": {
                 "schema": {

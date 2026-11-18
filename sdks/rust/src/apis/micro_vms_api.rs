@@ -44,6 +44,16 @@ pub enum GetApiV1VmmByMachineNameError {
     UnknownValue(serde_json::Value),
 }
 
+/// struct for typed errors of method [`get_api_v1_vmm_by_machine_name_metrics`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum GetApiV1VmmByMachineNameMetricsError {
+    Status401(models::ApiError),
+    Status404(models::ApiError),
+    Status500(models::ApiError),
+    UnknownValue(serde_json::Value),
+}
+
 /// struct for typed errors of method [`post_api_v1_vmm_by_machine_name`]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
@@ -124,6 +134,17 @@ pub enum PutApiV1VmmByMachineNameShutdownError {
     UnknownValue(serde_json::Value),
 }
 
+/// struct for typed errors of method [`put_api_v1_vmm_by_machine_name_sleep`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum PutApiV1VmmByMachineNameSleepError {
+    Status400(models::ApiError),
+    Status401(models::ApiError),
+    Status404(models::ApiError),
+    Status500(models::ApiError),
+    UnknownValue(serde_json::Value),
+}
+
 /// struct for typed errors of method [`put_api_v1_vmm_by_machine_name_snapshot`]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
@@ -138,6 +159,17 @@ pub enum PutApiV1VmmByMachineNameSnapshotError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum PutApiV1VmmByMachineNameStartError {
+    Status401(models::ApiError),
+    Status402(models::ApiError),
+    Status404(models::ApiError),
+    Status500(models::ApiError),
+    UnknownValue(serde_json::Value),
+}
+
+/// struct for typed errors of method [`put_api_v1_vmm_by_machine_name_wake`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum PutApiV1VmmByMachineNameWakeError {
     Status401(models::ApiError),
     Status402(models::ApiError),
     Status404(models::ApiError),
@@ -282,6 +314,62 @@ pub async fn get_api_v1_vmm_by_machine_name(configuration: &configuration::Confi
     } else {
         let content = resp.text().await?;
         let entity: Option<GetApiV1VmmByMachineNameError> = serde_json::from_str(&content).ok();
+        Err(Error::ResponseError(ResponseContent { status, content, entity }))
+    }
+}
+
+/// Returns CPU, memory, network and disk time series for the microVM. Each series includes its points plus current, average and max values.
+pub async fn get_api_v1_vmm_by_machine_name_metrics(configuration: &configuration::Configuration, machine_name: &str, range: Option<&str>, step: Option<i32>) -> Result<models::ApiVmMetricsResponse, Error<GetApiV1VmmByMachineNameMetricsError>> {
+    // add a prefix to parameters to efficiently prevent name collisions
+    let p_path_machine_name = machine_name;
+    let p_query_range = range;
+    let p_query_step = step;
+
+    let uri_str = format!("{}/api/v1/vmm/{machine_name}/metrics", configuration.base_path, machine_name=crate::apis::urlencode(p_path_machine_name));
+    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+
+    if let Some(ref param_value) = p_query_range {
+        req_builder = req_builder.query(&[("range", &param_value.to_string())]);
+    }
+    if let Some(ref param_value) = p_query_step {
+        req_builder = req_builder.query(&[("step", &param_value.to_string())]);
+    }
+    if let Some(ref user_agent) = configuration.user_agent {
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    if let Some(ref apikey) = configuration.api_key {
+        let key = apikey.key.clone();
+        let value = match apikey.prefix {
+            Some(ref prefix) => format!("{} {}", prefix, key),
+            None => key,
+        };
+        req_builder = req_builder.header("X-API-Key", value);
+    };
+    if let Some(ref token) = configuration.bearer_access_token {
+        req_builder = req_builder.bearer_auth(token.to_owned());
+    };
+
+    let req = req_builder.build()?;
+    let resp = configuration.client.execute(req).await?;
+
+    let status = resp.status();
+    let content_type = resp
+        .headers()
+        .get("content-type")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("application/octet-stream");
+    let content_type = super::ContentType::from(content_type);
+
+    if !status.is_client_error() && !status.is_server_error() {
+        let content = resp.text().await?;
+        match content_type {
+            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
+            ContentType::Text => return Err(Error::from(serde_json::Error::custom("Received `text/plain` content type response that cannot be converted to `models::ApiVmMetricsResponse`"))),
+            ContentType::Unsupported(unknown_type) => return Err(Error::from(serde_json::Error::custom(format!("Received `{unknown_type}` content type response that cannot be converted to `models::ApiVmMetricsResponse`")))),
+        }
+    } else {
+        let content = resp.text().await?;
+        let entity: Option<GetApiV1VmmByMachineNameMetricsError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent { status, content, entity }))
     }
 }
@@ -625,6 +713,54 @@ pub async fn put_api_v1_vmm_by_machine_name_shutdown(configuration: &configurati
     }
 }
 
+/// Pauses the VM, snapshots it to a rolling slot, then evicts the hypervisor process to free host memory. Wakes in place from the snapshot.
+pub async fn put_api_v1_vmm_by_machine_name_sleep(configuration: &configuration::Configuration, machine_name: &str) -> Result<models::ApiVmSleepResponse, Error<PutApiV1VmmByMachineNameSleepError>> {
+    // add a prefix to parameters to efficiently prevent name collisions
+    let p_path_machine_name = machine_name;
+
+    let uri_str = format!("{}/api/v1/vmm/{machine_name}/sleep", configuration.base_path, machine_name=crate::apis::urlencode(p_path_machine_name));
+    let mut req_builder = configuration.client.request(reqwest::Method::PUT, &uri_str);
+
+    if let Some(ref user_agent) = configuration.user_agent {
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    if let Some(ref apikey) = configuration.api_key {
+        let key = apikey.key.clone();
+        let value = match apikey.prefix {
+            Some(ref prefix) => format!("{} {}", prefix, key),
+            None => key,
+        };
+        req_builder = req_builder.header("X-API-Key", value);
+    };
+    if let Some(ref token) = configuration.bearer_access_token {
+        req_builder = req_builder.bearer_auth(token.to_owned());
+    };
+
+    let req = req_builder.build()?;
+    let resp = configuration.client.execute(req).await?;
+
+    let status = resp.status();
+    let content_type = resp
+        .headers()
+        .get("content-type")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("application/octet-stream");
+    let content_type = super::ContentType::from(content_type);
+
+    if !status.is_client_error() && !status.is_server_error() {
+        let content = resp.text().await?;
+        match content_type {
+            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
+            ContentType::Text => return Err(Error::from(serde_json::Error::custom("Received `text/plain` content type response that cannot be converted to `models::ApiVmSleepResponse`"))),
+            ContentType::Unsupported(unknown_type) => return Err(Error::from(serde_json::Error::custom(format!("Received `{unknown_type}` content type response that cannot be converted to `models::ApiVmSleepResponse`")))),
+        }
+    } else {
+        let content = resp.text().await?;
+        let entity: Option<PutApiV1VmmByMachineNameSleepError> = serde_json::from_str(&content).ok();
+        Err(Error::ResponseError(ResponseContent { status, content, entity }))
+    }
+}
+
 pub async fn put_api_v1_vmm_by_machine_name_snapshot(configuration: &configuration::Configuration, machine_name: &str, api_vm_snapshot_request: Option<models::ApiVmSnapshotRequest>) -> Result<models::ApiVmSnapshotResponse, Error<PutApiV1VmmByMachineNameSnapshotError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_path_machine_name = machine_name;
@@ -717,6 +853,56 @@ pub async fn put_api_v1_vmm_by_machine_name_start(configuration: &configuration:
     } else {
         let content = resp.text().await?;
         let entity: Option<PutApiV1VmmByMachineNameStartError> = serde_json::from_str(&content).ok();
+        Err(Error::ResponseError(ResponseContent { status, content, entity }))
+    }
+}
+
+/// Resumes a live-paused VM in place or restores a slept VM from its snapshot. When no usable snapshot exists, boots the existing disk fresh (RAM state is lost, disk contents are preserved).
+pub async fn put_api_v1_vmm_by_machine_name_wake(configuration: &configuration::Configuration, machine_name: &str, api_vm_wake_request: Option<models::ApiVmWakeRequest>) -> Result<models::ApiVmWakeResponse, Error<PutApiV1VmmByMachineNameWakeError>> {
+    // add a prefix to parameters to efficiently prevent name collisions
+    let p_path_machine_name = machine_name;
+    let p_body_api_vm_wake_request = api_vm_wake_request;
+
+    let uri_str = format!("{}/api/v1/vmm/{machine_name}/wake", configuration.base_path, machine_name=crate::apis::urlencode(p_path_machine_name));
+    let mut req_builder = configuration.client.request(reqwest::Method::PUT, &uri_str);
+
+    if let Some(ref user_agent) = configuration.user_agent {
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    if let Some(ref apikey) = configuration.api_key {
+        let key = apikey.key.clone();
+        let value = match apikey.prefix {
+            Some(ref prefix) => format!("{} {}", prefix, key),
+            None => key,
+        };
+        req_builder = req_builder.header("X-API-Key", value);
+    };
+    if let Some(ref token) = configuration.bearer_access_token {
+        req_builder = req_builder.bearer_auth(token.to_owned());
+    };
+    req_builder = req_builder.json(&p_body_api_vm_wake_request);
+
+    let req = req_builder.build()?;
+    let resp = configuration.client.execute(req).await?;
+
+    let status = resp.status();
+    let content_type = resp
+        .headers()
+        .get("content-type")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("application/octet-stream");
+    let content_type = super::ContentType::from(content_type);
+
+    if !status.is_client_error() && !status.is_server_error() {
+        let content = resp.text().await?;
+        match content_type {
+            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
+            ContentType::Text => return Err(Error::from(serde_json::Error::custom("Received `text/plain` content type response that cannot be converted to `models::ApiVmWakeResponse`"))),
+            ContentType::Unsupported(unknown_type) => return Err(Error::from(serde_json::Error::custom(format!("Received `{unknown_type}` content type response that cannot be converted to `models::ApiVmWakeResponse`")))),
+        }
+    } else {
+        let content = resp.text().await?;
+        let entity: Option<PutApiV1VmmByMachineNameWakeError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent { status, content, entity }))
     }
 }
