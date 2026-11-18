@@ -108,8 +108,8 @@ jobs:
           # Node 24 bundles npm >= 11.5.1, which is required for OIDC
           # trusted publishing.
           node-version: 24
-          # No registry-url: setup-node would write a dummy NODE_AUTH_TOKEN,
-          # which disables npm's OIDC trusted publishing and causes a 404.
+          # No registry-url: setup-node would set a dummy NODE_AUTH_TOKEN,
+          # masking an OIDC failure as a misleading 404 on publish.
           package-manager-cache: false # never use caching in release builds
 
       - name: Check if version is already published
@@ -135,6 +135,35 @@ jobs:
             echo "::error::npm $version is too old; trusted publishing requires >= 11.5.1"
             exit 1
           fi
+
+      - name: Check npm trusted publishing
+        if: steps.check.outputs.published != 'true'
+        shell: bash
+        run: |
+          if [ -z "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ] || [ -z "${ACTIONS_ID_TOKEN_REQUEST_TOKEN:-}" ]; then
+            echo "::error::GitHub did not provide an OIDC token. The job must set 'permissions: id-token: write'."
+            exit 1
+          fi
+
+          response="$(curl -sS \
+            -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=npm:registry.npmjs.org")"
+          id_token="$(printf '%s' "$response" | jq -r '.value // empty')"
+          if [ -z "$id_token" ]; then
+            echo "::error::GitHub did not return an OIDC token: $response"
+            exit 1
+          fi
+
+          body="$(mktemp)"
+          status="$(curl -sS -o "$body" -w '%{http_code}' \
+            -X POST \
+            -H "Authorization: Bearer $id_token" \
+            "https://registry.npmjs.org/-/npm/v1/oidc/token/exchange/package/@jilebi%2fsdk")"
+          if [ "$status" != "200" ]; then
+            echo "::error::npm rejected the OIDC token exchange (HTTP $status): $(cat "$body")"
+            exit 1
+          fi
+          echo "npm accepted the OIDC token exchange"
 
       - name: Set SDK version
         if: steps.check.outputs.published != 'true'
