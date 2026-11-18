@@ -18,6 +18,25 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ssh-key: ${{ secrets.RELEASE_DEPLOY_KEY }}
+          persist-credentials: true
+
+      - name: Configure git
+        run: |
+          git config user.email "bot@jilebi.ai"
+          git config user.name "Semver bot"
+          git remote set-url origin "git@github.com:${GITHUB_REPOSITORY}.git"
+
+      - name: Verify push access to master
+        shell: bash
+        run: |
+          git commit --allow-empty -m "chore: verify master push access"
+          trap 'git reset --hard HEAD~1' EXIT
+
+          if ! git push --dry-run origin HEAD:master; then
+            echo "::error::The release deploy key cannot update master. Add a write-enabled deploy key to the master ruleset's bypass list (Settings → Rules → master) and store its private key as RELEASE_DEPLOY_KEY."
+            exit 1
+          fi
 
       - name: Install Node.js
         uses: actions/setup-node@v4
@@ -46,8 +65,6 @@ jobs:
       - name: Set version
         id: set_version
         run: |
-          git config user.email "bot@jilebi.ai"
-          git config user.name "Semver bot"
           cog bump --auto --skip-ci-override "[skip ci]"
           
       - name: Get latest tag
@@ -56,6 +73,7 @@ jobs:
         run: |
             version=`git tag -l --sort=-creatordate | head -n 1`
             echo "version=$version"
+            echo "version=$version" >> "$GITHUB_OUTPUT"
             cargo set-version --workspace $version
             node sdks/scripts/set-version.mjs "$version"
       
@@ -63,6 +81,7 @@ jobs:
         run: |
           git add .
           git commit --amend --no-edit
+          git tag -f "${{ steps.git_tag.outputs.version }}" HEAD
           git push origin master
           git push origin --tags
   
