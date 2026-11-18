@@ -7,8 +7,11 @@ Method | HTTP request | Description
 [**delete_api_v1_nodes_by_name**](NodesApi.md#delete_api_v1_nodes_by_name) | **DELETE** /api/v1/nodes/{name} | Delete a node
 [**get_api_v1_nodes**](NodesApi.md#get_api_v1_nodes) | **GET** /api/v1/nodes | List nodes
 [**get_api_v1_nodes_by_name**](NodesApi.md#get_api_v1_nodes_by_name) | **GET** /api/v1/nodes/{name} | Get a node
+[**get_api_v1_nodes_by_name_maintenance**](NodesApi.md#get_api_v1_nodes_by_name_maintenance) | **GET** /api/v1/nodes/{name}/maintenance | Get node maintenance state
 [**post_api_v1_nodes**](NodesApi.md#post_api_v1_nodes) | **POST** /api/v1/nodes | Register a node
 [**post_api_v1_nodes_by_name_health**](NodesApi.md#post_api_v1_nodes_by_name_health) | **POST** /api/v1/nodes/{name}/health | Check node health
+[**post_api_v1_nodes_by_name_maintenance_restore**](NodesApi.md#post_api_v1_nodes_by_name_maintenance_restore) | **POST** /api/v1/nodes/{name}/maintenance/restore | Restore every VM on a node
+[**post_api_v1_nodes_by_name_maintenance_snapshot**](NodesApi.md#post_api_v1_nodes_by_name_maintenance_snapshot) | **POST** /api/v1/nodes/{name}/maintenance/snapshot | Snapshot every VM on a node
 [**post_api_v1_nodes_by_name_refresh**](NodesApi.md#post_api_v1_nodes_by_name_refresh) | **POST** /api/v1/nodes/{name}/refresh | Refresh node resources
 [**post_api_v1_nodes_by_name_reinitialize**](NodesApi.md#post_api_v1_nodes_by_name_reinitialize) | **POST** /api/v1/nodes/{name}/reinitialize | Reinitialize a node
 [**put_api_v1_nodes_by_name**](NodesApi.md#put_api_v1_nodes_by_name) | **PUT** /api/v1/nodes/{name} | Update a node
@@ -288,6 +291,102 @@ Name | Type | Description  | Notes
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **get_api_v1_nodes_by_name_maintenance**
+> ApiNodeMaintenanceStatus get_api_v1_nodes_by_name_maintenance(name)
+
+Get node maintenance state
+
+Progress of the node's snapshot/restore run, if one is pending.
+
+### Example
+
+* Api Key Authentication (apiKey):
+* Api Key Authentication (sessionCookie):
+* Bearer (API key) Authentication (bearerAuth):
+
+```python
+import jilebi_sdk
+from jilebi_sdk.models.api_node_maintenance_status import ApiNodeMaintenanceStatus
+from jilebi_sdk.rest import ApiException
+from pprint import pprint
+
+# Defining the host is optional and defaults to https://jilebi.ai
+# See configuration.py for a list of all supported configuration parameters.
+configuration = jilebi_sdk.Configuration(
+    host = "https://jilebi.ai"
+)
+
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure API key authorization: apiKey
+configuration.api_key['apiKey'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['apiKey'] = 'Bearer'
+
+# Configure API key authorization: sessionCookie
+configuration.api_key['sessionCookie'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['sessionCookie'] = 'Bearer'
+
+# Configure Bearer authorization (API key): bearerAuth
+configuration = jilebi_sdk.Configuration(
+    access_token = os.environ["BEARER_TOKEN"]
+)
+
+# Enter a context with an instance of the API client
+with jilebi_sdk.ApiClient(configuration) as api_client:
+    # Create an instance of the API class
+    api_instance = jilebi_sdk.NodesApi(api_client)
+    name = 'name_example' # str | Name of the node.
+
+    try:
+        # Get node maintenance state
+        api_response = api_instance.get_api_v1_nodes_by_name_maintenance(name)
+        print("The response of NodesApi->get_api_v1_nodes_by_name_maintenance:\n")
+        pprint(api_response)
+    except Exception as e:
+        print("Exception when calling NodesApi->get_api_v1_nodes_by_name_maintenance: %s\n" % e)
+```
+
+
+
+### Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **name** | **str**| Name of the node. | 
+
+### Return type
+
+[**ApiNodeMaintenanceStatus**](ApiNodeMaintenanceStatus.md)
+
+### Authorization
+
+[apiKey](../README.md#apiKey), [sessionCookie](../README.md#sessionCookie), [bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+### HTTP response details
+
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+**200** | Maintenance state. |  -  |
+**401** | Unauthorized |  -  |
+**403** | Forbidden |  -  |
+**404** | Node not found |  -  |
+**500** | Internal server error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **post_api_v1_nodes**
 > ApiNode post_api_v1_nodes(api_node_create_request)
 
@@ -476,6 +575,200 @@ Name | Type | Description  | Notes
 **401** | Unauthorized |  -  |
 **403** | Forbidden |  -  |
 **404** | Node not found |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **post_api_v1_nodes_by_name_maintenance_restore**
+> ApiNodeMaintenanceRunResponse post_api_v1_nodes_by_name_maintenance_restore(name)
+
+Restore every VM on a node
+
+Wakes every VM snapshotted by the maintenance snapshot back to its previous state, re-adds its app routes and returns the node to service. Safe to retry: VMs already restored are skipped and failures stay pending. Works in the background; poll the maintenance endpoint for progress.
+
+### Example
+
+* Api Key Authentication (apiKey):
+* Api Key Authentication (sessionCookie):
+* Bearer (API key) Authentication (bearerAuth):
+
+```python
+import jilebi_sdk
+from jilebi_sdk.models.api_node_maintenance_run_response import ApiNodeMaintenanceRunResponse
+from jilebi_sdk.rest import ApiException
+from pprint import pprint
+
+# Defining the host is optional and defaults to https://jilebi.ai
+# See configuration.py for a list of all supported configuration parameters.
+configuration = jilebi_sdk.Configuration(
+    host = "https://jilebi.ai"
+)
+
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure API key authorization: apiKey
+configuration.api_key['apiKey'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['apiKey'] = 'Bearer'
+
+# Configure API key authorization: sessionCookie
+configuration.api_key['sessionCookie'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['sessionCookie'] = 'Bearer'
+
+# Configure Bearer authorization (API key): bearerAuth
+configuration = jilebi_sdk.Configuration(
+    access_token = os.environ["BEARER_TOKEN"]
+)
+
+# Enter a context with an instance of the API client
+with jilebi_sdk.ApiClient(configuration) as api_client:
+    # Create an instance of the API class
+    api_instance = jilebi_sdk.NodesApi(api_client)
+    name = 'name_example' # str | Name of the node.
+
+    try:
+        # Restore every VM on a node
+        api_response = api_instance.post_api_v1_nodes_by_name_maintenance_restore(name)
+        print("The response of NodesApi->post_api_v1_nodes_by_name_maintenance_restore:\n")
+        pprint(api_response)
+    except Exception as e:
+        print("Exception when calling NodesApi->post_api_v1_nodes_by_name_maintenance_restore: %s\n" % e)
+```
+
+
+
+### Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **name** | **str**| Name of the node. | 
+
+### Return type
+
+[**ApiNodeMaintenanceRunResponse**](ApiNodeMaintenanceRunResponse.md)
+
+### Authorization
+
+[apiKey](../README.md#apiKey), [sessionCookie](../README.md#sessionCookie), [bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+### HTTP response details
+
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+**200** | Restore started. |  -  |
+**401** | Unauthorized |  -  |
+**403** | Forbidden |  -  |
+**404** | Node not found |  -  |
+**409** | A run is already in progress |  -  |
+**500** | Internal server error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **post_api_v1_nodes_by_name_maintenance_snapshot**
+> ApiNodeMaintenanceRunResponse post_api_v1_nodes_by_name_maintenance_snapshot(name)
+
+Snapshot every VM on a node
+
+Takes the node out of service and sleeps every VM on it (pause + snapshot + process evict), releasing their capacity. Run this before rebooting the node, then call restore. Works in the background; poll the maintenance endpoint for progress.
+
+### Example
+
+* Api Key Authentication (apiKey):
+* Api Key Authentication (sessionCookie):
+* Bearer (API key) Authentication (bearerAuth):
+
+```python
+import jilebi_sdk
+from jilebi_sdk.models.api_node_maintenance_run_response import ApiNodeMaintenanceRunResponse
+from jilebi_sdk.rest import ApiException
+from pprint import pprint
+
+# Defining the host is optional and defaults to https://jilebi.ai
+# See configuration.py for a list of all supported configuration parameters.
+configuration = jilebi_sdk.Configuration(
+    host = "https://jilebi.ai"
+)
+
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure API key authorization: apiKey
+configuration.api_key['apiKey'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['apiKey'] = 'Bearer'
+
+# Configure API key authorization: sessionCookie
+configuration.api_key['sessionCookie'] = os.environ["API_KEY"]
+
+# Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+# configuration.api_key_prefix['sessionCookie'] = 'Bearer'
+
+# Configure Bearer authorization (API key): bearerAuth
+configuration = jilebi_sdk.Configuration(
+    access_token = os.environ["BEARER_TOKEN"]
+)
+
+# Enter a context with an instance of the API client
+with jilebi_sdk.ApiClient(configuration) as api_client:
+    # Create an instance of the API class
+    api_instance = jilebi_sdk.NodesApi(api_client)
+    name = 'name_example' # str | Name of the node.
+
+    try:
+        # Snapshot every VM on a node
+        api_response = api_instance.post_api_v1_nodes_by_name_maintenance_snapshot(name)
+        print("The response of NodesApi->post_api_v1_nodes_by_name_maintenance_snapshot:\n")
+        pprint(api_response)
+    except Exception as e:
+        print("Exception when calling NodesApi->post_api_v1_nodes_by_name_maintenance_snapshot: %s\n" % e)
+```
+
+
+
+### Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **name** | **str**| Name of the node. | 
+
+### Return type
+
+[**ApiNodeMaintenanceRunResponse**](ApiNodeMaintenanceRunResponse.md)
+
+### Authorization
+
+[apiKey](../README.md#apiKey), [sessionCookie](../README.md#sessionCookie), [bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+### HTTP response details
+
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+**200** | Run started. |  -  |
+**401** | Unauthorized |  -  |
+**403** | Forbidden |  -  |
+**404** | Node not found |  -  |
+**409** | A run is already in progress, or a restore is pending |  -  |
+**500** | Internal server error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

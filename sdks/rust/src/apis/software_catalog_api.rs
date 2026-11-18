@@ -30,7 +30,6 @@ pub enum DeleteApiV1SoftwareByIdError {
 #[serde(untagged)]
 pub enum GetApiV1SoftwareError {
     Status401(models::ApiError),
-    Status403(models::ApiError),
     Status500(models::ApiError),
     UnknownValue(serde_json::Value),
 }
@@ -40,7 +39,6 @@ pub enum GetApiV1SoftwareError {
 #[serde(untagged)]
 pub enum GetApiV1SoftwareByIdError {
     Status401(models::ApiError),
-    Status403(models::ApiError),
     Status404(models::ApiError),
     Status500(models::ApiError),
     UnknownValue(serde_json::Value),

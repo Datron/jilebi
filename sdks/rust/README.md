@@ -39,6 +39,7 @@ Class | Method | HTTP request | Description
 *MicroVmsApi* | [**delete_api_v1_vmm_by_machine_name**](docs/MicroVmsApi.md#delete_api_v1_vmm_by_machine_name) | **DELETE** /api/v1/vmm/{machine_name} | Delete a microVM
 *MicroVmsApi* | [**get_api_v1_vmm**](docs/MicroVmsApi.md#get_api_v1_vmm) | **GET** /api/v1/vmm | List microVMs
 *MicroVmsApi* | [**get_api_v1_vmm_by_machine_name**](docs/MicroVmsApi.md#get_api_v1_vmm_by_machine_name) | **GET** /api/v1/vmm/{machine_name} | Get a microVM
+*MicroVmsApi* | [**get_api_v1_vmm_by_machine_name_metrics**](docs/MicroVmsApi.md#get_api_v1_vmm_by_machine_name_metrics) | **GET** /api/v1/vmm/{machine_name}/metrics | Get microVM usage metrics
 *MicroVmsApi* | [**post_api_v1_vmm_by_machine_name**](docs/MicroVmsApi.md#post_api_v1_vmm_by_machine_name) | **POST** /api/v1/vmm/{machine_name} | Create a microVM
 *MicroVmsApi* | [**post_api_v1_vmm_by_machine_name_clone**](docs/MicroVmsApi.md#post_api_v1_vmm_by_machine_name_clone) | **POST** /api/v1/vmm/{machine_name}/clone | Clone a microVM
 *MicroVmsApi* | [**put_api_v1_vmm_by_machine_name**](docs/MicroVmsApi.md#put_api_v1_vmm_by_machine_name) | **PUT** /api/v1/vmm/{machine_name} | Resize a microVM
@@ -46,13 +47,18 @@ Class | Method | HTTP request | Description
 *MicroVmsApi* | [**put_api_v1_vmm_by_machine_name_restart**](docs/MicroVmsApi.md#put_api_v1_vmm_by_machine_name_restart) | **PUT** /api/v1/vmm/{machine_name}/restart | Restart a microVM
 *MicroVmsApi* | [**put_api_v1_vmm_by_machine_name_restore**](docs/MicroVmsApi.md#put_api_v1_vmm_by_machine_name_restore) | **PUT** /api/v1/vmm/{machine_name}/restore | Restore a microVM from a snapshot
 *MicroVmsApi* | [**put_api_v1_vmm_by_machine_name_shutdown**](docs/MicroVmsApi.md#put_api_v1_vmm_by_machine_name_shutdown) | **PUT** /api/v1/vmm/{machine_name}/shutdown | Shut down a microVM
+*MicroVmsApi* | [**put_api_v1_vmm_by_machine_name_sleep**](docs/MicroVmsApi.md#put_api_v1_vmm_by_machine_name_sleep) | **PUT** /api/v1/vmm/{machine_name}/sleep | Sleep a microVM
 *MicroVmsApi* | [**put_api_v1_vmm_by_machine_name_snapshot**](docs/MicroVmsApi.md#put_api_v1_vmm_by_machine_name_snapshot) | **PUT** /api/v1/vmm/{machine_name}/snapshot | Snapshot a microVM
 *MicroVmsApi* | [**put_api_v1_vmm_by_machine_name_start**](docs/MicroVmsApi.md#put_api_v1_vmm_by_machine_name_start) | **PUT** /api/v1/vmm/{machine_name}/start | Start a microVM
+*MicroVmsApi* | [**put_api_v1_vmm_by_machine_name_wake**](docs/MicroVmsApi.md#put_api_v1_vmm_by_machine_name_wake) | **PUT** /api/v1/vmm/{machine_name}/wake | Wake a microVM
 *NodesApi* | [**delete_api_v1_nodes_by_name**](docs/NodesApi.md#delete_api_v1_nodes_by_name) | **DELETE** /api/v1/nodes/{name} | Delete a node
 *NodesApi* | [**get_api_v1_nodes**](docs/NodesApi.md#get_api_v1_nodes) | **GET** /api/v1/nodes | List nodes
 *NodesApi* | [**get_api_v1_nodes_by_name**](docs/NodesApi.md#get_api_v1_nodes_by_name) | **GET** /api/v1/nodes/{name} | Get a node
+*NodesApi* | [**get_api_v1_nodes_by_name_maintenance**](docs/NodesApi.md#get_api_v1_nodes_by_name_maintenance) | **GET** /api/v1/nodes/{name}/maintenance | Get node maintenance state
 *NodesApi* | [**post_api_v1_nodes**](docs/NodesApi.md#post_api_v1_nodes) | **POST** /api/v1/nodes | Register a node
 *NodesApi* | [**post_api_v1_nodes_by_name_health**](docs/NodesApi.md#post_api_v1_nodes_by_name_health) | **POST** /api/v1/nodes/{name}/health | Check node health
+*NodesApi* | [**post_api_v1_nodes_by_name_maintenance_restore**](docs/NodesApi.md#post_api_v1_nodes_by_name_maintenance_restore) | **POST** /api/v1/nodes/{name}/maintenance/restore | Restore every VM on a node
+*NodesApi* | [**post_api_v1_nodes_by_name_maintenance_snapshot**](docs/NodesApi.md#post_api_v1_nodes_by_name_maintenance_snapshot) | **POST** /api/v1/nodes/{name}/maintenance/snapshot | Snapshot every VM on a node
 *NodesApi* | [**post_api_v1_nodes_by_name_refresh**](docs/NodesApi.md#post_api_v1_nodes_by_name_refresh) | **POST** /api/v1/nodes/{name}/refresh | Refresh node resources
 *NodesApi* | [**post_api_v1_nodes_by_name_reinitialize**](docs/NodesApi.md#post_api_v1_nodes_by_name_reinitialize) | **POST** /api/v1/nodes/{name}/reinitialize | Reinitialize a node
 *NodesApi* | [**put_api_v1_nodes_by_name**](docs/NodesApi.md#put_api_v1_nodes_by_name) | **PUT** /api/v1/nodes/{name} | Update a node
@@ -87,6 +93,9 @@ Class | Method | HTTP request | Description
  - [ApiNode](docs/ApiNode.md)
  - [ApiNodeCreateRequest](docs/ApiNodeCreateRequest.md)
  - [ApiNodeHealthResponse](docs/ApiNodeHealthResponse.md)
+ - [ApiNodeMaintenanceEntry](docs/ApiNodeMaintenanceEntry.md)
+ - [ApiNodeMaintenanceRunResponse](docs/ApiNodeMaintenanceRunResponse.md)
+ - [ApiNodeMaintenanceStatus](docs/ApiNodeMaintenanceStatus.md)
  - [ApiNodeRefreshResponse](docs/ApiNodeRefreshResponse.md)
  - [ApiNodeReinitializeResponse](docs/ApiNodeReinitializeResponse.md)
  - [ApiNodeStatus](docs/ApiNodeStatus.md)
@@ -110,12 +119,23 @@ Class | Method | HTTP request | Description
  - [ApiVmCreateRequest](docs/ApiVmCreateRequest.md)
  - [ApiVmCreateResponse](docs/ApiVmCreateResponse.md)
  - [ApiVmGetResponse](docs/ApiVmGetResponse.md)
+ - [ApiVmMetricPoint](docs/ApiVmMetricPoint.md)
+ - [ApiVmMetricsResponse](docs/ApiVmMetricsResponse.md)
+ - [ApiVmMetricsResponseConfigured](docs/ApiVmMetricsResponseConfigured.md)
+ - [ApiVmMetricsResponseCpu](docs/ApiVmMetricsResponseCpu.md)
+ - [ApiVmMetricsResponseDisk](docs/ApiVmMetricsResponseDisk.md)
+ - [ApiVmMetricsResponseMemory](docs/ApiVmMetricsResponseMemory.md)
+ - [ApiVmMetricsResponseNetwork](docs/ApiVmMetricsResponseNetwork.md)
+ - [ApiVmMetricsSeries](docs/ApiVmMetricsSeries.md)
  - [ApiVmRestoreRequest](docs/ApiVmRestoreRequest.md)
  - [ApiVmRestoreResponse](docs/ApiVmRestoreResponse.md)
+ - [ApiVmSleepResponse](docs/ApiVmSleepResponse.md)
  - [ApiVmSnapshotRequest](docs/ApiVmSnapshotRequest.md)
  - [ApiVmSnapshotResponse](docs/ApiVmSnapshotResponse.md)
  - [ApiVmState](docs/ApiVmState.md)
  - [ApiVmUpdateRequest](docs/ApiVmUpdateRequest.md)
+ - [ApiVmWakeRequest](docs/ApiVmWakeRequest.md)
+ - [ApiVmWakeResponse](docs/ApiVmWakeResponse.md)
  - [DeviceNode](docs/DeviceNode.md)
  - [ProvisionedVm](docs/ProvisionedVm.md)
  - [SharedUser](docs/SharedUser.md)

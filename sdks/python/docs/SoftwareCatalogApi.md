@@ -188,7 +188,6 @@ This endpoint does not need any parameter.
 |-------------|-------------|------------------|
 **200** | The software catalog. |  -  |
 **401** | Unauthorized |  -  |
-**403** | Forbidden |  -  |
 **500** | Internal server error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -281,7 +280,6 @@ Name | Type | Description  | Notes
 |-------------|-------------|------------------|
 **200** | The catalog entry. |  -  |
 **401** | Unauthorized |  -  |
-**403** | Forbidden |  -  |
 **404** | Not found |  -  |
 **500** | Internal server error |  -  |
 

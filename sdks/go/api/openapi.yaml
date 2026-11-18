@@ -29,7 +29,7 @@ tags:
   name: API keys
 - description: Host nodes (admin only).
   name: Nodes
-- description: Software installable at VM creation (admin only).
+- description: Software installable at VM creation; mutations are admin only.
   name: Software catalog
 - description: "Invoices, payments and admin billing actions."
   name: Billing
@@ -271,6 +271,73 @@ paths:
       summary: Resize a microVM
       tags:
       - MicroVMs
+  /api/v1/vmm/{machine_name}/metrics:
+    get:
+      description: "Returns CPU, memory, network and disk time series for the microVM.\
+        \ Each series includes its points plus current, average and max values."
+      operationId: getApiV1VmmByMachineNameMetrics
+      parameters:
+      - description: Name of the microVM.
+        explode: false
+        in: path
+        name: machine_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: Time window to query.
+        explode: true
+        in: query
+        name: range
+        required: false
+        schema:
+          default: 1h
+          enum:
+          - 1h
+          - 6h
+          - 24h
+          - 7d
+          type: string
+        style: form
+      - description: Sampling resolution in seconds. Defaults to a window-appropriate
+          step (max ~500 points).
+        explode: true
+        in: query
+        name: step
+        required: false
+        schema:
+          maximum: 3600
+          minimum: 10
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiVmMetricsResponse"
+          description: Usage time series for the microVM.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Unauthorized
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: MicroVM not found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Internal server error
+      summary: Get microVM usage metrics
+      tags:
+      - MicroVMs
   /api/v1/vmm/{machine_name}/start:
     put:
       operationId: putApiV1VmmByMachineNameStart
@@ -315,6 +382,109 @@ paths:
                 $ref: "#/components/schemas/ApiError"
           description: Internal server error
       summary: Start a microVM
+      tags:
+      - MicroVMs
+  /api/v1/vmm/{machine_name}/sleep:
+    put:
+      description: "Pauses the VM, snapshots it to a rolling slot, then evicts the\
+        \ hypervisor process to free host memory. Wakes in place from the snapshot."
+      operationId: putApiV1VmmByMachineNameSleep
+      parameters:
+      - description: Name of the microVM.
+        explode: false
+        in: path
+        name: machine_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiVmSleepResponse"
+          description: Slept (or already sleeping).
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: MicroVM is not active
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Unauthorized
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: MicroVM not found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Internal server error
+      summary: Sleep a microVM
+      tags:
+      - MicroVMs
+  /api/v1/vmm/{machine_name}/wake:
+    put:
+      description: "Resumes a live-paused VM in place or restores a slept VM from\
+        \ its snapshot. When no usable snapshot exists, boots the existing disk fresh\
+        \ (RAM state is lost, disk contents are preserved)."
+      operationId: putApiV1VmmByMachineNameWake
+      parameters:
+      - description: Name of the microVM.
+        explode: false
+        in: path
+        name: machine_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApiVmWakeRequest"
+        required: false
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiVmWakeResponse"
+          description: Woken (or already active).
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Unauthorized
+        "402":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Overdue unpaid invoice
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: MicroVM not found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Internal server error
+      summary: Wake a microVM
       tags:
       - MicroVMs
   /api/v1/vmm/{machine_name}/pause:
@@ -964,6 +1134,165 @@ paths:
       summary: Reinitialize a node
       tags:
       - Nodes
+  /api/v1/nodes/{name}/maintenance:
+    get:
+      description: "Progress of the node's snapshot/restore run, if one is pending."
+      operationId: getApiV1NodesByNameMaintenance
+      parameters:
+      - description: Name of the node.
+        explode: false
+        in: path
+        name: name
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiNodeMaintenanceStatus"
+          description: Maintenance state.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Node not found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Internal server error
+      summary: Get node maintenance state
+      tags:
+      - Nodes
+  /api/v1/nodes/{name}/maintenance/snapshot:
+    post:
+      description: "Takes the node out of service and sleeps every VM on it (pause\
+        \ + snapshot + process evict), releasing their capacity. Run this before rebooting\
+        \ the node, then call restore. Works in the background; poll the maintenance\
+        \ endpoint for progress."
+      operationId: postApiV1NodesByNameMaintenanceSnapshot
+      parameters:
+      - description: Name of the node.
+        explode: false
+        in: path
+        name: name
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiNodeMaintenanceRunResponse"
+          description: Run started.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Node not found
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: "A run is already in progress, or a restore is pending"
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Internal server error
+      summary: Snapshot every VM on a node
+      tags:
+      - Nodes
+  /api/v1/nodes/{name}/maintenance/restore:
+    post:
+      description: "Wakes every VM snapshotted by the maintenance snapshot back to\
+        \ its previous state, re-adds its app routes and returns the node to service.\
+        \ Safe to retry: VMs already restored are skipped and failures stay pending.\
+        \ Works in the background; poll the maintenance endpoint for progress."
+      operationId: postApiV1NodesByNameMaintenanceRestore
+      parameters:
+      - description: Name of the node.
+        explode: false
+        in: path
+        name: name
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiNodeMaintenanceRunResponse"
+          description: Restore started.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Node not found
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: A run is already in progress
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+          description: Internal server error
+      summary: Restore every VM on a node
+      tags:
+      - Nodes
   /api/v1/software:
     get:
       operationId: getApiV1Software
@@ -980,12 +1309,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/ApiError"
           description: Unauthorized
-        "403":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
-          description: Forbidden
         "500":
           content:
             application/json:
@@ -1095,12 +1418,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/ApiError"
           description: Unauthorized
-        "403":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
-          description: Forbidden
         "404":
           content:
             application/json:
@@ -1983,6 +2300,198 @@ components:
               - children
               - children
               pci_bdf: pci_bdf
+    ApiVmMetricPoint:
+      example:
+        t: 7.061401241503109
+        v: 9.301444243932576
+      properties:
+        t:
+          description: Unix epoch seconds (may include fractional seconds).
+          type: number
+        v:
+          type: number
+      required:
+      - t
+      - v
+    ApiVmMetricsSeries:
+      example:
+        points:
+        - t: 7.061401241503109
+          v: 9.301444243932576
+        - t: 7.061401241503109
+          v: 9.301444243932576
+        current: 3.616076749251911
+        average: 2.027123023002322
+        max: 4.145608029883936
+      properties:
+        points:
+          items:
+            $ref: "#/components/schemas/ApiVmMetricPoint"
+          type: array
+          default: null
+        current:
+          description: Last sample in the window.
+          nullable: true
+          type: number
+        average:
+          nullable: true
+          type: number
+        max:
+          nullable: true
+          type: number
+      required:
+      - average
+      - current
+      - max
+      - points
+    ApiVmMetricsResponse:
+      example:
+        machine_name: machine_name
+        node_name: node_name
+        range: 1h
+        start: 0
+        end: 6
+        step_seconds: 1
+        available: true
+        error: error
+        configured:
+          cpu_count: 5
+          memory_mb: 5
+          disk_gb: 2
+        cpu:
+          usage_ratio:
+            points:
+            - t: 7.061401241503109
+              v: 9.301444243932576
+            - t: 7.061401241503109
+              v: 9.301444243932576
+            current: 3.616076749251911
+            average: 2.027123023002322
+            max: 4.145608029883936
+        memory:
+          used_mb:
+            points:
+            - t: 7.061401241503109
+              v: 9.301444243932576
+            - t: 7.061401241503109
+              v: 9.301444243932576
+            current: 3.616076749251911
+            average: 2.027123023002322
+            max: 4.145608029883936
+          configured_mb:
+            points:
+            - t: 7.061401241503109
+              v: 9.301444243932576
+            - t: 7.061401241503109
+              v: 9.301444243932576
+            current: 3.616076749251911
+            average: 2.027123023002322
+            max: 4.145608029883936
+        network:
+          rx_bps:
+            points:
+            - t: 7.061401241503109
+              v: 9.301444243932576
+            - t: 7.061401241503109
+              v: 9.301444243932576
+            current: 3.616076749251911
+            average: 2.027123023002322
+            max: 4.145608029883936
+          tx_bps:
+            points:
+            - t: 7.061401241503109
+              v: 9.301444243932576
+            - t: 7.061401241503109
+              v: 9.301444243932576
+            current: 3.616076749251911
+            average: 2.027123023002322
+            max: 4.145608029883936
+        disk:
+          used_gb:
+            points:
+            - t: 7.061401241503109
+              v: 9.301444243932576
+            - t: 7.061401241503109
+              v: 9.301444243932576
+            current: 3.616076749251911
+            average: 2.027123023002322
+            max: 4.145608029883936
+          configured_gb:
+            points:
+            - t: 7.061401241503109
+              v: 9.301444243932576
+            - t: 7.061401241503109
+              v: 9.301444243932576
+            current: 3.616076749251911
+            average: 2.027123023002322
+            max: 4.145608029883936
+          read_gbps:
+            points:
+            - t: 7.061401241503109
+              v: 9.301444243932576
+            - t: 7.061401241503109
+              v: 9.301444243932576
+            current: 3.616076749251911
+            average: 2.027123023002322
+            max: 4.145608029883936
+          write_gbps:
+            points:
+            - t: 7.061401241503109
+              v: 9.301444243932576
+            - t: 7.061401241503109
+              v: 9.301444243932576
+            current: 3.616076749251911
+            average: 2.027123023002322
+            max: 4.145608029883936
+      properties:
+        machine_name:
+          type: string
+        node_name:
+          type: string
+        range:
+          enum:
+          - 1h
+          - 6h
+          - 24h
+          - 7d
+          type: string
+        start:
+          description: "Window start, Unix epoch seconds."
+          type: integer
+        end:
+          description: "Window end, Unix epoch seconds."
+          type: integer
+        step_seconds:
+          type: integer
+        available:
+          description: True when at least one metrics query succeeded.
+          type: boolean
+        error:
+          description: Why metrics could not be read.
+          type: string
+        configured:
+          $ref: "#/components/schemas/ApiVmMetricsResponse_configured"
+        cpu:
+          $ref: "#/components/schemas/ApiVmMetricsResponse_cpu"
+        memory:
+          $ref: "#/components/schemas/ApiVmMetricsResponse_memory"
+        network:
+          $ref: "#/components/schemas/ApiVmMetricsResponse_network"
+        disk:
+          $ref: "#/components/schemas/ApiVmMetricsResponse_disk"
+      required:
+      - available
+      - configured
+      - cpu
+      - disk
+      - end
+      - machine_name
+      - memory
+      - network
+      - node_name
+      - range
+      - start
+      - step_seconds
     ApiVmCreateRequest:
       example:
         cloudinit_user_data:
@@ -2158,6 +2667,94 @@ components:
           type: string
       required:
       - source_url
+    ApiVmSleepResponse:
+      example:
+        success: true
+        destination_url: destination_url
+        already_sleeping: true
+        pause_ms: 0
+        snapshot_ms: 6
+        total_ms: 1
+        deduped: true
+        state_changed: true
+      properties:
+        success:
+          type: boolean
+        destination_url:
+          description: Snapshot slot URL the VM was saved to.
+          type: string
+        already_sleeping:
+          description: True when the VM was already evicted.
+          type: boolean
+        pause_ms:
+          description: Time spent pausing the vCPUs.
+          type: integer
+        snapshot_ms:
+          description: Time spent writing the snapshot.
+          type: integer
+        total_ms:
+          description: Total time for the sleep operation.
+          type: integer
+        deduped:
+          description: True when an identical sleep was already running and this call
+            was a no-op.
+          type: boolean
+        state_changed:
+          description: True when this call actually put the VM to sleep. Callers release
+            node capacity only when this is true.
+          type: boolean
+      required:
+      - already_sleeping
+      - destination_url
+    ApiVmWakeRequest:
+      example:
+        ip_address: ip_address
+      properties:
+        ip_address:
+          description: Guest IP; only needed to recreate the tap device if it is missing.
+          type: string
+    ApiVmWakeResponse:
+      example:
+        success: true
+        source_url: source_url
+        already_running: true
+        resumed_in_place: true
+        cold_booted: true
+        took_ms: 0
+        deduped: true
+        state_changed: true
+      properties:
+        success:
+          type: boolean
+        source_url:
+          description: "Snapshot restored from, when not resumed in place."
+          nullable: true
+          type: string
+        already_running:
+          description: True when the VM was already running.
+          type: boolean
+        resumed_in_place:
+          description: True when a live-paused VM was resumed.
+          type: boolean
+        cold_booted:
+          description: True when no snapshot was usable and the existing disk was
+            booted fresh (RAM state lost).
+          type: boolean
+        took_ms:
+          description: Time taken to bring the VM back.
+          type: integer
+        deduped:
+          description: True when an identical wake was already running and this call
+            was a no-op.
+          type: boolean
+        state_changed:
+          description: True when this call actually moved the VM to running. Callers
+            reserve node capacity only when this is true.
+          type: boolean
+      required:
+      - already_running
+      - cold_booted
+      - resumed_in_place
     ApiNodeStatus:
       description: Lifecycle status persisted on the node.
       enum:
@@ -2302,6 +2899,138 @@ components:
           type: string
       required:
       - message
+    ApiNodeMaintenanceEntry:
+      example:
+        username: username
+        machine_name: machine_name
+        ip_address: ip_address
+        prev_state: active
+        state: pending
+        restored: true
+        destination_url: destination_url
+        error: error
+      properties:
+        username:
+          type: string
+        machine_name:
+          type: string
+        ip_address:
+          nullable: true
+          type: string
+        prev_state:
+          description: "State the VM had before the run, and is restored to."
+          enum:
+          - active
+          - paused
+          type: string
+        state:
+          description: Snapshot progress.
+          enum:
+          - pending
+          - ok
+          - failed
+          type: string
+        restored:
+          description: True once the VM has been woken back.
+          type: boolean
+        destination_url:
+          description: Snapshot slot the VM was saved to.
+          type: string
+        error:
+          type: string
+      required:
+      - machine_name
+      - prev_state
+      - restored
+      - state
+      - username
+    ApiNodeMaintenanceStatus:
+      example:
+        node: node
+        phase: idle
+        running: true
+        started_at: 2000-01-23T04:56:07.000+00:00
+        routes_pending: true
+        entries:
+        - username: username
+          machine_name: machine_name
+          ip_address: ip_address
+          prev_state: active
+          state: pending
+          restored: true
+          destination_url: destination_url
+          error: error
+        - username: username
+          machine_name: machine_name
+          ip_address: ip_address
+          prev_state: active
+          state: pending
+          restored: true
+          destination_url: destination_url
+          error: error
+      properties:
+        node:
+          type: string
+        phase:
+          enum:
+          - idle
+          - snapshot
+          - restore
+          type: string
+        running:
+          description: True while the run is working in the background.
+          type: boolean
+        started_at:
+          format: date-time
+          nullable: true
+          type: string
+        routes_pending:
+          description: True when every VM is back but some app routes still need replaying.
+          type: boolean
+        entries:
+          items:
+            $ref: "#/components/schemas/ApiNodeMaintenanceEntry"
+          type: array
+          default: null
+      required:
+      - entries
+      - node
+      - phase
+      - routes_pending
+      - running
+    ApiNodeMaintenanceRunResponse:
+      allOf:
+      - $ref: "#/components/schemas/ApiNodeMaintenanceStatus"
+      - properties:
+          message:
+            description: Human summary of the run.
+            type: string
+        required:
+        - message
+      example:
+        node: node
+        phase: idle
+        running: true
+        started_at: 2000-01-23T04:56:07.000+00:00
+        routes_pending: true
+        entries:
+        - username: username
+          machine_name: machine_name
+          ip_address: ip_address
+          prev_state: active
+          state: pending
+          restored: true
+          destination_url: destination_url
+          error: error
+        - username: username
+          machine_name: machine_name
+          ip_address: ip_address
+          prev_state: active
+          state: pending
+          restored: true
+          destination_url: destination_url
+          error: error
+        message: message
     ApiSoftware:
       example:
         id: id
@@ -3122,6 +3851,146 @@ components:
       required:
       - session
       - user
+    ApiVmMetricsResponse_configured:
+      example:
+        cpu_count: 5
+        memory_mb: 5
+        disk_gb: 2
+      properties:
+        cpu_count:
+          type: integer
+        memory_mb:
+          type: integer
+        disk_gb:
+          type: integer
+      required:
+      - cpu_count
+      - disk_gb
+      - memory_mb
+    ApiVmMetricsResponse_cpu:
+      example:
+        usage_ratio:
+          points:
+          - t: 7.061401241503109
+            v: 9.301444243932576
+          - t: 7.061401241503109
+            v: 9.301444243932576
+          current: 3.616076749251911
+          average: 2.027123023002322
+          max: 4.145608029883936
+      properties:
+        usage_ratio:
+          $ref: "#/components/schemas/ApiVmMetricsSeries"
+      required:
+      - usage_ratio
+    ApiVmMetricsResponse_memory:
+      example:
+        used_mb:
+          points:
+          - t: 7.061401241503109
+            v: 9.301444243932576
+          - t: 7.061401241503109
+            v: 9.301444243932576
+          current: 3.616076749251911
+          average: 2.027123023002322
+          max: 4.145608029883936
+        configured_mb:
+          points:
+          - t: 7.061401241503109
+            v: 9.301444243932576
+          - t: 7.061401241503109
+            v: 9.301444243932576
+          current: 3.616076749251911
+          average: 2.027123023002322
+          max: 4.145608029883936
+      properties:
+        used_mb:
+          $ref: "#/components/schemas/ApiVmMetricsSeries"
+        configured_mb:
+          $ref: "#/components/schemas/ApiVmMetricsSeries"
+      required:
+      - configured_mb
+      - used_mb
+    ApiVmMetricsResponse_network:
+      example:
+        rx_bps:
+          points:
+          - t: 7.061401241503109
+            v: 9.301444243932576
+          - t: 7.061401241503109
+            v: 9.301444243932576
+          current: 3.616076749251911
+          average: 2.027123023002322
+          max: 4.145608029883936
+        tx_bps:
+          points:
+          - t: 7.061401241503109
+            v: 9.301444243932576
+          - t: 7.061401241503109
+            v: 9.301444243932576
+          current: 3.616076749251911
+          average: 2.027123023002322
+          max: 4.145608029883936
+      properties:
+        rx_bps:
+          $ref: "#/components/schemas/ApiVmMetricsSeries"
+        tx_bps:
+          $ref: "#/components/schemas/ApiVmMetricsSeries"
+      required:
+      - rx_bps
+      - tx_bps
+    ApiVmMetricsResponse_disk:
+      example:
+        used_gb:
+          points:
+          - t: 7.061401241503109
+            v: 9.301444243932576
+          - t: 7.061401241503109
+            v: 9.301444243932576
+          current: 3.616076749251911
+          average: 2.027123023002322
+          max: 4.145608029883936
+        configured_gb:
+          points:
+          - t: 7.061401241503109
+            v: 9.301444243932576
+          - t: 7.061401241503109
+            v: 9.301444243932576
+          current: 3.616076749251911
+          average: 2.027123023002322
+          max: 4.145608029883936
+        read_gbps:
+          points:
+          - t: 7.061401241503109
+            v: 9.301444243932576
+          - t: 7.061401241503109
+            v: 9.301444243932576
+          current: 3.616076749251911
+          average: 2.027123023002322
+          max: 4.145608029883936
+        write_gbps:
+          points:
+          - t: 7.061401241503109
+            v: 9.301444243932576
+          - t: 7.061401241503109
+            v: 9.301444243932576
+          current: 3.616076749251911
+          average: 2.027123023002322
+          max: 4.145608029883936
+      properties:
+        used_gb:
+          $ref: "#/components/schemas/ApiVmMetricsSeries"
+        configured_gb:
+          $ref: "#/components/schemas/ApiVmMetricsSeries"
+        read_gbps:
+          $ref: "#/components/schemas/ApiVmMetricsSeries"
+        write_gbps:
+          $ref: "#/components/schemas/ApiVmMetricsSeries"
+      required:
+      - configured_gb
+      - read_gbps
+      - used_gb
+      - write_gbps
     ApiKeyCreateRequest_expiresIn:
       description: "Lifetime: `never`, `7d`, `30d`, `90d`, or a positive number of\
         \ seconds."

@@ -7,6 +7,7 @@ All URIs are relative to *https://jilebi.ai*
 | [**deleteApiV1VmmByMachineName**](MicroVMsApi.md#deleteapiv1vmmbymachinename) | **DELETE** /api/v1/vmm/{machine_name} | Delete a microVM |
 | [**getApiV1Vmm**](MicroVMsApi.md#getapiv1vmm) | **GET** /api/v1/vmm | List microVMs |
 | [**getApiV1VmmByMachineName**](MicroVMsApi.md#getapiv1vmmbymachinename) | **GET** /api/v1/vmm/{machine_name} | Get a microVM |
+| [**getApiV1VmmByMachineNameMetrics**](MicroVMsApi.md#getapiv1vmmbymachinenamemetrics) | **GET** /api/v1/vmm/{machine_name}/metrics | Get microVM usage metrics |
 | [**postApiV1VmmByMachineName**](MicroVMsApi.md#postapiv1vmmbymachinename) | **POST** /api/v1/vmm/{machine_name} | Create a microVM |
 | [**postApiV1VmmByMachineNameClone**](MicroVMsApi.md#postapiv1vmmbymachinenameclone) | **POST** /api/v1/vmm/{machine_name}/clone | Clone a microVM |
 | [**putApiV1VmmByMachineName**](MicroVMsApi.md#putapiv1vmmbymachinename) | **PUT** /api/v1/vmm/{machine_name} | Resize a microVM |
@@ -14,8 +15,10 @@ All URIs are relative to *https://jilebi.ai*
 | [**putApiV1VmmByMachineNameRestart**](MicroVMsApi.md#putapiv1vmmbymachinenamerestart) | **PUT** /api/v1/vmm/{machine_name}/restart | Restart a microVM |
 | [**putApiV1VmmByMachineNameRestore**](MicroVMsApi.md#putapiv1vmmbymachinenamerestore) | **PUT** /api/v1/vmm/{machine_name}/restore | Restore a microVM from a snapshot |
 | [**putApiV1VmmByMachineNameShutdown**](MicroVMsApi.md#putapiv1vmmbymachinenameshutdown) | **PUT** /api/v1/vmm/{machine_name}/shutdown | Shut down a microVM |
+| [**putApiV1VmmByMachineNameSleep**](MicroVMsApi.md#putapiv1vmmbymachinenamesleep) | **PUT** /api/v1/vmm/{machine_name}/sleep | Sleep a microVM |
 | [**putApiV1VmmByMachineNameSnapshot**](MicroVMsApi.md#putapiv1vmmbymachinenamesnapshot) | **PUT** /api/v1/vmm/{machine_name}/snapshot | Snapshot a microVM |
 | [**putApiV1VmmByMachineNameStart**](MicroVMsApi.md#putapiv1vmmbymachinenamestart) | **PUT** /api/v1/vmm/{machine_name}/start | Start a microVM |
+| [**putApiV1VmmByMachineNameWake**](MicroVMsApi.md#putapiv1vmmbymachinenamewake) | **PUT** /api/v1/vmm/{machine_name}/wake | Wake a microVM |
 
 
 
@@ -233,6 +236,90 @@ example().catch(console.error);
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 | **200** | The microVM with live hypervisor info. |  -  |
+| **401** | Unauthorized |  -  |
+| **404** | MicroVM not found |  -  |
+| **500** | Internal server error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
+
+## getApiV1VmmByMachineNameMetrics
+
+> ApiVmMetricsResponse getApiV1VmmByMachineNameMetrics(machineName, range, step)
+
+Get microVM usage metrics
+
+Returns CPU, memory, network and disk time series for the microVM. Each series includes its points plus current, average and max values.
+
+### Example
+
+```ts
+import {
+  Configuration,
+  MicroVMsApi,
+} from '@jilebi/sdk';
+import type { GetApiV1VmmByMachineNameMetricsRequest } from '@jilebi/sdk';
+
+async function example() {
+  console.log("🚀 Testing @jilebi/sdk SDK...");
+  const config = new Configuration({ 
+    // To configure API key authorization: apiKey
+    apiKey: "YOUR API KEY",
+    // To configure API key authorization: sessionCookie
+    apiKey: "YOUR API KEY",
+    // Configure HTTP bearer authorization: bearerAuth
+    accessToken: "YOUR BEARER TOKEN",
+  });
+  const api = new MicroVMsApi(config);
+
+  const body = {
+    // string | Name of the microVM.
+    machineName: machineName_example,
+    // '1h' | '6h' | '24h' | '7d' | Time window to query. (optional)
+    range: range_example,
+    // number | Sampling resolution in seconds. Defaults to a window-appropriate step (max ~500 points). (optional)
+    step: 56,
+  } satisfies GetApiV1VmmByMachineNameMetricsRequest;
+
+  try {
+    const data = await api.getApiV1VmmByMachineNameMetrics(body);
+    console.log(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// Run the test
+example().catch(console.error);
+```
+
+### Parameters
+
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **machineName** | `string` | Name of the microVM. | [Defaults to `undefined`] |
+| **range** | `1h`, `6h`, `24h`, `7d` | Time window to query. | [Optional] [Defaults to `&#39;1h&#39;`] [Enum: 1h, 6h, 24h, 7d] |
+| **step** | `number` | Sampling resolution in seconds. Defaults to a window-appropriate step (max ~500 points). | [Optional] [Defaults to `undefined`] |
+
+### Return type
+
+[**ApiVmMetricsResponse**](ApiVmMetricsResponse.md)
+
+### Authorization
+
+[apiKey](../README.md#apiKey), [sessionCookie](../README.md#sessionCookie), [bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: `application/json`
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **200** | Usage time series for the microVM. |  -  |
 | **401** | Unauthorized |  -  |
 | **404** | MicroVM not found |  -  |
 | **500** | Internal server error |  -  |
@@ -799,6 +886,85 @@ example().catch(console.error);
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 
 
+## putApiV1VmmByMachineNameSleep
+
+> ApiVmSleepResponse putApiV1VmmByMachineNameSleep(machineName)
+
+Sleep a microVM
+
+Pauses the VM, snapshots it to a rolling slot, then evicts the hypervisor process to free host memory. Wakes in place from the snapshot.
+
+### Example
+
+```ts
+import {
+  Configuration,
+  MicroVMsApi,
+} from '@jilebi/sdk';
+import type { PutApiV1VmmByMachineNameSleepRequest } from '@jilebi/sdk';
+
+async function example() {
+  console.log("🚀 Testing @jilebi/sdk SDK...");
+  const config = new Configuration({ 
+    // To configure API key authorization: apiKey
+    apiKey: "YOUR API KEY",
+    // To configure API key authorization: sessionCookie
+    apiKey: "YOUR API KEY",
+    // Configure HTTP bearer authorization: bearerAuth
+    accessToken: "YOUR BEARER TOKEN",
+  });
+  const api = new MicroVMsApi(config);
+
+  const body = {
+    // string | Name of the microVM.
+    machineName: machineName_example,
+  } satisfies PutApiV1VmmByMachineNameSleepRequest;
+
+  try {
+    const data = await api.putApiV1VmmByMachineNameSleep(body);
+    console.log(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// Run the test
+example().catch(console.error);
+```
+
+### Parameters
+
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **machineName** | `string` | Name of the microVM. | [Defaults to `undefined`] |
+
+### Return type
+
+[**ApiVmSleepResponse**](ApiVmSleepResponse.md)
+
+### Authorization
+
+[apiKey](../README.md#apiKey), [sessionCookie](../README.md#sessionCookie), [bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: `application/json`
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **200** | Slept (or already sleeping). |  -  |
+| **400** | MicroVM is not active |  -  |
+| **401** | Unauthorized |  -  |
+| **404** | MicroVM not found |  -  |
+| **500** | Internal server error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
+
 ## putApiV1VmmByMachineNameSnapshot
 
 > ApiVmSnapshotResponse putApiV1VmmByMachineNameSnapshot(machineName, apiVmSnapshotRequest)
@@ -947,6 +1113,88 @@ example().catch(console.error);
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 | **200** | Started, or already active. |  -  |
+| **401** | Unauthorized |  -  |
+| **402** | Overdue unpaid invoice |  -  |
+| **404** | MicroVM not found |  -  |
+| **500** | Internal server error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
+
+## putApiV1VmmByMachineNameWake
+
+> ApiVmWakeResponse putApiV1VmmByMachineNameWake(machineName, apiVmWakeRequest)
+
+Wake a microVM
+
+Resumes a live-paused VM in place or restores a slept VM from its snapshot. When no usable snapshot exists, boots the existing disk fresh (RAM state is lost, disk contents are preserved).
+
+### Example
+
+```ts
+import {
+  Configuration,
+  MicroVMsApi,
+} from '@jilebi/sdk';
+import type { PutApiV1VmmByMachineNameWakeRequest } from '@jilebi/sdk';
+
+async function example() {
+  console.log("🚀 Testing @jilebi/sdk SDK...");
+  const config = new Configuration({ 
+    // To configure API key authorization: apiKey
+    apiKey: "YOUR API KEY",
+    // To configure API key authorization: sessionCookie
+    apiKey: "YOUR API KEY",
+    // Configure HTTP bearer authorization: bearerAuth
+    accessToken: "YOUR BEARER TOKEN",
+  });
+  const api = new MicroVMsApi(config);
+
+  const body = {
+    // string | Name of the microVM.
+    machineName: machineName_example,
+    // ApiVmWakeRequest (optional)
+    apiVmWakeRequest: ...,
+  } satisfies PutApiV1VmmByMachineNameWakeRequest;
+
+  try {
+    const data = await api.putApiV1VmmByMachineNameWake(body);
+    console.log(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// Run the test
+example().catch(console.error);
+```
+
+### Parameters
+
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **machineName** | `string` | Name of the microVM. | [Defaults to `undefined`] |
+| **apiVmWakeRequest** | [ApiVmWakeRequest](ApiVmWakeRequest.md) |  | [Optional] |
+
+### Return type
+
+[**ApiVmWakeResponse**](ApiVmWakeResponse.md)
+
+### Authorization
+
+[apiKey](../README.md#apiKey), [sessionCookie](../README.md#sessionCookie), [bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+- **Content-Type**: `application/json`
+- **Accept**: `application/json`
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **200** | Woken (or already active). |  -  |
 | **401** | Unauthorized |  -  |
 | **402** | Overdue unpaid invoice |  -  |
 | **404** | MicroVM not found |  -  |
