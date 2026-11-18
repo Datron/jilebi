@@ -2,6 +2,27 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [0.7.0](https://github.com/datron/jilebi/compare/8e2336954ee2e3a044089c776fae691a7d254e21..0.7.0) - 2026-11-18
+### Package updates
+- [store](crates/store) bumped to [store-0.1.0](https://github.com/datron/jilebi/compare/bb408ad578f73207546df83ce3a4816f662a625f..store-0.1.0)
+- [jilebi](crates/jilebi) bumped to [jilebi-0.1.0](https://github.com/datron/jilebi/compare/bb408ad578f73207546df83ce3a4816f662a625f..jilebi-0.1.0)
+- [dosa](crates/plugin-runtime) bumped to [dosa-0.1.0](https://github.com/datron/jilebi/compare/bb408ad578f73207546df83ce3a4816f662a625f..dosa-0.1.0)
+- [jilebi_types](crates/jilebi_types) bumped to [jilebi_types-0.1.0](https://github.com/datron/jilebi/compare/bb408ad578f73207546df83ce3a4816f662a625f..jilebi_types-0.1.0)
+### Global changes
+#### Bug Fixes
+- **(ci)** push release commits with a ruleset-bypass deploy key (#7) - ([8e23369](https://github.com/datron/jilebi/commit/8e2336954ee2e3a044089c776fae691a7d254e21)) - Datron
+- **(store)** align UI with the rest of the website - ([157f5f6](https://github.com/datron/jilebi/commit/157f5f6d3940f9f6e35693eba5fcf4739ed87b9f)) - datron
+#### Continuous Integration
+- **(sdks)** trusted publishing for npm/PyPI and parallel release jobs (#5) - ([0733911](https://github.com/datron/jilebi/commit/0733911a45bf9c9a1c94ab52fc56432e684554d1)) - Datron
+#### Features
+- **(jilebi)** add HTTPS/TLS support to streamable HTTP server (#3) - ([4f8d571](https://github.com/datron/jilebi/commit/4f8d571e3ea949355f4b6b8afdbcd1962a233d6f)) - Datron
+- **(sdks)** generate and version SDKs from the server tag (#4) - ([25c22f4](https://github.com/datron/jilebi/commit/25c22f431d00d73543113ac3e914aafad9d94a6a)) - Datron
+#### Miscellaneous Chores
+- **(sdks)** regenerate from latest OpenAPI spec (#6) - ([60b1a9c](https://github.com/datron/jilebi/commit/60b1a9cc47122eed065a6b32e444901b8b462d08)) - Datron
+- **(version)** 0.6.2 [skip ci] - ([7b7b1c9](https://github.com/datron/jilebi/commit/7b7b1c9d4975649c3cdebaf63bfa5a29465bf381)) - Semver bot
+
+- - -
+
 ## [0.6.2](https://github.com/datron/jilebi/compare/85d4cfe1a04bf5c19367c9c995e2142a3afd443e..0.6.2) - 2026-09-08
 ### Package updates
 - [store](crates/store) bumped to [store-0.1.0](https://github.com/datron/jilebi/compare/bb408ad578f73207546df83ce3a4816f662a625f..store-0.1.0)
