@@ -45,25 +45,45 @@ jobs:
         id: version
         uses: ./.github/actions/resolve-sdk-version
 
+      - name: Check if version is already published
+        id: check
+        shell: bash
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          status="$(curl -sS -o /dev/null -w '%{http_code}' \
+            -H 'User-Agent: jilebi-release' \
+            "https://crates.io/api/v1/crates/jilebi-sdk/$VERSION")"
+          if [ "$status" = "200" ]; then
+            echo "jilebi-sdk $VERSION is already on crates.io; skipping publish"
+            echo "published=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "published=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Install Node.js
         uses: actions/setup-node@v6
         with:
           node-version: 22
 
       - name: Install Rust
+        if: steps.check.outputs.published != 'true'
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: 1.95.0
 
       - name: Set SDK version
+        if: steps.check.outputs.published != 'true'
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: node sdks/scripts/set-version.mjs "$VERSION"
 
       - name: Package crate
+        if: steps.check.outputs.published != 'true'
         run: cargo package -p jilebi-sdk --allow-dirty
 
       - name: Publish to crates.io
+        if: steps.check.outputs.published != 'true'
         run: cargo publish -p jilebi-sdk --allow-dirty --token "${{ secrets.CARGO_REGISTRY_TOKEN }}"
 
   typescript:
@@ -88,10 +108,25 @@ jobs:
           # Node 24 bundles npm >= 11.5.1, which is required for OIDC
           # trusted publishing.
           node-version: 24
-          registry-url: "https://registry.npmjs.org"
+          # No registry-url: setup-node would write a dummy NODE_AUTH_TOKEN,
+          # which disables npm's OIDC trusted publishing and causes a 404.
           package-manager-cache: false # never use caching in release builds
 
+      - name: Check if version is already published
+        id: check
+        shell: bash
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          if npm view "@jilebi/sdk@$VERSION" version >/dev/null 2>&1; then
+            echo "@jilebi/sdk@$VERSION is already on npm; skipping publish"
+            echo "published=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "published=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Verify npm supports trusted publishing
+        if: steps.check.outputs.published != 'true'
         shell: bash
         run: |
           version="$(npm --version)"
@@ -102,15 +137,18 @@ jobs:
           fi
 
       - name: Set SDK version
+        if: steps.check.outputs.published != 'true'
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: node sdks/scripts/set-version.mjs "$VERSION"
 
       - name: Install dependencies
+        if: steps.check.outputs.published != 'true'
         working-directory: sdks/typescript
         run: npm install
 
       - name: Build
+        if: steps.check.outputs.published != 'true'
         working-directory: sdks/typescript
         run: npm run build
 
@@ -119,6 +157,7 @@ jobs:
       # generated automatically. The trusted publisher must be configured on
       # npmjs.com for @jilebi/sdk (see sdks/README.md).
       - name: Publish to npm (trusted publishing)
+        if: steps.check.outputs.published != 'true'
         working-directory: sdks/typescript
         run: npm publish --access public
 
@@ -138,22 +177,40 @@ jobs:
         id: version
         uses: ./.github/actions/resolve-sdk-version
 
+      - name: Check if version is already published
+        id: check
+        shell: bash
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          status="$(curl -sS -o /dev/null -w '%{http_code}' \
+            "https://pypi.org/pypi/jilebi-sdk/$VERSION/json")"
+          if [ "$status" = "200" ]; then
+            echo "jilebi-sdk $VERSION is already on PyPI; skipping publish"
+            echo "published=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "published=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Install Node.js
         uses: actions/setup-node@v6
         with:
           node-version: 22
 
       - name: Install Python
+        if: steps.check.outputs.published != 'true'
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
       - name: Set SDK version
+        if: steps.check.outputs.published != 'true'
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: node sdks/scripts/set-version.mjs "$VERSION"
 
       - name: Build distribution
+        if: steps.check.outputs.published != 'true'
         working-directory: sdks/python
         run: |
           python -m pip install --upgrade build
@@ -163,6 +220,7 @@ jobs:
       # short-lived PyPI upload token. The trusted publisher must be configured
       # on PyPI for the jilebi-sdk project (see sdks/README.md).
       - name: Publish to PyPI (trusted publishing)
+        if: steps.check.outputs.published != 'true'
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: sdks/python/dist
