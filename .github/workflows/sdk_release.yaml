@@ -154,13 +154,24 @@ jobs:
             exit 1
           fi
 
+          echo "GitHub OIDC identity presented to npm:"
+          printf '%s' "$id_token" | python3 -c '
+          import base64, json, sys
+          payload = sys.stdin.read().split(".")[1]
+          payload += "=" * (-len(payload) % 4)
+          claims = json.loads(base64.urlsafe_b64decode(payload))
+          keys = ("repository", "repository_owner", "workflow", "workflow_ref",
+                  "job_workflow_ref", "ref", "environment")
+          print(json.dumps({k: claims.get(k) for k in keys}, indent=2))
+          '
+
           body="$(mktemp)"
           status="$(curl -sS -o "$body" -w '%{http_code}' \
             -X POST \
             -H "Authorization: Bearer $id_token" \
             "https://registry.npmjs.org/-/npm/v1/oidc/token/exchange/package/@jilebi%2fsdk")"
           if [ "$status" != "200" ]; then
-            echo "::error::npm rejected the OIDC token exchange (HTTP $status): $(cat "$body")"
+            echo "::error::npm rejected the OIDC token exchange (HTTP $status): $(cat "$body"). The trusted publisher for @jilebi/sdk on npmjs.com must match these claims exactly: repository Datron/jilebi, workflow sdk_release.yaml, no environment, and 'Allow npm publish' enabled."
             exit 1
           fi
           echo "npm accepted the OIDC token exchange"
