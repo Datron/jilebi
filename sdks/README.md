@@ -122,6 +122,12 @@ A newly created npm trusted publisher must complete its first successful
 publish within 2 days or it expires. npm provenance attestations and PyPI
 PEP 740 attestations are generated automatically.
 
+The npm fields are matched case-sensitively against the GitHub OIDC token and
+must be exact: owner `Datron`, repository `jilebi` (without `.git`), workflow
+filename `sdk_release.yaml`, and no environment. `OIDC token exchange error -
+package not found` means no active trusted publisher matched those claims —
+delete the connection and create a new one, then publish within 2 days.
+
 ```bash
 # Normal flow: bump the MCP server version, which tags and releases the SDKs
 # (run the "Create jilebi version" workflow). Or, to release manually:
